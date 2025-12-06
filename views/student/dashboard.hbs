@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - NETD</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/stylesheets/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --dark-blue: rgba(0,78,137,1);
+            --golden-brown: rgba(176,149,114,1);
+            --white: #ffffff;
+            --light-blue: rgba(0,78,137,0.1);
+            --dark-blue-hover: rgba(0,60,110,1);
+            --golden-brown-hover: rgba(156,129,94,1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .welcome-card {
+            background: linear-gradient(135deg, var(--dark-blue) 0%, var(--dark-blue-hover) 100%);
+            border-radius: 15px;
+            color: var(--white);
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--golden-brown);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(176,149,114,0.1), transparent);
+            transform: rotate(45deg);
+        }
+
+        .student-photo-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid var(--golden-brown);
+            object-fit: cover;
+            box-shadow: var(--shadow);
+        }
+
+        .info-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--golden-brown);
+            transition: var(--transition);
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .action-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 2px solid transparent;
+            transition: var(--transition);
+            height: 100%;
+        }
+
+        .action-card:hover {
+            border-color: var(--golden-brown);
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            color: var(--dark-blue);
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, var(--light-blue), transparent);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            border: 2px solid var(--golden-brown);
+        }
+
+        .btn-dashboard {
+            background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+            color: var(--white);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-dashboard:hover {
+            background: linear-gradient(135deg, var(--golden-brown), var(--golden-brown-hover));
+            color: var(--white);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--white), #f8f9fa);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--light-blue);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--dark-blue);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--golden-brown);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        .notice-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border-top: 4px solid var(--golden-brown);
+        }
+
+        .info-badge {
+            background: linear-gradient(135deg, var(--golden-brown), var(--golden-brown-hover));
+            color: var(--white);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dashboard-item {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 15px;
+            }
+            
+            .welcome-card {
+                padding: 20px;
+                text-align: center;
+            }
+            
+            .student-photo-large {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .btn-dashboard {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+   
+    
+    <div class="dashboard-container">
+        <!-- Welcome Header -->
+        <div class="welcome-card dashboard-item">
+            <div class="row align-items-center">
+                <div class="col-md-2 text-center">
+                    <img src="/studentImages/{{student._id}}.jpg" 
+                         alt="Student Photo" 
+                         class="student-photo-large"
+                         onerror="this.src='/images/default-user.png'">
+                </div>
+                <div class="col-md-8">
+                    <h2 class="mb-3">Welcome, {{student.fullName}}!</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><i class="fas fa-id-card me-2"></i><strong>Registration No:</strong> {{student.regNo}}</p>
+                            <p class="mb-2"><i class="fas fa-graduation-cap me-2"></i><strong>Course:</strong> {{student.courseName}}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><i class="fas fa-university me-2"></i><strong>Center:</strong> {{student.centreDetails.centreName}}</p>
+                            <p class="mb-0"><i class="fas fa-calendar me-2"></i><strong>Admission:</strong> {{student.admissionYear}}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 text-end">
+                   
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Quick Stats -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-card dashboard-item" style="animation-delay: 0.1s">
+                    <div class="stat-number">{{student.regNo}}</div>
+                    <div class="stat-label">Registration No</div>
+                    <div class="mt-3">
+                        <span class="info-badge">Active</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-card dashboard-item" style="animation-delay: 0.2s">
+                    <div class="stat-number">{{student.admissionYear}}</div>
+                    <div class="stat-label">Admission Year</div>
+                    <div class="mt-3">
+                        <span class="info-badge">Academic</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-card dashboard-item" style="animation-delay: 0.3s">
+                    <div class="stat-number">{{student.grade}}
+</div>
+                    <div class="stat-label">Current Grade</div>
+                    <div class="mt-3">
+                        <span class="info-badge">Performance</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-card dashboard-item" style="animation-delay: 0.4s">
+                    <div class="stat-number">SECTOR</div>
+                    <div class="stat-label">{{student.centreDetails.department}}</div>
+                    <div class="mt-3">
+                        <span class="info-badge">Registered</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Student Information -->
+            <div class="col-lg-6 mb-4">
+                <div class="info-card dashboard-item" style="animation-delay: 0.2s">
+                    <h4 class="mb-4" style="color: var(--dark-blue);">
+                        <i class="fas fa-user-graduate me-2"></i>
+                        Student Information
+                    </h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <h6 style="color: var(--golden-brown);">
+                                <i class="fas fa-id-badge me-2"></i>Registration Number
+                            </h6>
+                            <p class="fw-bold text-dark">{{student.regNo}}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6 style="color: var(--golden-brown);">
+                                <i class="fas fa-book me-2"></i>Course Name
+                            </h6>
+                            <p class="fw-bold text-dark">{{student.courseName}}</p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <h6 style="color: var(--golden-brown);">
+                                <i class="fas fa-calendar me-2"></i>Admission Year
+                            </h6>
+                            <p class="fw-bold text-dark">{{student.admissionYear}}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6 style="color: var(--golden-brown);">
+                                <i class="fas fa-building me-2"></i>Center ID
+                            </h6>
+                            <p class="fw-bold text-dark">{{student.centreId}}</p>
+                        </div>
+                    </div>
+
+                    {{#if student.email}}
+                    <div class="mb-3">
+                        <h6 style="color: var(--golden-brown);">
+                            <i class="fas fa-envelope me-2"></i>Email Address
+                        </h6>
+                        <p class="fw-bold text-dark">{{student.email}}</p>
+                    </div>
+                    {{/if}}
+
+                    {{#if student.number}}
+                    <div class="mb-3">
+                        <h6 style="color: var(--golden-brown);">
+                            <i class="fas fa-phone me-2"></i>Contact Number
+                        </h6>
+                        <p class="fw-bold text-dark">{{student.number}}</p>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="col-lg-6 mb-4">
+                <div class="row">
+                  <div class="col-md-6 mb-4">
+    <div class="action-card dashboard-item" style="animation-delay: 0.3s">
+        <div class="card-icon">
+            <i class="fas fa-ticket-alt"></i>
+        </div>
+        <h5>Hall Ticket</h5>
+        <p class="text-muted mb-3">Download your exam hall ticket</p>
+
+        {{#if (eq hallticketStatus "APPROVED")}}
+            <a href="/student/hallticket-download/{{student._id}}" class="btn-dashboard">
+                <i class="fas fa-download"></i> Download
+            </a>
+        {{else if (eq hallticketStatus "PENDING")}}
+            <span class="text-warning fw-bold">Your hall ticket will be available soon</span>
+        {{else}}
+            <span class="text-muted fw-bold">Unavailable</span>
+        {{/if}}
+
+    </div>
+</div>
+
+                    
+                   <div class="col-md-6 mb-4">
+  <div class="action-card dashboard-item" style="animation-delay: 0.4s">
+    <div class="card-icon">
+      <i class="fas fa-chart-bar"></i>
+    </div>
+    <h5>Marksheet</h5>
+    <p class="text-muted mb-3">View your academic performance</p>
+
+    {{#if student.marks.subjects}}
+      <a href="/student/preview-marklist/{{student._id}}" class="btn-dashboard">
+        <i class="fas fa-eye"></i> View
+      </a>
+    {{else}}
+      <span class="text-muted fw-bold">Marks not added yet</span>
+    {{/if}}
+  </div>
+</div>
+
+                    <div class="col-md-6 mb-4">
+  <div class="action-card dashboard-item" style="animation-delay: 0.4s">
+    <div class="card-icon">
+      <i class="fas fa-graduation-cap"></i>
+    </div>
+    <h5>Certificate</h5>
+    <p class="text-muted mb-3">View your Certificate</p>
+
+    {{#if certificateAvailable}}
+      <a href="/student/preview-certificate/{{student._id}}" class="btn-dashboard">
+        <i class="fas fa-download"></i> Download
+      </a>
+    {{else if student.appliedForCertificate}}
+      <span class="text-warning fw-bold">
+        Your certificate will be available after 24 hours
+      </span>
+    {{else}}
+      <span class="text-muted fw-bold">Not Applied</span>
+    {{/if}}
+  </div>
+</div>
+
+                    
+                    
+                    
+                   <div class="col-md-6 mb-4">
+  <div class="action-card dashboard-item" style="animation-delay: 0.6s">
+    <div class="card-icon">
+      <i class="fas fa-question-circle"></i>
+    </div>
+    <h5>Support</h5>
+    <p class="text-muted mb-3">Get help and support</p>
+    <button id="contactBtn" class="btn-dashboard">
+      <i class="fas fa-headset"></i> Contact
+    </button>
+  </div>
+</div>
+
+<script>
+  document.getElementById('contactBtn').addEventListener('click', function() {
+    alert('Please contact your training centre for support.');
+  });
+</script>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Notices -->
+        <div class="row">
+            <div class="col-12">
+                <div class="notice-card dashboard-item" style="animation-delay: 0.7s">
+                    <h4 class="mb-4" style="color: var(--dark-blue);">
+                        <i class="fas fa-bullhorn me-2"></i>
+                        Recent Notices & Announcements
+                    </h4>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>No new notices at the moment.</strong> Check back regularly for important updates about exams, results, and other academic information.
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            Last updated: {{currentDate}}
+                        </small>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/javascripts/bootstrap.bundle.min.js"></script>
+</body>
+</html>

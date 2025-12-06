@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Training Centre</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/stylesheets/cform.css">
+
+  <style>
+    .container {
+      width: 80%;
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .header h2 {
+      color: #d00000;
+      margin: 0;
+    }
+
+    .content {
+      text-align: center;
+    }
+.content img {
+  display: block;
+  margin: 0 auto 15px auto;
+  width: 590px;     /* ↓ reduced from 740px */
+  height: 120px;    /* ↓ reduced from 150px */
+  object-fit: contain;  /* keeps full image visible */
+}
+
+
+    form {
+      text-align: left;
+      margin-top: 10px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+
+   input[type="text"],
+input[type="email"],
+select {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+
+
+    .inline-input {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      width: 80%;
+    }
+
+    .inline-input input {
+      flex: 1;
+    }
+
+    .inline-input button {
+      background-color: #000;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .inline-input button:hover {
+      background-color: #d00000;
+    }
+
+    .submit-btn, #downloadPdf {
+      width: 80%;
+      margin-top: 20px;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .submit-btn {
+      background-color: #007bff;
+      color: white;
+    }
+
+    #downloadPdf {
+      background-color: #d00000;
+      color: white;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="left-head">
+        <h2>NETD</h2>
+      </div>
+      <div class="right-head">
+        <a href="/admin" class="btn btn-dark">Back</a>
+      </div>
+    </div>
+
+    <div class="content">
+      <img src="/images/title.jpg" alt="Title Image">
+      <h1>Add New Training Centre</h1>
+
+      <form id="centreForm" action="/admin/add-center" method="post">
+        <label for="centreId">Centre Id</label>
+        <input type="text" id="centreId" name="centreId">
+
+        <label for="centreName">Centre Name</label>
+        <input type="text" id="centreName" name="centreName">
+
+        <label for="address">Address</label>
+        <input type="text" id="address" name="address">
+
+        <label for="centreDirector">Director Name</label>
+        <input type="text" id="centreDirector" name="centreDirector">
+
+        <label for="email">Email id</label>
+        <input type="email" id="email" name="email">
+
+        <!-- Scheme -->
+        <label for="newScheme">Add Scheme</label>
+        <div class="inline-input">
+          <input type="text" id="newScheme" placeholder="Enter scheme name">
+          <button type="button" onclick="addScheme()">+</button>
+        </div>
+        <label for="scheme">Scheme</label>
+        <select id="scheme" name="scheme">
+          <option value="select">Select</option>
+          <option value="netd">NETD Scheme</option>
+        </select>
+
+        <!-- College -->
+        <label for="newCollege">Add Type of College</label>
+        <div class="inline-input">
+          <input type="text" id="newCollege" placeholder="Enter type of college">
+          <button type="button" onclick="addCollege()">+</button>
+        </div>
+        <label for="college">Type of College</label>
+        <select id="college" name="college">
+          <option value="select">Select</option>
+          <option value="Paramedical College">Paramedical College</option>
+          <option value="Skill Development">Skill Development</option>
+        </select>
+
+        <!-- Sector -->
+        <label for="newSector">Add Sector</label>
+        <div class="inline-input">
+          <input type="text" id="newSector" placeholder="Enter sector name">
+          <button type="button" onclick="addSector()">+</button>
+        </div>
+        <label for="sector">Sector</label>
+        <select id="sector" name="sector">
+          <option value="select">Select</option>
+          <option value="Medical Techniques">Medical Techniques</option>
+          <option value="Electronics">Electronics</option>
+        </select>
+
+        <!-- Department -->
+        <label for="newDepartment">Add Department</label>
+        <div class="inline-input">
+          <input type="text" id="newDepartment" placeholder="Enter department name">
+          <button type="button" onclick="addDepartment()">+</button>
+        </div>
+        <label for="department">Department</label>
+        <select id="department" name="department">
+          <option value="select">Select</option>
+          <option value="Department of Paramedical">Department of Paramedical</option>
+          <option value="Mobile Phone Technology">Mobile Phone Technology</option>
+        </select>
+        <!-- Course Name -->
+<label>Add Course Name</label>
+<div id="courseContainer">
+  <div class="inline-input">
+    <input type="text" name="courseName[]" placeholder="Enter course name">
+    <button type="button" onclick="addCourse()">+</button>
+  </div>
+</div>
+
+
+        <input class="submit-btn" type="submit" value="Save Centre">
+        <button type="button" id="downloadPdf">Download as PDF</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function addOption(inputId, selectId, message) {
+      const input = document.getElementById(inputId);
+      const select = document.getElementById(selectId);
+      const value = input.value.trim();
+      if (!value) {
+        alert(message);
+        return;
+      }
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = value;
+      select.appendChild(option);
+      select.value = value;
+      input.value = "";
+    }
+
+    const addScheme = () => addOption("newScheme", "scheme", "Please enter a scheme name");
+    const addCollege = () => addOption("newCollege", "college", "Please enter a college type");
+    const addSector = () => addOption("newSector", "sector", "Please enter a sector name");
+    const addDepartment = () => addOption("newDepartment", "department", "Please enter a department name");
+
+    document.getElementById("downloadPdf").addEventListener("click", function () {
+      const { jsPDF } = window.jspdf;
+      const formElement = document.querySelector(".container");
+      html2canvas(formElement, { scale: 2 }).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const imgHeight = (canvas.height * pageWidth) / canvas.width;
+        pdf.addImage(imgData, "PNG", 0, 0, pageWidth, imgHeight);
+        pdf.save("training_centre_form.pdf");
+      });
+    });
+    function addCourse() {
+  const container = document.getElementById("courseContainer");
+
+  const div = document.createElement("div");
+  div.className = "inline-input";
+  div.style.marginTop = "8px";
+
+  div.innerHTML = `
+    <input type="text" name="courseName[]" placeholder="Enter course name">
+    <button type="button" onclick="this.parentNode.remove()">−</button>
+  `;
+
+  container.appendChild(div);
+}
+
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</body>
+</html>

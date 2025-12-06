@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NETD Combined Statement of Marks</title>
+<style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      margin: 0;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+
+    .mark-container {
+      width: 210mm;   /* A4 width */
+      min-height: 297mm; /* A4 height */
+      margin: auto;
+      background: url('/images/Marklist-bg.jpg') no-repeat center center;
+      background-size: cover;
+      background-color: white;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      position: relative;
+      box-sizing: border-box;
+      padding: 275px 60px 20px 60px;
+      /* existing solid outer side borders */
+      border-left: 6px solid #082614;
+      border-right: 6px solid #082614;
+    }
+
+    /* 🟦 inner dotted darker blue border */
+    .mark-container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 4px;   /* move slightly inside */
+      right: 4px;
+      border-left: 2px dotted #082614;  /* darker blue dotted */
+      border-right: 2px dotted #082614;
+      pointer-events: none;
+    }
+
+    
+
+    .supply-notice {
+      
+      padding: -5px;
+      
+      margin: -15px 0;
+      text-align: center;
+      font-weight: bold;
+      color: #d63031;
+    }
+
+    .details {
+      margin-bottom: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+      padding: 10px;
+      padding-bottom: 5px;
+    }
+
+    .details p {
+      margin: 3px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+      font-size: 10px; /* Reduced from 12px */
+    }
+
+    th, td {
+      border: 1px solid #000;
+      padding: 3px; /* Reduced from 6px */
+      text-align: center;
+    }
+
+    th {
+      background: #cfe2f3;
+      font-weight: bold;
+      font-size: 9px; /* Smaller header font */
+    }
+
+    /* Column width adjustments */
+    th:nth-child(1), td:nth-child(1) { width: 30px; } /* S.No */
+    th:nth-child(2), td:nth-child(2) { width: 120px; text-align: left; } /* Subject */
+    th:nth-child(3), td:nth-child(3) { width: 35px; } /* Theory Max */
+    th:nth-child(4), td:nth-child(4) { width: 35px; } /* Theory Min */
+    th:nth-child(5), td:nth-child(5) { width: 35px; } /* Theory Obt */
+    th:nth-child(6), td:nth-child(6) { width: 35px; } /* Practical Max */
+    th:nth-child(7), td:nth-child(7) { width: 35px; } /* Practical Min */
+    th:nth-child(8), td:nth-child(8) { width: 35px; } /* Practical Obt */
+    th:nth-child(9), td:nth-child(9) { width: 40px; } /* Total Max */
+    th:nth-child(10), td:nth-child(10) { width: 40px; } /* Total Min */
+    th:nth-child(11), td:nth-child(11) { width: 40px; } /* Total Obt */
+    th:nth-child(12), td:nth-child(12) { width: 50px; } /* Result */
+    th:nth-child(13), td:nth-child(13) { width: 45px; font-size: 8px; } /* Source */
+
+    .subject-source {
+      font-size: 8px; /* Reduced from 10px */
+      color: #666;
+      font-style: italic;
+      line-height: 1;
+    }
+
+    .source-regular {
+      color: #27ae60;
+    }
+
+    .source-supply {
+      color: #e74c3c;
+    }
+
+    .total-row {
+      font-weight: bold;
+      background: #e8e8e8;
+      font-size: 9px; /* Smaller font for totals */
+    }
+
+    .footer {
+      margin-top: 10px;
+      padding-top: 5px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .marks-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 10px;
+    }
+
+    .grade-result {
+      font-weight: bold;
+      font-size: 13px;
+      padding: 4px 10px;
+      background: #e8f5e9;
+      border: 1px solid #4caf50;
+      text-align: center;
+      min-width: 150px;
+      line-height: 1.4;
+      height: auto;
+      align-self: flex-start;
+    }
+
+    .grade-failed {
+      background: #ffebee;
+      border: 1px solid #ef5350;
+    }
+
+    .logos {
+      position: absolute;
+      bottom: 170px;
+      left: -100px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo-box {
+      width: 100px;
+      height: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+    }
+
+    .logo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border: none;
+      border-radius: 0;
+    }
+
+    .sign {
+      position: absolute;
+      bottom: 160px;
+      right: 80px;
+      text-align: right;
+      font-weight: bold;
+      font-size: 13px;
+      min-width: 200px;
+    }
+
+    .no-marks {
+      text-align: center;
+      padding: 40px;
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+
+    .no-marks h3 {
+      color: #856404;
+      margin-bottom: 15px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #004080;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      
+      .mark-container {
+        box-shadow: none;
+        border: 2px solid #004080;
+        transform: scale(0.95);
+        transform-origin: top left;
+      }
+      
+      .no-marks, .btn {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="mark-container">
+    {{#if combinedMarks}}
+      
+        
+       
+      
+
+      <div class="details">
+        <p><strong>Registration Number:</strong> {{combinedMarks.registrationNo}}</p>
+        <p><strong>This combined mark sheet is Awarded to:</strong> {{combinedMarks.candidateName}}</p>
+        <p><strong>Course:</strong> {{combinedMarks.course}}</p>
+        <p><strong>Course Duration:</strong> {{combinedMarks.courseDuration}}</p>
+        <p><strong>Training Centre:</strong> {{combinedMarks.institute}}</p>
+        <p><strong>Examination Type:</strong> Regular + Supply Combined</p>
+      </div>
+
+      <table id="marksTable">
+        <thead>
+          <tr>
+            <th rowspan="2">S.No</th>
+            <th rowspan="2">Name of Subject</th>
+            <th colspan="3">Theory Marks</th>
+            <th colspan="3">Practical Marks</th>
+            <th colspan="3">Total Marks</th>
+            <th rowspan="2">Result</th>
+            <th rowspan="2">Source</th>
+          </tr>
+          <tr>
+            <th>Max</th><th>Min</th><th>Obt</th>
+            <th>Max</th><th>Min</th><th>Obt</th>
+            <th>Max</th><th>Min</th><th>Obt</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each combinedMarks.subjects}}
+          <tr>
+            <td>{{add @index 1}}</td>
+            <td>
+              {{this.subject}}
+              {{#if (eq this.source 'supply')}}
+                <div class="subject-source source-supply">(Supply)</div>
+              {{else}}
+                <div class="subject-source source-regular">(Regular)</div>
+              {{/if}}
+            </td>
+            <td>{{this.theoryMax}}</td>
+            <td>{{this.theoryMin}}</td>
+            <td>{{this.theoryObt}}</td>
+            <td>{{this.practicalMax}}</td>
+            <td>{{this.practicalMin}}</td>
+            <td>{{this.practicalObt}}</td>
+            <td>{{this.totalMax}}</td>
+            <td>{{this.totalMin}}</td>
+            <td>{{this.totalObt}}</td>
+            <td class="result-cell">{{this.result}}</td>
+            <td>
+              {{#if (eq this.source 'supply')}}
+                <span style="color: #e74c3c; font-weight: bold;">Supply</span>
+              {{else}}
+                <span style="color: #27ae60; font-weight: bold;">Regular</span>
+              {{/if}}
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td colspan="2"><strong>Total in Words</strong></td>
+            <td colspan="9">{{combinedMarks.totalWords}}</td>
+            <td>{{combinedMarks.overallResult}}</td>
+            <td>Combined</td>
+          </tr>
+          <tr class="total-row">
+            <td colspan="2"><strong>Maximum Total</strong></td>
+            <td colspan="3">{{combinedMarks.maxTotal}}</td>
+            <td colspan="3"><strong>Obtained Total</strong></td>
+            <td colspan="3">{{combinedMarks.obtainedTotal}}</td>
+            <td><strong>Grade</strong></td>
+            <td>{{combinedMarks.grade}}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="footer">
+        <div>
+          <p><strong>Place of Issue:</strong> NETD (HO)</p>
+          <p><strong>Date of Issue:</strong> {{formatDate currentDate}}</p>
+        </div>
+        <div class="grade-result {{#if (eq combinedMarks.overallResult 'FAILED')}}grade-failed{{/if}}">
+          {{combinedMarks.grade}}
+        </div>
+      </div>
+
+      <div class="logos">
+        {{#if departmentLogoPath}}
+          <div class="logo-box">
+            <img src="{{departmentLogoPath}}" alt="Department Logo">
+          </div>
+        {{/if}}
+
+        {{#if logoPath}}
+          <div class="logo-box">
+            <img src="{{logoPath}}" alt="Institution Logo">
+          </div>
+        {{/if}}
+      </div>
+
+      <div class="sign">
+        Chairman/<br>
+        Board of Examiners NETD
+      </div>
+
+    {{else}}
+      <div class="no-marks">
+        <h3>No Combined Marks Available</h3>
+        <p>Combined mark sheet cannot be generated.</p>
+        <a href="/admin/view-bstudent" class="btn">Back to Students</a>
+      </div>
+    {{/if}}
+    <div style="height:40px;"></div>
+  </div>
+
+  <button id="downloadPdf" class="btn" style="text-align: center; margin: 20px auto; display: block;">Download as PDF</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const resultCells = document.querySelectorAll('.result-cell');
+      resultCells.forEach(cell => {
+        if (cell.textContent.trim() === 'PASSED') {
+          cell.style.color = 'green';
+          cell.style.fontWeight = 'bold';
+        } else if (cell.textContent.trim() === 'FAILED') {
+          cell.style.color = 'red';
+          cell.style.fontWeight = 'bold';
+        }
+      });
+    });
+
+    document.getElementById('downloadPdf').addEventListener('click', function() {
+      const element = document.querySelector('.mark-container');
+      const opt = {
+        margin: 0,
+        filename: 'Combined_Marksheet_{{combinedMarks.registrationNo}}.pdf',
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          scrollY: 0,
+          windowWidth: document.body.scrollWidth,
+          windowHeight: document.body.scrollHeight
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'portrait'
+        },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      html2pdf().set(opt).from(element).save();
+    });
+  </script>
+</body>
+</html>

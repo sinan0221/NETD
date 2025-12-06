@@ -1,0 +1,534 @@
+
+ <header>
+<style>
+   /* Professional Dark Blue & Golden Brown Theme */
+:root {
+  --dark-blue: rgba(0,78,137,1);
+  --golden-brown: rgba(176,149,114,1);
+  --white: #ffffff;
+  --light-blue: rgba(0,78,137,0.1);
+  --dark-blue-hover: rgba(0,60,110,1);
+  --golden-brown-hover: rgba(156,129,94,1);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* Navbar Styling */
+.navbar {
+  background: linear-gradient(135deg, var(--dark-blue) 0%, rgba(0,60,110,1) 100%) !important;
+  box-shadow: var(--shadow);
+  padding: 0.8rem 1rem;
+  position: relative;
+  z-index: 1030 !important;
+  border-bottom: 3px solid var(--golden-brown);
+  animation: slideDown 0.6s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.8rem;
+  color: var(--white) !important;
+  display: flex;
+  align-items: center;
+  position: relative;
+  transition: var(--transition);
+}
+
+.navbar-brand::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--golden-brown);
+  transition: width 0.4s ease;
+}
+
+.navbar-brand:hover::after {
+  width: 100%;
+}
+
+.navbar-brand:hover {
+  color: var(--white) !important;
+  transform: translateY(-2px);
+}
+
+.navbar-toggler {
+  border: 1px solid var(--golden-brown);
+  padding: 4px 8px;
+  transition: var(--transition);
+}
+
+.navbar-toggler:hover {
+  background: rgba(176,149,114,0.1);
+  transform: scale(1.05);
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(176,149,114,1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.navbar-nav {
+  margin-left: 30px;
+  position: relative;
+  z-index: 1031;
+}
+
+.nav-item {
+  margin: 0 8px;
+  position: relative;
+}
+
+.nav-link {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 8px 15px !important;
+  border-radius: 6px;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--golden-brown), transparent);
+  transition: left 0.6s ease;
+}
+
+.nav-link:hover::before {
+  left: 100%;
+}
+
+.nav-link:hover, .nav-link:focus {
+  color: var(--white) !important;
+  background-color: rgba(176,149,114,0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.nav-link.active {
+  color: var(--white) !important;
+  background-color: var(--golden-brown);
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(176,149,114,0.3);
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 15px;
+  right: 15px;
+  height: 2px;
+  background-color: var(--white);
+  border-radius: 2px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.nav-link.disabled {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Dropdown Styling */
+.nav-item.dropdown {
+  position: relative;
+  z-index: 10000;
+}
+
+.dropdown-menu {
+  z-index: 10001 !important;
+  position: absolute !important;
+  border: none;
+  box-shadow: var(--shadow-hover);
+  border-radius: 8px;
+  background: var(--dark-blue);
+  min-width: 200px;
+  border: 1px solid var(--golden-brown);
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-menu-dark {
+  background: var(--dark-blue) !important;
+  border: 1px solid var(--golden-brown);
+}
+
+.dropdown-menu-dark .dropdown-item {
+  color: var(--white);
+  font-weight: 500;
+  padding: 10px 16px;
+  transition: var(--transition);
+  border-radius: 6px;
+  margin: 2px 8px;
+  width: calc(100% - 16px);
+}
+
+.dropdown-menu-dark .dropdown-item:hover,
+.dropdown-menu-dark .dropdown-item:focus {
+  background: var(--golden-brown) !important;
+  color: var(--dark-blue) !important;
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(176,149,114,0.3);
+}
+
+.dropdown-menu-dark .dropdown-item:active {
+  background: var(--golden-brown-hover) !important;
+  color: var(--dark-blue) !important;
+}
+
+/* Search Form Styling */
+.d-flex {
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 1030;
+}
+
+.form-control {
+  border: 1px solid var(--golden-brown);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  border-radius: 6px;
+  padding: 8px 15px;
+  transition: var(--transition);
+  min-width: 250px;
+}
+
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.form-control:focus {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--golden-brown);
+  color: var(--white);
+  box-shadow: 0 0 0 0.2rem rgba(176,149,114,0.25);
+  transform: scale(1.02);
+}
+
+.btn-outline-success {
+  color: var(--white);
+  border-color: var(--golden-brown);
+  background: transparent;
+  margin-left: 10px;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-weight: 500;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-outline-success::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: var(--golden-brown);
+  transition: left 0.4s ease;
+  z-index: -1;
+}
+
+.btn-outline-success:hover::before {
+  left: 0;
+}
+
+.btn-outline-success:hover {
+  background-color: transparent;
+  color: var(--dark-blue);
+  border-color: var(--golden-brown);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(176,149,114,0.4);
+}
+
+/* Account Dropdown Styling */
+.dropdown {
+  margin-left: 15px;
+  position: relative;
+  z-index: 1030;
+}
+
+.btn-secondary {
+  background: transparent !important;
+  border: 1px solid var(--golden-brown) !important;
+  color: var(--white) !important;
+  transition: var(--transition);
+}
+
+.btn-secondary:hover {
+  background: rgba(176,149,114,0.1) !important;
+  border-color: var(--golden-brown) !important;
+  color: var(--white) !important;
+  transform: translateY(-2px);
+}
+
+.dropdown-menu {
+  background: var(--dark-blue) !important;
+  border: 1px solid var(--golden-brown) !important;
+  box-shadow: var(--shadow-hover);
+}
+
+.dropdown-item {
+  color: var(--white) !important;
+  transition: var(--transition);
+}
+
+.dropdown-item:hover {
+  background: var(--golden-brown) !important;
+  color: var(--dark-blue) !important;
+  transform: translateX(5px);
+}
+
+/* Animation for navbar items */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.navbar-nav .nav-item {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.navbar-nav .nav-item:nth-child(1) { animation-delay: 0.1s; }
+.navbar-nav .nav-item:nth-child(2) { animation-delay: 0.2s; }
+.navbar-nav .nav-item:nth-child(3) { animation-delay: 0.3s; }
+.navbar-nav .nav-item:nth-child(4) { animation-delay: 0.4s; }
+
+/* Responsive Adjustments */
+@media (max-width: 991.98px) {
+  .navbar-nav {
+    margin-left: 0;
+    margin-top: 15px;
+    margin-bottom: 15px;
+  }
+  
+  .nav-item {
+    margin: 5px 0;
+  }
+  
+  .form-control {
+    min-width: auto;
+    margin-top: 10px;
+  }
+  
+  .d-flex {
+    margin-top: 15px;
+    padding-bottom: 15px;
+  }
+  
+  .dropdown {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+
+  .navbar-collapse {
+    position: relative;
+    z-index: 1030;
+  }
+}
+
+/* Additional animations */
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(176,149,114,0.5); }
+  50% { box-shadow: 0 0 20px rgba(176,149,114,0.8); }
+}
+
+.nav-link.active {
+  animation: glow 3s ease-in-out infinite;
+}
+    </style>
+    {{#unless hideNavbar}}
+      <nav class="navbar navbar-expand-lg bg-body-tertiary" >
+        <div class="container-fluid">
+            
+          <a class="navbar-brand" href="/user">NETD</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02" aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="/user">Home</a>
+              </li>
+              
+              
+              
+               <li class="nav-item">
+                <div class="dropdown">
+  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+    Students
+  </button>
+  <ul class="dropdown-menu custom-dropdown" aria-labelledby="dropdownMenuButton1">
+  <li><a class="dropdown-item" href="/user/view-student">All Students</a></li>
+    <li><a class="dropdown-item" href="/user/pending-students">Pending Students</a></li>
+    
+</ul>
+
+
+</div>
+              </li>
+              
+<li class="nav-item">
+  <div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+     Examinations
+    </button>
+    <ul class="dropdown-menu">
+      <li><a class="dropdown-item" href="/user/add-timetable">Add Time Table</a></li>
+      <li><a class="dropdown-item" href="/user/add-timetable">Add question paper</a></li>
+      <li><a class="dropdown-item" href="/user/view-tbatch">View</a></li>
+    </ul>
+  </div>
+</li>
+
+              <li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle" href="#" id="hallDropdown" role="button" data-bs-toggle="dropdown">
+    Skill Development Certificate
+  </a>
+  <ul class="dropdown-menu dropdown-menu-dark shadow" aria-labelledby="hallDropdown">
+    <li><a class="dropdown-item" href="/user/add-sdstudent">Apply Skill</a></li>
+   
+    
+  </ul>
+</li>
+
+ 
+            </ul>
+            <form action="/user/search-students" method="get" class="d-flex" role="search">
+  <input class="form-control me-2" 
+         type="search" 
+         name="q" 
+         placeholder="Search students..." 
+         aria-label="Search"
+         value="{{searchKeyword}}">
+  <button class="btn btn-outline-success" type="submit">
+    <i class="fas fa-search"></i>
+  </button>
+</form>
+           
+            <div class="dropdown">
+  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+   {{#if user}}
+    {{user.name}}
+   {{else}}
+    Account
+   {{/if}}
+  
+    
+  </button>
+  <ul class="dropdown-menu">
+    {{#if user}}
+    <li><a class="dropdown-item" href="/user/logout">Logout</a></li>
+    {{else}}
+    <li><a class="dropdown-item" href="/user/login">Login</a></li>
+    {{/if}}
+  </ul>
+</div>
+          </div>
+        </div>
+      </nav>
+    
+      {{/unless}}
+    </header>
+    <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchForm = document.querySelector('form[action="/user/search-students"]');
+    if (searchForm) {
+      searchForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        console.log("🔍 Form submitted!");
+        console.log("Action:", this.action);
+        console.log("Method:", this.method);
+        console.log("Search term:", this.querySelector('input[name="q"]').value);
+        
+        // Submit form manually
+        this.submit();
+      });
+    }
+  });
+</script>
+<script>
+  // Toggle fee card
+  document.getElementById('feeLink').addEventListener('click', function(e) {
+    e.preventDefault();
+    const feeCard = document.getElementById('feeCard');
+    feeCard.style.display = feeCard.style.display === 'none' ? 'block' : 'none';
+  });
+
+  // Hide fee card
+  function hideFeeCard() {
+    document.getElementById('feeCard').style.display = 'none';
+  }
+
+  // Copy to clipboard
+  function copyToClipboard() {
+    const input = document.getElementById('paymentLinkInput');
+    input.select();
+    document.execCommand('copy');
+    
+    // Show copied message
+    const btn = event.target.closest('button');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i>';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-success');
+    
+    setTimeout(() => {
+      btn.innerHTML = originalHTML;
+      btn.classList.remove('btn-success');
+      btn.classList.add('btn-primary');
+    }, 2000);
+  }
+
+  // Hide card when clicking outside
+  document.addEventListener('click', function(e) {
+    const feeCard = document.getElementById('feeCard');
+    const feeLink = document.getElementById('feeLink');
+    
+    if (!feeCard.contains(e.target) && e.target !== feeLink && !feeLink.contains(e.target)) {
+      feeCard.style.display = 'none';
+    }
+  });
+</script>

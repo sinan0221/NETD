@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Skill Development Student</title>
+    <link rel="stylesheet" href="/stylesheets/sform.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="left-head">
+                <h2>NETD</h2>
+            </div>
+            <div class="right-head">
+                <a href="/user" class="btn btn-dark">Back</a>
+            </div>
+        </div>
+        
+        <div class="full-width-image-container">
+            <img src="/images/title.jpg" alt="Title" class="full-width-image" />
+        </div>
+        
+        <div class="content">
+            <h2>Skill Development Student Registration Form</h2>
+            <h3>Note: All entries must be filled by the candidate in capital letters</h3>
+            
+            <form action="/user/add-sdstudent" method="POST" enctype="multipart/form-data">
+                <!-- Personal Details -->
+                <h2><i class="fa-solid fa-circle-user"></i> Personal Details</h2>
+                
+                <div class="photo-box">
+                    <label for="imageUpload" class="photo-label">Photo</label>
+                    <input type="file" accept="image/*" id="imageUpload" name="image" onchange="previewPhoto(event)" style="display: none;">
+                    <div class="photo-preview" id="photoPreviewBox">
+                        <img id="previewImage" src="" alt="Photo Preview" style="max-width: 100%; max-height: 100%;">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" name="fullName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Registration No.</label>
+                        <input type="text" name="regNo" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Aadhar Number</label>
+                        <input type="number" name="adharNo" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Skill</label>
+                        
+                            <input type="text" name="skill" required>
+                       
+                    </div>
+                    <div class="form-group">
+                        <label>Mobile Number</label>
+                        <input type="number" name="number" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Blood Group</label>
+                        <select name="bloodGroup" required>
+                            <option value="">Select</option>
+                            <option>A Positive</option>
+                            <option>A Negative</option>
+                            <option>B Positive</option>
+                            <option>B Negative</option>
+                            <option>AB Positive</option>
+                            <option>AB Negative</option>
+                            <option>O Positive</option>
+                            <option>O Negative</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="date" name="dob" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Course Start Date</label>
+                        <input type="date" name="courseStartDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Course End Date</label>
+                        <input type="date" name="courseEndDate" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Address</label>
+                        <input type="text" name="address" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Center Name</label>
+                        <input type="text" name="centreName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Issue Date</label>
+                        <input type="date" name="issueDate" required>
+                    </div>
+                </div>
+                
+                <br>
+                <input class="submit-btn" type="submit" value="Submit">
+                <button type="button" id="downloadPdf" class="btn btn-danger">Download as PDF</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Photo preview functionality
+        function previewPhoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById("previewImage").src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        // Trigger file input when clicking the preview box
+        document.getElementById('photoPreviewBox').addEventListener('click', function() {
+            document.getElementById('imageUpload').click();
+        });
+        
+        // PDF download functionality
+        document.getElementById("downloadPdf").addEventListener("click", function () {
+            const { jsPDF } = window.jspdf;
+            
+            let formElement = document.querySelector(".container"); // main form wrapper
+            
+            html2canvas(formElement, { scale: 2 }).then(canvas => {
+                const imgData = canvas.toDataURL("image/png");
+                const pdf = new jsPDF("p", "mm", "a4");
+                
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                
+                const imgWidth = pageWidth;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                
+                let position = 0;
+                pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+                
+                pdf.save("sd-student-form.pdf");
+            });
+        });
+    </script>
+</body>
+</html>

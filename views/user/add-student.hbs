@@ -1,0 +1,734 @@
+{{!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Students</title>
+    <link rel="stylesheet" href="/stylesheets/sform.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   
+</head>
+<body>
+    <div class="container">
+        <div class="header" >
+            <div class="left-head">
+                <h2>NETD</h2>
+            </div>
+            <div class="right-head">
+                <a href="/user" class="btn btn-dark"> Back</a>
+            </div>
+        </div>
+        <div class="full-width-image-container">
+  <img src="/images/title.jpg" alt="Title" class="full-width-image" />
+</div>
+        <div class="content">
+            <h2>Candidate Admission-cum-Examination Form</h2>
+            <h3>note:All entries must be filled by the candidate in captal letters</h3>
+            
+            <form action="/user/add-student" method="POST" enctype="multipart/form-data">
+                 <!-- Academic Details -->
+      <h2><i class="fa-solid fa-building-columns"></i> Academic Details</h2>
+       <div class="photo-box">
+  <label for="imageUpload" class="photo-label">Photo</label>
+  <input type="file" accept="image/*" id="imageUpload" name="image" onchange="previewPhoto(event)" style="display: none;">
+  <div class="photo-preview" id="photoPreviewBox">
+    <img id="previewImage" src="" alt="Photo Preview" style="max-width: 100%; max-height: 100%;">
+  </div>
+</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Admission Year</label>
+          <input type="number" name="admissionYear">
+        </div>
+        <div class="form-group">
+          <label>Mode</label>
+          <select name="mode">
+            <option>select</option>
+            <option>Regular</option>
+            <option>Distance</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>ATC (Centre)</label>
+          <input type="text" name="centreId" id="centreId" value="{{centreId}}">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Course Name</label>
+          <input type="text" name="courseName">
+        </div>
+        <div class="form-group">
+          <label>Course Code</label>
+          <input type="text" name="courseCode">
+        </div>
+        <div class="form-group">
+          <label>Short Name</label>
+          <input type="text" name="shortName">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Course Duration</label>
+          <input type="text" name="courseDuration">
+        </div>
+        <div class="form-group">
+          <label>Medium</label>
+          <input type="text" name="medium">
+        </div>
+       <div class="form-group">
+            <label for="batchId">Admission Batch</label>
+<select name="batchId" id="batchId" required>
+  <option value="">Select</option>
+  {{#each batches}}
+    <option value="{{this._id}}">{{this.batchName}} ({{this.batchId}})</option>
+  {{/each}}
+</select>
+
+
+          
+        </div>
+      </div
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Course Department</label>
+          <select name="courseDepartmentName">
+            <option>select</option>
+            <option>Department of Paramedical Education</option>
+            <option>Mobile Phone Technology</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Personal Details -->
+      <h2><i class="fa-solid fa-circle-user"></i> Personal Details</h2>
+     
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Student Reg. No.</label>
+          <input type="text" name="regNo">
+        </div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" name="fullName">
+        </div>
+      
+
+
+        <div class="form-group">
+          <label>Mother Name</label>
+          <input type="text" name="motherName">
+        </div>
+      </div>
+       
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Father Name</label>
+          <input type="text" name="fatherName">
+        </div>
+        <div class="form-group">
+          <label>Father Occupation</label>
+          <input type="text" name="fatherOcc">
+        </div>
+        <div class="form-group">
+          <label>Candidate Occupation</label>
+          <input type="text" name="candOcc">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Gender</label>
+          <select name="gender">
+            <option>select</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date of Birth</label>
+          <input type="date" name="dob">
+        </div>
+        <div class="form-group">
+          <label>Contact Number</label>
+          <input type="number" name="number">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Emergency Number</label>
+          <input type="number" name="emerNum">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="email">
+        </div>
+        <div class="form-group">
+          <label>BPL</label>
+          <select name="bpl">
+            <option>select</option>
+            <option>Yes</option>
+            <option>No</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>PH</label>
+          <select name="ph">
+            <option>select</option>
+            <option>Yes</option>
+            <option>No</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Caste Category</label>
+          <select name="caste">
+            <option>select category</option>
+            <option>Gen</option>
+            <option>OBC</option>
+            <option>SC</option>
+            <option>ST</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Aadhar Number</label>
+          <input type="number" name="adharNo">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Address</label>
+          <input type="text" name="address">
+        </div>
+        <div class="form-group">
+          <label>Pin Code</label>
+          <input type="number" name="pinCode">
+        </div>
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" name="city">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>District</label>
+          <input type="text" name="district">
+        </div>
+        <div class="form-group">
+          <label>State</label>
+          <input type="text" name="state">
+        </div>
+        <div class="form-group">
+          <label>Nationality</label>
+          <input type="text" name="nationality">
+        </div>
+      </div>
+
+ 
+
+      <!-- Qualification Details -->
+      <h2><i class="fa-solid fa-medal"></i> Qualification Details</h2>
+      <div class="table-container">
+        <table class="qualification-table">
+  <thead>
+    <tr>
+      <th>Education</th>
+      <th>Max Marks</th>
+      <th>Min Marks</th>
+      <th>Obtained Marks</th>
+      <th>Grade-%</th>
+      <th>Year</th>
+      <th>Board/University/Organisation</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="qualificationBody">
+    <tr>
+      <td>
+        <select name="education[]">
+          <option value="">Select</option>
+          <option value="10th">10th Standard</option>
+          <option value="12th">12th Standard</option>
+          <option value="diploma">Diploma</option>
+          <option value="ug">Undergraduate</option>
+          <option value="pg">Postgraduate</option>
+        </select>
+      </td>
+      <td><input type="number" name="maxMarks[]" placeholder="0"></td>
+      <td><input type="number" name="minMarks[]" placeholder="0"></td>
+      <td><input type="number" name="obtainedMarks[]" placeholder="Obtained"></td>
+      <td><input type="text" name="grade[]" placeholder="A/90%"></td>
+      <td><input type="number" name="year[]" placeholder="YYYY"></td>
+      <td><input type="text" name="board[]" placeholder="Board name"></td>
+      <td>
+        <button type="button" class="add-row-btn">
+          <i class="fas fa-plus-circle"></i> Add
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+      </div>
+
+      <br>
+      <input class="submit-btn" type="submit" value="Submit">
+      <button type="button" id="downloadPdf" class="btn btn-danger">Download as PDF</button>
+
+    </form>
+            
+            
+            
+        </div>
+    </div>
+    <script>
+document.addEventListener("click", function (e) {
+  if (e.target.closest(".add-row-btn")) {
+    let tbody = document.getElementById("qualificationBody");
+    let newRow = tbody.rows[0].cloneNode(true);
+
+    // clear inputs
+    newRow.querySelectorAll("input, select").forEach(el => el.value = "");
+
+    // change button to remove
+    let actionCell = newRow.querySelector("td:last-child");
+    actionCell.innerHTML = `
+      <button type="button" class="remove-row-btn">
+        <i class="fas fa-minus-circle"></i> Remove
+      </button>
+    `;
+
+    tbody.appendChild(newRow);
+  }
+
+  if (e.target.closest(".remove-row-btn")) {
+    let row = e.target.closest("tr");
+    row.remove();
+  }
+});
+function previewPhoto(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById("previewImage").src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+// Trigger file input when clicking the preview box
+document.getElementById('photoPreviewBox').addEventListener('click', function() {
+  document.getElementById('imageUpload').click();
+});
+
+</script>
+<script>
+document.getElementById("downloadPdf").addEventListener("click", function () {
+  const { jsPDF } = window.jspdf;
+
+  let formElement = document.querySelector(".container"); // main form wrapper
+
+  html2canvas(formElement, { scale: 2 }).then(canvas => {
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const imgWidth = pageWidth;
+    const imgHeight = canvas.height * imgWidth / canvas.width;
+
+    let position = 0;
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+
+    pdf.save("form.pdf");
+  });
+});
+</script>
+
+
+   
+</body>
+</html> --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Students</title>
+    <link rel="stylesheet" href="/stylesheets/sform.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   
+</head>
+<body>
+    <div class="container">
+        <div class="header" >
+            <div class="left-head">
+                <h2>NETD</h2>
+            </div>
+            <div class="right-head">
+                <a href="/user" class="btn btn-dark"> Back</a>
+            </div>
+        </div>
+        <div class="full-width-image-container">
+  <img src="/images/title.jpg" alt="Title" class="full-width-image" />
+</div>
+        <div class="content">
+            <h2>Candidate Admission-cum-Examination Form</h2>
+            <h3>note:All entries must be filled by the candidate in captal letters</h3>
+            
+            <form action="/user/add-student" method="POST" enctype="multipart/form-data">
+                 <!-- Academic Details -->
+      <h2><i class="fa-solid fa-building-columns"></i> Academic Details</h2>
+       <div class="photo-box">
+  <label for="imageUpload" class="photo-label">Photo</label>
+  <input type="file" accept="image/*" id="imageUpload" name="image" onchange="previewPhoto(event)" style="display: none;">
+  <div class="photo-preview" id="photoPreviewBox">
+    <img id="previewImage" src="" alt="Photo Preview" style="max-width: 100%; max-height: 100%;">
+  </div>
+</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Admission Year</label>
+          <input type="number" name="admissionYear">
+        </div>
+        <div class="form-group">
+          <label>Mode</label>
+          <select name="mode">
+            <option>select</option>
+            <option>Regular</option>
+            <option>Distance</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>ATC (Centre)</label>
+           <input type="text" name="centreId" id="centreId" value="{{centreId}}" >
+        </div>
+        
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Course Name</label>
+          <input type="text" name="courseName">
+        </div>
+        <div class="form-group">
+          <label>Course Code</label>
+          <input type="text" name="courseCode">
+        </div>
+        <div class="form-group">
+          <label>Short Name</label>
+          <input type="text" name="shortName">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Course Duration</label>
+          <input type="text" name="courseDuration">
+        </div>
+        <div class="form-group">
+          <label>Medium</label>
+          <input type="text" name="medium">
+        </div>
+        <div class="form-group">
+            <label for="batchId">Admission Batch</label>
+<select name="batchId" id="batchId" required>
+  <option value="">Select</option>
+  {{#each batches}}
+    <option value="{{this._id}}">{{this.batchName}} ({{this.batchId}})</option>
+  {{/each}}
+</select>
+
+
+          
+        </div>
+      </div>
+
+      <div class="form-row">
+  <div class="form-group">
+    <label>Course Department</label>
+    <select name="department" id="department">
+      {{#if centre.department}}
+        <option value="{{centre.department}}" selected>{{centre.department}}</option>
+      {{else}}
+        <option value="">Select Department</option>
+      {{/if}}
+      <option>Department of Paramedical Education</option>
+      <option>Mobile Phone Technology</option>
+    </select>
+  </div>
+</div>
+
+
+      <!-- Personal Details -->
+      <h2><i class="fa-solid fa-circle-user"></i> Personal Details</h2>
+     
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Student Reg. No.</label>
+          <input type="text" name="regNo">
+        </div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" name="fullName">
+        </div>
+      
+
+
+        <div class="form-group">
+          <label>Mother Name</label>
+          <input type="text" name="motherName">
+        </div>
+      </div>
+       
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Father Name</label>
+          <input type="text" name="fatherName">
+        </div>
+        <div class="form-group">
+          <label>Father Occupation</label>
+          <input type="text" name="fatherOcc">
+        </div>
+        <div class="form-group">
+          <label>Candidate Occupation</label>
+          <input type="text" name="candOcc">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Gender</label>
+          <select name="gender">
+            <option>select</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date of Birth</label>
+          <input type="date" name="dob">
+        </div>
+        <div class="form-group">
+          <label>Contact Number</label>
+          <input type="number" name="number">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Emergency Number</label>
+          <input type="number" name="emerNum">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="email">
+        </div>
+        <div class="form-group">
+          <label>BPL</label>
+          <select name="bpl">
+            <option>select</option>
+            <option>Yes</option>
+            <option>No</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>PH</label>
+          <select name="ph">
+            <option>select</option>
+            <option>Yes</option>
+            <option>No</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Caste Category</label>
+          <select name="caste">
+            <option>select category</option>
+            <option>Gen</option>
+            <option>OBC</option>
+            <option>SC</option>
+            <option>ST</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Aadhar Number</label>
+          <input type="number" name="adharNo">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Address</label>
+          <input type="text" name="address">
+        </div>
+        <div class="form-group">
+          <label>Pin Code</label>
+          <input type="number" name="pinCode">
+        </div>
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" name="city">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>District</label>
+          <input type="text" name="district">
+        </div>
+        <div class="form-group">
+          <label>State</label>
+          <input type="text" name="state">
+        </div>
+        <div class="form-group">
+          <label>Nationality</label>
+          <input type="text" name="nationality">
+        </div>
+      </div>
+
+ 
+
+      <!-- Qualification Details -->
+      <h2><i class="fa-solid fa-medal"></i> Qualification Details</h2>
+      <div class="table-container">
+        <table class="qualification-table">
+  <thead>
+    <tr>
+      <th>Education</th>
+      <th>Max Marks</th>
+      <th>Min Marks</th>
+      <th>Obtained Marks</th>
+      <th>Grade-%</th>
+      <th>Year</th>
+      <th>Board/University/Organisation</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="qualificationBody">
+    <tr>
+      <td>
+        <select name="education[]">
+          <option value="">Select</option>
+          <option value="10th">10th Standard</option>
+          <option value="12th">12th Standard</option>
+          <option value="diploma">Diploma</option>
+          <option value="ug">Undergraduate</option>
+          <option value="pg">Postgraduate</option>
+        </select>
+      </td>
+      <td><input type="number" name="maxMarks[]" placeholder="0"></td>
+      <td><input type="number" name="minMarks[]" placeholder="0"></td>
+      <td><input type="number" name="obtainedMarks[]" placeholder="Obtained"></td>
+      <td><input type="text" name="grade[]" placeholder="A/90%"></td>
+      <td><input type="number" name="year[]" placeholder="YYYY"></td>
+      <td><input type="text" name="board[]" placeholder="Board name"></td>
+      <td>
+        <button type="button" class="add-row-btn">
+          <i class="fas fa-plus-circle"></i> Add
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+      </div>
+
+      <br>
+      <input class="submit-btn" type="submit" value="Submit">
+      <button type="button" id="downloadPdf" class="btn btn-danger">Download as PDF</button>
+
+    </form>
+            
+            
+            
+        </div>
+    </div>
+    <script>
+document.addEventListener("click", function (e) {
+  if (e.target.closest(".add-row-btn")) {
+    let tbody = document.getElementById("qualificationBody");
+    let newRow = tbody.rows[0].cloneNode(true);
+
+    // clear inputs
+    newRow.querySelectorAll("input, select").forEach(el => el.value = "");
+
+    // change button to remove
+    let actionCell = newRow.querySelector("td:last-child");
+    actionCell.innerHTML = `
+      <button type="button" class="remove-row-btn">
+        <i class="fas fa-minus-circle"></i> Remove
+      </button>
+    `;
+
+    tbody.appendChild(newRow);
+  }
+
+  if (e.target.closest(".remove-row-btn")) {
+    let row = e.target.closest("tr");
+    row.remove();
+  }
+});
+function previewPhoto(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById("previewImage").src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+// Trigger file input when clicking the preview box
+document.getElementById('photoPreviewBox').addEventListener('click', function() {
+  document.getElementById('imageUpload').click();
+});
+
+</script>
+<script>
+document.getElementById("downloadPdf").addEventListener("click", function () {
+  const { jsPDF } = window.jspdf;
+
+  let formElement = document.querySelector(".container"); // main form wrapper
+
+  html2canvas(formElement, { scale: 2 }).then(canvas => {
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const imgWidth = pageWidth;
+    const imgHeight = canvas.height * imgWidth / canvas.width;
+
+    let position = 0;
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+
+    pdf.save("form.pdf");
+  });
+});
+</script>
+
+
+   
+</body>
+</html>

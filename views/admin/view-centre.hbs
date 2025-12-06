@@ -1,0 +1,552 @@
+<section>
+
+<style>
+/* Professional Dark Blue & Golden Brown Theme for Table */
+:root {
+  --dark-blue: rgba(0,78,137,1);
+  --golden-brown: rgba(176,149,114,1);
+  --white: #ffffff;
+  --light-blue: rgba(0,78,137,0.1);
+  --dark-blue-hover: rgba(0,60,110,1);
+  --golden-brown-hover: rgba(156,129,94,1);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* ====== GLOBAL ENHANCEMENTS ====== */
+.container {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  margin-top: 20px;
+  position: relative;
+  z-index: 1; /* Lower than navbar but higher than page content */
+}
+.h2{
+  
+}
+
+.table {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(0,78,137,0.1);
+  position: relative;
+  z-index: 1;
+}
+
+/* ====== HEADER STYLING ====== */
+.table thead th {
+  background: linear-gradient(135deg, var(--dark-blue) 0%, var(--dark-blue-hover) 100%);
+  color: var(--white);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 16px 12px;
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.table thead th::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--golden-brown), transparent);
+  transition: left 0.6s ease;
+}
+
+.table thead th:hover::before {
+  left: 100%;
+}
+
+.table thead th:first-child {
+  border-top-left-radius: 10px;
+}
+
+.table thead th:last-child {
+  border-top-right-radius: 10px;
+}
+
+/* ====== TABLE ROW STYLING ====== */
+.table tbody tr {
+  transition: var(--transition);
+  border-bottom: 1px solid rgba(0,78,137,0.1);
+}
+
+.table tbody tr:hover {
+  background-color: rgba(0,78,137,0.03);
+}
+
+.table tbody td {
+  padding: 14px 12px;
+  vertical-align: middle;
+  border: none;
+  font-size: 14px;
+  color: #495057;
+}
+
+/* ====== ACTION CELL STYLING ====== */
+.action-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  justify-content: center;
+  position: relative;
+  z-index: 100; /* Higher z-index for action buttons */
+}
+
+/* ====== BUTTON BASE STYLES ====== */
+.action-cell .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: var(--transition);
+  font-weight: 500;
+  border: 1px solid transparent;
+  position: relative;
+  z-index: 101; /* Even higher for individual buttons */
+}
+
+/* ====== LOGO BUTTONS STYLING ====== */
+.btn-logo-institution {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  color: var(--white) !important;
+  border: none;
+  font-size: 11px !important;
+  padding: 8px 12px !important;
+  margin: 2px;
+  box-shadow: 0 2px 4px rgba(0,78,137,0.3);
+}
+
+.btn-logo-institution:hover {
+  background: linear-gradient(135deg, var(--dark-blue-hover), var(--dark-blue));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,78,137,0.4);
+  color: var(--white) !important;
+}
+
+.btn-logo-department {
+  background: linear-gradient(135deg, var(--golden-brown), var(--golden-brown-hover));
+  color: var(--white) !important;
+  border: none;
+  font-size: 11px !important;
+  padding: 8px 12px !important;
+  margin: 2px;
+  box-shadow: 0 2px 4px rgba(176,149,114,0.3);
+}
+
+.btn-logo-department:hover {
+  background: linear-gradient(135deg, var(--golden-brown-hover), var(--golden-brown));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(176,149,114,0.4);
+  color: var(--white) !important;
+}
+
+/* ====== BATCHES BUTTON ====== */
+.btn-outline-success.btn-action {
+  color: var(--dark-blue);
+  border-color: var(--dark-blue);
+  background: transparent;
+}
+
+.btn-outline-success.btn-action:hover {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  color: var(--white);
+  border-color: var(--dark-blue);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,78,137,0.3);
+}
+
+/* ====== EDIT BUTTON ====== */
+.btn-outline-info.btn-action {
+  color: var(--dark-blue);
+  border-color: var(--dark-blue);
+  background: transparent;
+  padding: 6px 10px !important;
+}
+
+.btn-outline-info.btn-action:hover {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  color: var(--white);
+  border-color: var(--dark-blue);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,78,137,0.3);
+}
+
+/* ====== DELETE BUTTON ====== */
+.btn-outline-danger.btn-action {
+  color: #dc3545;
+  border-color: #dc3545;
+  background: transparent;
+  padding: 6px 10px !important;
+}
+
+.btn-outline-danger.btn-action:hover {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  border-color: #dc3545;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* ====== EXCEL BUTTON ====== */
+.btn-success {
+  background: linear-gradient(135deg, var(--golden-brown), var(--golden-brown-hover));
+  border: none;
+  color: var(--white);
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, var(--golden-brown-hover), var(--golden-brown));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(176,149,114,0.3);
+  color: var(--white);
+}
+
+/* ====== ICON SPACING ====== */
+.btn i {
+  margin-right: 4px;
+  font-size: 11px;
+}
+
+/* ====== HEADER ACTION BUTTONS ====== */
+.row.mb-3 .btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 13px;
+  transition: var(--transition);
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 100;
+}
+
+.row.mb-3 .btn-danger {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  color: white;
+}
+
+.row.mb-3 .btn-success {
+  background: linear-gradient(135deg, var(--golden-brown), var(--golden-brown-hover));
+  color: white;
+}
+
+.row.mb-3 .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  color: white;
+}
+
+/* ====== IMAGE STYLING ====== */
+td img {
+  height: 50px;
+  width: 50px;
+  border-radius: 8px;
+  border: 2px solid #e9ecef;
+  transition: var(--transition);
+  object-fit: cover;
+}
+
+td img:hover {
+  transform: scale(1.1);
+  border-color: var(--golden-brown);
+  box-shadow: 0 4px 8px rgba(176,149,114,0.3);
+}
+
+.action-btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 130px;
+  position: relative;
+  z-index: 100;
+}
+
+.action-btn-group .btn-sm {
+  flex: 1 1 calc(50% - 6px);
+  white-space: nowrap;
+  text-align: center;
+  position: relative;
+  z-index: 101;
+}
+
+/* ====== DEPARTMENT LOGOS CONTAINER ====== */
+td > div {
+  display: inline-block;
+  text-align: center;
+  margin-right: 12px;
+  transition: var(--transition);
+}
+
+td > div:hover {
+  transform: translateY(-2px);
+}
+
+td > div small {
+  font-size: 10px;
+  color: #6c757d;
+  margin-top: 4px;
+  display: block;
+}
+
+/* ====== TEXT MUTED ENHANCEMENT ====== */
+.text-muted {
+  color: #95a5a6 !important;
+  font-style: italic;
+}
+
+/* ====== LOGOS COLUMN STYLING ====== */
+td .d-inline {
+  display: flex !important;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  position: relative;
+  z-index: 100;
+}
+
+/* ====== GRADE LINK STYLING ====== */
+a[onclick*="showAllGradeInstructions"] {
+  color: var(--dark-blue);
+  text-decoration: none;
+  font-weight: 600;
+  transition: var(--transition);
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(0,78,137,0.1);
+  display: inline-block;
+  margin-top: 4px;
+  position: relative;
+  z-index: 100;
+}
+
+a[onclick*="showAllGradeInstructions"]:hover {
+  color: var(--white);
+  background: var(--dark-blue);
+  transform: translateY(-1px);
+}
+
+/* ====== RESPONSIVE ADJUSTMENTS ====== */
+@media (max-width: 768px) {
+  .action-cell {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 4px;
+  }
+  
+  .action-cell .btn {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+  
+  td .d-inline {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .btn-logo-institution,
+  .btn-logo-department {
+    font-size: 10px !important;
+    padding: 6px 10px !important;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ====== ANIMATIONS - FIXED ====== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.table tbody tr {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+/* ====== CRITICAL Z-INDEX FIX FOR DROPDOWN CONFLICTS ====== */
+/* Ensure table content stays above navbar dropdown */
+.container {
+  z-index: 1000;
+}
+
+.table {
+  z-index: 1001;
+}
+
+.action-cell {
+  z-index: 1002;
+}
+
+.action-cell .btn {
+  z-index: 1003;
+}
+
+/* Override any navbar dropdown that might be overlapping */
+.navbar .dropdown-menu {
+  z-index: 1030 !important; /* Keep dropdown high but table buttons higher */
+}
+
+/* Ensure table buttons are always clickable */
+.action-btn-group,
+.action-btn-group .btn {
+  z-index: 1004 !important;
+  pointer-events: auto !important;
+}
+
+/* Remove transform animations that break layout */
+.table tbody tr:hover {
+  transform: none;
+}
+</style>
+<div class="container">
+  <div class="row mb-3">
+     <h2>Training Center Management Portal </h2>
+    <div class="col d-flex justify-content-end">
+     
+      <a href="/admin/add-center" class="btn btn-danger btn-sm">Add Center</a>
+      
+    </div>
+  </div>
+
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">Name</th>
+        <th scope="col">Director</th>
+         <th>Institution Logo</th>
+      <th>Department Logos</th>
+      <th>Add Logos</th>
+        <th scope="col">Action</th>
+
+      </tr>
+    </thead>
+    <tbody>
+      {{#each centers}}
+      <tr>
+        <th scope="row">
+     {{this.centreId}}
+     <br>
+          <a href="javascript:void(0);" onclick="showAllGradeInstructions('{{this.grade}}','{{this.stars}}')" 
+  >
+  {{this.grade}} {{this.stars}}
+</a>
+        </th>
+        <td>{{this.centreName}}
+           
+
+        </td>
+        <td>{{this.centreDirector}}</td>
+         <td>
+        {{#if this.institutionLogo}}
+          <img src="{{this.institutionLogo}}" alt="Institution Logo" style="height:50px;width:50px;border-radius:6px;border:1px solid #ccc;">
+        {{else}}
+          <span class="text-muted">No Logo</span>
+        {{/if}}
+      </td>
+
+      {{!-- 🟩 Department Logos --}}
+      <td>
+       {{#if this.departmentLogos}}
+  {{#each this.departmentLogos}}
+    <div style="display:inline-block;text-align:center;margin-right:8px;">
+      <img src="{{this}}" 
+           alt="{{@key}} Logo" 
+           style="height:40px;width:40px;border-radius:5px;border:1px solid #ccc;"><br>
+      <small>{{@key}}</small>
+    </div>
+  {{/each}}
+{{else}}
+  <span class="text-muted">No Dept Logos</span>
+{{/if}}
+
+      </td>
+      <td>
+  <div class="d-inline">
+    <a href="/admin/add-inlogo" class="btn btn-logo-institution">
+      <i class="fas fa-university"></i> Institution
+    </a>
+   <a href="/admin/add-deplogo?centreId={{this._id}}&department={{this.department}}"
+   class="btn btn-logo-department btn-sm btn-outline-primary">
+   <i class="fas fa-building"></i> Department
+</a>
+
+  </div>
+</td>
+        
+     <td class="action-cell">
+
+
+<div class="action-btn-group">
+  <a href="/admin/view-cbatch/{{this._id}}" class="btn btn-outline-success btn-sm btn-action">
+    Batches
+  </a>
+   <a href="/admin/export-students-excel/{{this._id}}" class="btn btn-success btn-sm">
+  <i class="fa fa-file-excel"></i> 
+</a>
+  <a href="/admin/edit-center/{{this._id}}" class="btn btn-outline-info btn-sm btn-action">
+    <i class="fa fa-edit"></i>
+  </a>
+  <a href="/admin/delete-center/{{this._id}}" class="btn btn-outline-danger btn-sm btn-action">
+    <i class="fas fa-trash"></i>
+  </a>
+ 
+
+</div>
+</td>
+
+
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+<script>
+function showAllGradeInstructions() {
+    let message = `📌 Grade & Star Instructions:\n\n` +
+    
+    `1) D Grade ⭐\n` +
+    `- If a student is not registered within 6 months.\n` +
+    `- Not eligible to conduct other government or semi-government courses, nor for bonuses.\n\n` +
+
+    `2) C Grade ⭐⭐\n` +
+    `- Register 10 to 25 students within 6 months.\n` +
+    `- Not eligible to conduct other government or semi-government courses, nor for bonuses.\n\n` +
+
+    `3) B Grade ⭐⭐⭐\n` +
+    `- Register 26 to 50 students within 1 year.\n` +
+    `- Eligible to conduct other government or semi-government courses according to allotment, but not eligible for bonuses.\n\n` +
+
+    `4) A Grade ⭐⭐⭐⭐\n` +
+    `- Register 51 to 90 students within 1 year.\n` +
+    `- Eligible to conduct other government or semi-government courses, but not eligible for bonuses.\n\n` +
+
+    `5) A+ Grade ⭐⭐⭐⭐⭐\n` +
+    `- Register more than 91 students within 1 year.\n` +
+    `- Eligible to conduct other government or semi-government courses, and also eligible for bonuses.\n`;
+
+    alert(message);
+}
+</script>
+
+</section>

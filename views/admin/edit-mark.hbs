@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Marks - {{student.name}}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+ <style>
+    /* RESET AND BASE STYLES */
+    body {
+        background-color: #f5f7fa;
+        font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        color: #2d3748;
+        line-height: 1.6;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* MAIN CONTAINER */
+    .container-fluid.py-4 {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+    }
+
+    /* FORM CARD */
+    .form-card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        padding: 30px;
+        margin-bottom: 30px;
+        border: 1px solid #e2e8f0;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .form-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+    }
+
+    /* HEADER SECTION */
+    .d-flex.justify-content-between.align-items-center.mb-4 {
+        background: linear-gradient(to right, #4f46e5, #7c3aed);
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 30px !important;
+        color: white;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);
+    }
+
+    .d-flex.justify-content-between.align-items-center.mb-4 h2 {
+        color: white !important;
+        margin-bottom: 8px;
+        font-weight: 700;
+        font-size: 1.8rem;
+    }
+
+    .d-flex.justify-content-between.align-items-center.mb-4 .text-muted {
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-size: 1rem;
+    }
+
+    /* BUTTONS IN HEADER */
+    .btn-outline-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white !important;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-info {
+        background: linear-gradient(to right, #0ea5e9, #3b82f6);
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        color: white !important;
+        transition: all 0.3s ease;
+    }
+
+    .btn-info:hover {
+        background: linear-gradient(to right, #0284c7, #2563eb);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(14, 165, 233, 0.3);
+    }
+
+    /* FORM INPUTS - FIXED TEXT COLOR */
+    .form-control {
+        background-color: #ffffff !important;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px 15px;
+        font-size: 0.95rem;
+        color: #2d3748 !important;
+        transition: all 0.3s ease;
+        height: auto;
+    }
+
+    .form-control:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        outline: none;
+    }
+
+    .form-control::placeholder {
+        color: #94a3b8 !important;
+        opacity: 1;
+    }
+
+    .form-control[readonly] {
+        background-color: #f8fafc !important;
+        color: #64748b !important;
+        border-color: #cbd5e0;
+        cursor: not-allowed;
+    }
+
+    /* MARKS INPUT SPECIFIC */
+    .marks-input {
+        width: 100%;
+        max-width: 120px;
+        text-align: center;
+        padding: 10px 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        background: #ffffff !important;
+        font-weight: 600;
+        color: #1e293b !important;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+
+    .marks-input:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        transform: scale(1.02);
+    }
+
+    .marks-input[readonly] {
+        background-color: #f1f5f9 !important;
+        color: #475569 !important;
+        font-weight: 700;
+        border-color: #cbd5e0;
+    }
+
+    /* FORM LABELS */
+    .form-label {
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        display: block;
+    }
+
+    /* SUBJECT ROWS */
+    .subject-row {
+        background: linear-gradient(to right, #ffffff, #f8fafc);
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 25px;
+        border: 1px solid #e2e8f0;
+        border-left: 5px solid #4f46e5;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .subject-row:hover {
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        transform: translateY(-3px);
+    }
+
+    .subject-header {
+        background: linear-gradient(135deg, #edf2f7, #e2e8f0);
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #cbd5e0;
+    }
+
+    .subject-header h5 {
+        color: #2d3748 !important;
+        font-weight: 700;
+        margin: 0;
+        font-size: 1.15rem;
+    }
+
+    /* RESULT BADGES */
+    .result-badge {
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 6px 16px;
+        border-radius: 20px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .result-passed {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white !important;
+        border: none;
+    }
+
+    .result-failed {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white !important;
+        border: none;
+    }
+
+    /* FORM SELECT */
+    .form-select {
+        background-color: #ffffff !important;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px 15px;
+        font-size: 0.95rem;
+        color: #2d3748 !important;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%234a5568' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    }
+
+    .form-select:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    /* CALCULATE BUTTON */
+    .btn-calculate {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        color: white !important;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
+    }
+
+    .btn-calculate:hover {
+        background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+        color: white !important;
+    }
+
+    /* ACTION BUTTONS */
+    .btn-outline-secondary.action-cancel {
+        border: 2px solid #94a3b8;
+        color: #64748b !important;
+        padding: 10px 20px;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-secondary.action-cancel:hover {
+        background-color: #f1f5f9;
+        border-color: #64748b;
+        color: #475569 !important;
+    }
+
+    .btn-outline-warning {
+        border: 2px solid #f59e0b;
+        color: #d97706 !important;
+        padding: 10px 20px;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-warning:hover {
+        background-color: #fef3c7;
+        border-color: #f59e0b;
+        color: #b45309 !important;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #10b981, #059669);
+        border: none;
+        padding: 12px 28px;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        color: white !important;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-success:hover {
+        background: linear-gradient(135deg, #059669, #047857);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        color: white !important;
+    }
+
+    /* ALERTS */
+    .alert {
+        border-radius: 10px;
+        border: none;
+        padding: 18px 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-left: 5px solid;
+    }
+
+    .alert-success {
+        background: linear-gradient(to right, #d1fae5, #a7f3d0);
+        color: #065f46 !important;
+        border-left-color: #10b981;
+    }
+
+    .alert-danger {
+        background: linear-gradient(to right, #fee2e2, #fecaca);
+        color: #991b1b !important;
+        border-left-color: #ef4444;
+    }
+
+    .alert-warning {
+        background: linear-gradient(to right, #fef3c7, #fde68a);
+        color: #92400e !important;
+        border-left-color: #f59e0b;
+    }
+
+    /* TYPOGRAPHY */
+    h4.mb-0 {
+        color: #1e293b !important;
+        font-weight: 700;
+        font-size: 1.4rem;
+        margin-bottom: 0;
+    }
+
+    /* ICONS */
+    .fa-edit.text-primary {
+        color: #8b5cf6 !important;
+    }
+
+    .fa-book {
+        color: #7c3aed;
+    }
+
+    .fa-calculator {
+        color: white !important;
+    }
+
+    .fa-eye {
+        color: white !important;
+    }
+
+    .fa-save {
+        color: white !important;
+    }
+
+    .fa-redo {
+        color: #d97706 !important;
+    }
+
+    .fa-times {
+        color: #64748b !important;
+    }
+
+    .fa-arrow-left {
+        color: white !important;
+    }
+
+    .fa-plus-circle {
+        color: white !important;
+    }
+
+    /* GRID SPACING */
+    .row.g-3 > [class*="col-"] {
+        padding-right: 15px;
+        padding-left: 15px;
+        margin-bottom: 15px;
+    }
+
+    /* RESPONSIVE DESIGN */
+    @media (max-width: 768px) {
+        .form-card {
+            padding: 20px;
+        }
+        
+        .subject-row {
+            padding: 15px;
+        }
+        
+        .marks-input {
+            max-width: 100%;
+        }
+        
+        .d-flex.justify-content-between.align-items-center.mb-4 {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 15px;
+        }
+        
+        .d-flex.justify-content-between.align-items-center.mb-4 > div:last-child {
+            align-self: stretch;
+        }
+        
+        .d-flex.justify-content-between.align-items-center.mb-4 .btn {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+    }
+
+    /* FORM VALIDATION STATES */
+    .form-control.is-valid {
+        border-color: #10b981;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2310b981' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+    }
+
+    .form-control.is-invalid {
+        border-color: #ef4444;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23ef4444'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23ef4444' stroke='none'/%3e%3c/svg%3e");
+    }
+
+    /* FOOTER/BOTTOM SECTION */
+    .pt-3.border-top {
+        border-top: 2px solid #e2e8f0 !important;
+        padding-top: 25px !important;
+    }
+
+    /* ANIMATIONS */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .subject-row {
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    /* SCROLLBAR STYLING */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+</style>
+</head>
+<body>
+  {{> admin-header}}
+  
+  <div class="container-fluid py-4">
+    <div class="row">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h2 class="mb-1">
+              <i class="fas fa-edit text-primary me-2"></i>Edit Marks
+            </h2>
+            <p class="text-muted mb-0">
+              Student: <strong>{{student.name}}</strong> | Registration: <strong>{{student.marks.registrationNo}}</strong>
+            </p>
+          </div>
+          <div>
+            <a href="/admin/view-bstudent" class="btn btn-outline-secondary me-2">
+              <i class="fas fa-arrow-left me-1"></i> Back to Students
+            </a>
+            <a href="/admin/preview-marklist/{{student._id}}" class="btn btn-info">
+              <i class="fas fa-eye me-1"></i> Preview Marklist
+            </a>
+          </div>
+        </div>
+
+        {{#if message}}
+          <div class="alert alert-{{message.type}} alert-dismissible fade show" role="alert">
+            {{message.text}}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {{/if}}
+
+        <div class="form-card">
+          <form action="/admin/update-mark/{{student._id}}" method="POST" id="marksForm">
+            
+            <!-- Student Basic Info -->
+            <div class="row mb-4">
+              <div class="col-md-3">
+                <label class="form-label">Registration Number *</label>
+                <input type="text" class="form-control" name="registrationNo" 
+                       value="{{student.marks.registrationNo}}" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Candidate Name *</label>
+                <input type="text" class="form-control" name="candidateName" 
+                       value="{{student.marks.candidateName}}" required>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Course *</label>
+                <input type="text" class="form-control" name="course" 
+                       value="{{student.marks.course}}" required>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Duration *</label>
+                <input type="text" class="form-control" name="courseDuration" 
+                       value="{{student.marks.courseDuration}}" required>
+              </div>
+            </div>
+
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label class="form-label">Institute/Centre *</label>
+                <input type="text" class="form-control" name="institute" 
+                       value="{{student.marks.institute}}" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Department</label>
+                <input type="text" class="form-control" value="{{student.department}}" readonly>
+              </div>
+            </div>
+
+            <!-- Subjects Section -->
+            <div class="mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">
+                  <i class="fas fa-book me-2"></i>Subjects & Marks
+                </h4>
+                <button type="button" class="btn btn-calculate" onclick="calculateAllTotals()">
+                  <i class="fas fa-calculator me-1"></i> Calculate All Totals
+                </button>
+              </div>
+              
+              {{#each student.marks.subjects}}
+              <div class="subject-row" data-index="{{@index}}">
+                <div class="subject-header d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0">Subject {{add @index 1}}</h5>
+                  <span class="result-badge {{#if (eq this.result 'PASSED')}}result-passed{{else}}result-failed{{/if}}">
+                    {{this.result}}
+                  </span>
+                </div>
+                
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label class="form-label">Subject Name *</label>
+                    <input type="text" class="form-control subject-name" 
+                           name="subjectName[]" value="{{this.subject}}" required>
+                  </div>
+                  
+                  <!-- Theory Marks -->
+                  <div class="col-md-2">
+                    <label class="form-label">Theory Max</label>
+                    <input type="number" class="form-control marks-input theory-max" 
+                           name="theoryMax[]" value="{{this.theoryMax}}" min="0">
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">Theory Min</label>
+                    <input type="number" class="form-control marks-input theory-min" 
+                           name="theoryMin[]" value="{{this.theoryMin}}" min="0">
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">Theory Obt</label>
+                    <input type="number" class="form-control marks-input theory-obt" 
+                           name="theoryObt[]" value="{{this.theoryObt}}" min="0" 
+                           oninput="calculateSubjectTotal({{@index}})">
+                  </div>
+                  
+                  <!-- Practical Marks -->
+                  <div class="col-md-2">
+                    <label class="form-label">Practical Max</label>
+                    <input type="number" class="form-control marks-input practical-max" 
+                           name="practicalMax[]" value="{{this.practicalMax}}" min="0">
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">Practical Min</label>
+                    <input type="number" class="form-control marks-input practical-min" 
+                           name="practicalMin[]" value="{{this.practicalMin}}" min="0">
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">Practical Obt</label>
+                    <input type="number" class="form-control marks-input practical-obt" 
+                           name="practicalObt[]" value="{{this.practicalObt}}" min="0" 
+                           oninput="calculateSubjectTotal({{@index}})">
+                  </div>
+                  
+                  <!-- Total Marks -->
+                  <div class="col-md-2">
+                    <label class="form-label">Total Max</label>
+                    <input type="number" class="form-control marks-input total-max" 
+                           name="totalMax[]" value="{{this.totalMax}}" min="0" readonly>
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">Total Min</label>
+                    <input type="number" class="form-control marks-input total-min" 
+                           name="totalMin[]" value="{{this.totalMin}}" min="0">
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">Total Obt</label>
+                    <input type="number" class="form-control marks-input total-obt" 
+                           name="totalObt[]" value="{{this.totalObt}}" min="0" readonly>
+                  </div>
+                  
+                  <!-- Result -->
+                  <div class="col-md-2">
+                    <label class="form-label">Result</label>
+                    <select class="form-select result-select" name="result[]" 
+                            onchange="updateResultBadge({{@index}}, this.value)">
+                      <option value="PASSED" {{#if (eq this.result 'PASSED')}}selected{{/if}}>PASSED</option>
+                      <option value="FAILED" {{#if (eq this.result 'FAILED')}}selected{{/if}}>FAILED</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              {{/each}}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+              <div>
+                <a href="/admin/view-bstudent" class="btn btn-outline-secondary">
+                  <i class="fas fa-times me-1"></i> Cancel
+                </a>
+              </div>
+              <div>
+                <button type="reset" class="btn btn-outline-warning me-2">
+                  <i class="fas fa-redo me-1"></i> Reset
+                </button>
+                <button type="submit" class="btn btn-success">
+                  <i class="fas fa-save me-1"></i> Update Marks
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function calculateSubjectTotal(index) {
+      const row = document.querySelector(`.subject-row[data-index="${index}"]`);
+      
+      const theoryObt = parseInt(row.querySelector('.theory-obt').value) || 0;
+      const practicalObt = parseInt(row.querySelector('.practical-obt').value) || 0;
+      const theoryMax = parseInt(row.querySelector('.theory-max').value) || 0;
+      const practicalMax = parseInt(row.querySelector('.practical-max').value) || 0;
+      const theoryMin = parseInt(row.querySelector('.theory-min').value) || 0;
+      const practicalMin = parseInt(row.querySelector('.practical-min').value) || 0;
+      
+      // Calculate totals
+      const totalObt = theoryObt + practicalObt;
+      const totalMax = theoryMax + practicalMax;
+      const totalMin = theoryMin + practicalMin;
+      
+      // Update fields
+      row.querySelector('.total-obt').value = totalObt;
+      row.querySelector('.total-max').value = totalMax;
+      row.querySelector('.total-min').value = totalMin;
+      
+      // Auto-determine result
+      const resultSelect = row.querySelector('.result-select');
+      const isPassed = totalObt >= totalMin;
+      resultSelect.value = isPassed ? 'PASSED' : 'FAILED';
+      updateResultBadge(index, resultSelect.value);
+    }
+    
+    function calculateAllTotals() {
+      const rows = document.querySelectorAll('.subject-row');
+      rows.forEach((row, index) => {
+        calculateSubjectTotal(index);
+      });
+      
+      // Show success message
+      alert('All totals calculated successfully!');
+    }
+    
+    function updateResultBadge(index, result) {
+      const row = document.querySelector(`.subject-row[data-index="${index}"]`);
+      const badge = row.querySelector('.result-badge');
+      
+      badge.textContent = result;
+      badge.className = 'result-badge ' + (result === 'PASSED' ? 'result-passed' : 'result-failed');
+    }
+    
+    // Initialize calculations on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      const rows = document.querySelectorAll('.subject-row');
+      rows.forEach((row, index) => {
+        calculateSubjectTotal(index);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Form for Final Examination</title>
+  <style>
+   body {
+  font-family: "Times New Roman", serif;
+  margin: 0;
+  padding: 0;
+  background: #fdfdfd;
+}
+
+.form-container {
+  border: 2px solid #000;
+  padding: 40px 60px;
+  max-width: 850px;
+  margin: 40px auto;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.header img {
+  width: 100px;
+  margin-bottom: 10px;
+}
+
+.header h2 {
+  margin: 5px 0;
+  font-size: 20px;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #000;
+}
+
+.form-row {
+  margin: 15px 0;
+  display: flex;
+  align-items: center;
+}
+
+.form-row label {
+  display: inline-block;
+  width: 250px;
+  font-weight: bold;
+  font-size: 15px;
+  color: #000;
+}
+
+.form-row input {
+  flex: 1;
+  padding: 6px 5px;
+  border: none;
+  border-bottom: 1px solid #000;
+  outline: none;
+  font-size: 15px;
+  background: transparent;
+}
+
+.section-title {
+  margin-top: 25px;
+  font-weight: bold;
+  text-decoration: underline;
+  font-size: 15px;
+}
+
+.declaration {
+  text-align: justify;
+  margin-top: 12px;
+  line-height: 1.6;
+  font-size: 14px;
+  color: #000;
+}
+
+.declaration input {
+  border: none;
+  border-bottom: 1px solid #000;
+  padding: 3px 5px;
+  font-size: 14px;
+  width: 180px;
+}
+
+.signature-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40px;
+  font-size: 14px;
+}
+
+.signature-box {
+  text-align: center;
+  width: 45%;
+}
+
+.signature-box input {
+  border: none;
+  border-bottom: 1px solid #000;
+  padding: 3px 5px;
+  width: 70%;
+  font-size: 14px;
+}
+.form-actions {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.form-actions button {
+  background: #000;
+  color: #fff;
+  border: none;
+  padding: 10px 25px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: 0.3s ease;
+}
+
+.form-actions button:hover {
+  background: #444;
+}
+
+
+</style>
+</head>
+<body>
+  <div class="form-container">
+    <div class="header">
+      <img src="/images/netd.jpeg" alt="Logo" width="80"><br>
+      <h2>APPLICATION FORM FOR FINAL EXAMINATION</h2>
+    </div>
+
+    <form action="/user/app-form" method="POST">
+  <input type="hidden" name="studentId" value="{{studentId}}">
+
+
+      <div class="form-row">
+        <label>Name of Candidate:</label><input type="text" name="candidateName">
+      </div>
+      <div class="form-row">
+        <label>Name of the Course:</label><input type="text" name="courseName">
+      </div>
+      <div class="form-row">
+        <label>Name of Study Centre:</label><input type="text" name="studyCentre"  value="{{centre.centreName}}">
+      </div>
+      <div class="form-row">
+        <label>Examination Centre:</label><input type="text" name="examCentre">
+      </div>
+      <div class="form-row">
+        <label>Date of Examinations:</label><input type="date" name="examDate">
+      </div>
+      <div class="form-row">
+  <label>Examination Time:</label>
+  <input type="text" name="examTime" placeholder="e.g. 01:30 PM">
+</div>
+
+      <div class="form-row">
+        <label>Signature of Candidate:</label><input type="text" name="candidateSign">
+      </div>
+      <div class="form-row">
+        <label>Register Number:</label><input type="text" name="registerNumber" value="{{student.regNo}}">
+      </div>
+
+      <p class="section-title">STUDENT'S DECLARATION</p>
+      <p class="declaration">
+        I, <input type="text" name="studentName" style="width:200px;" placeholder="Enter Name"> hereby solemnly declare that the above information provided by me are true and correct to the best of my knowledge and belief. I am fully aware of the course, syllabus, duration, training and validity of the certificate before getting into admission. Further I will not raise any complaints against the certification body about the validity of the merit certificate that I have completely understood. I shall obey the rules and regulations of study centre. Now in force and as amended or altered from time to time. I accept all decision of the NETD authorities in all matters of training.
+      </p>
+
+      <div class="signature-row">
+        <div class="signature-box">
+          Date: <input type="date" name="studentDate">
+        </div>
+        <div class="signature-box">
+          Signature of Student
+        </div>
+      </div>
+
+      <p class="section-title">DECLARATION OF CENTRE HEAD</p>
+      <p class="declaration">
+        I hereby declare that Mr./Ms. <input type="text" name="centreStudentName" style="width:200px;"> (student name) has been made fully aware about NETD and the validity of the certificate, training fees, syllabus, duration and certification fees before taking admission. I assure that he will be getting excellent training on the prescribed course at our training centre and will complete the course in prescribed time to make him eligible for attending the final examination conducted by NETD Authority.
+      </p>
+
+      <div class="signature-row">
+        <div class="signature-box">
+          Name of Authorised Person: <input type="text" name="authorisedPerson">
+        </div>
+        <div class="signature-box">
+          Institution Seal
+        </div>
+      </div>
+      <div class="form-actions">
+  <button type="submit">Submit Application</button>
+</div>
+
+    </form>
+  </div>
+</body>
+</html>

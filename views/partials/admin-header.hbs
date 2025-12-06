@@ -1,0 +1,479 @@
+<style>
+ /* Professional Dark Blue & Golden Brown Theme */
+:root {
+  --dark-blue: rgba(0,78,137,1);
+  --golden-brown: rgba(176,149,114,1);
+  --white: #ffffff;
+  --light-blue: rgba(0,78,137,0.1);
+  --dark-blue-hover: rgba(0,60,110,1);
+  --golden-brown-hover: rgba(156,129,94,1);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* Navbar Styling */
+.navbar {
+  background: linear-gradient(135deg, var(--dark-blue) 0%, rgba(0,60,110,1) 100%) !important;
+  box-shadow: var(--shadow);
+  padding: 0.8rem 1rem;
+  position: relative;
+  z-index: 1030 !important;
+  border-bottom: 3px solid var(--golden-brown);
+  animation: slideDown 0.6s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.8rem;
+  color: var(--white) !important;
+  display: flex;
+  align-items: center;
+  position: relative;
+  transition: var(--transition);
+}
+
+.navbar-brand::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--golden-brown);
+  transition: width 0.4s ease;
+}
+
+.navbar-brand:hover::after {
+  width: 100%;
+}
+
+.navbar-brand:hover {
+  color: var(--white) !important;
+  transform: translateY(-2px);
+}
+
+.navbar-toggler {
+  border: 1px solid var(--golden-brown);
+  padding: 4px 8px;
+  transition: var(--transition);
+}
+
+.navbar-toggler:hover {
+  background: rgba(176,149,114,0.1);
+  transform: scale(1.05);
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(176,149,114,1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.navbar-nav {
+  margin-left: 30px;
+  position: relative;
+  z-index: 1031;
+}
+
+.nav-item {
+  margin: 0 8px;
+  position: relative;
+}
+
+.nav-link {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 8px 15px !important;
+  border-radius: 6px;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--golden-brown), transparent);
+  transition: left 0.6s ease;
+}
+
+.nav-link:hover::before {
+  left: 100%;
+}
+
+.nav-link:hover, .nav-link:focus {
+  color: var(--white) !important;
+  background-color: rgba(176,149,114,0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.nav-link.active {
+  color: var(--white) !important;
+  background-color: var(--golden-brown);
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(176,149,114,0.3);
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 15px;
+  right: 15px;
+  height: 2px;
+  background-color: var(--white);
+  border-radius: 2px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.nav-link.disabled {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Dropdown Styling */
+.nav-item.dropdown {
+  position: relative;
+  z-index: 10000;
+}
+
+.dropdown-menu {
+  z-index: 10001 !important;
+  position: absolute !important;
+  border: none;
+  box-shadow: var(--shadow-hover);
+  border-radius: 8px;
+  background: var(--dark-blue);
+  min-width: 200px;
+  border: 1px solid var(--golden-brown);
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-menu-dark {
+  background: var(--dark-blue) !important;
+  border: 1px solid var(--golden-brown);
+}
+
+.dropdown-menu-dark .dropdown-item {
+  color: var(--white);
+  font-weight: 500;
+  padding: 10px 16px;
+  transition: var(--transition);
+  border-radius: 6px;
+  margin: 2px 8px;
+  width: calc(100% - 16px);
+}
+
+.dropdown-menu-dark .dropdown-item:hover,
+.dropdown-menu-dark .dropdown-item:focus {
+  background: var(--golden-brown) !important;
+  color: var(--dark-blue) !important;
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(176,149,114,0.3);
+}
+
+.dropdown-menu-dark .dropdown-item:active {
+  background: var(--golden-brown-hover) !important;
+  color: var(--dark-blue) !important;
+}
+
+/* Search Form Styling */
+.d-flex {
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 1030;
+}
+
+.form-control {
+  border: 1px solid var(--golden-brown);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  border-radius: 6px;
+  padding: 8px 15px;
+  transition: var(--transition);
+  min-width: 250px;
+}
+
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.form-control:focus {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--golden-brown);
+  color: var(--white);
+  box-shadow: 0 0 0 0.2rem rgba(176,149,114,0.25);
+  transform: scale(1.02);
+}
+
+.btn-outline-light {
+  color: var(--white);
+  border-color: var(--golden-brown);
+  background: transparent;
+  margin-left: 10px;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-weight: 500;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-outline-light::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: var(--golden-brown);
+  transition: left 0.4s ease;
+  z-index: -1;
+}
+
+.btn-outline-light:hover::before {
+  left: 0;
+}
+
+.btn-outline-light:hover {
+  background-color: transparent;
+  color: var(--dark-blue);
+  border-color: var(--golden-brown);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(176,149,114,0.4);
+}
+
+/* Account Dropdown Styling */
+.dropdown {
+  margin-left: 15px;
+  position: relative;
+  z-index: 1030;
+}
+
+.btn-outline-light.dropdown-toggle {
+  background: transparent;
+  border: 1px solid var(--golden-brown);
+  color: var(--white);
+  transition: var(--transition);
+}
+
+.btn-outline-light.dropdown-toggle:hover {
+  background: rgba(176,149,114,0.1);
+  border-color: var(--golden-brown);
+}
+
+/* Animation for navbar items */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.navbar-nav .nav-item {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.navbar-nav .nav-item:nth-child(1) { animation-delay: 0.1s; }
+.navbar-nav .nav-item:nth-child(2) { animation-delay: 0.2s; }
+.navbar-nav .nav-item:nth-child(3) { animation-delay: 0.3s; }
+.navbar-nav .nav-item:nth-child(4) { animation-delay: 0.4s; }
+.navbar-nav .nav-item:nth-child(5) { animation-delay: 0.5s; }
+
+/* Responsive Adjustments */
+@media (max-width: 991.98px) {
+  .navbar-nav {
+    margin-left: 0;
+    margin-top: 15px;
+    margin-bottom: 15px;
+  }
+  
+  .nav-item {
+    margin: 5px 0;
+  }
+  
+  .form-control {
+    min-width: auto;
+    margin-top: 10px;
+  }
+  
+  .d-flex {
+    margin-top: 15px;
+    padding-bottom: 15px;
+  }
+  
+  .dropdown {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+
+  .navbar-collapse {
+    position: relative;
+    z-index: 1030;
+  }
+}
+
+/* Additional animations */
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(176,149,114,0.5); }
+  50% { box-shadow: 0 0 20px rgba(176,149,114,0.8); }
+}
+
+.nav-link.active {
+  animation: glow 3s ease-in-out infinite;
+}
+</style>
+{{#unless hideNavbar}}
+<header>
+  <nav class="navbar navbar-expand-lg navbar-dark" style="background-color:#222;">
+    <div class="container-fluid">
+
+      <!-- Brand -->
+      <a class="navbar-brand fw-bold" href="/admin">EDU ADMIN</a>
+
+      <!-- Mobile toggle -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+
+        <!-- Left: Nav links -->
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-2">
+         
+          <li class="nav-item">
+            <a class="nav-link active" href="/admin/view-batch">Batches</a>
+          </li>
+         
+
+          <!-- Hall Ticket Dropdown -->
+     <li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle" href="#" id="hallDropdown" role="button" data-bs-toggle="dropdown">
+    Students
+  </a>
+  <ul class="dropdown-menu dropdown-menu-dark shadow" aria-labelledby="hallDropdown">
+    <li><a class="dropdown-item" href="/admin/view-student">All Students</a></li>
+    <li><a class="dropdown-item" href="/admin/pending-students">Pending Students</a></li>
+    <li><a class="dropdown-item" href="/admin/approved-students">Approved Students</a></li>
+  </ul>
+</li>
+
+      <li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle" href="#" id="hallDropdown" role="button" data-bs-toggle="dropdown">
+    SDC
+  </a>
+  <ul class="dropdown-menu dropdown-menu-dark shadow" aria-labelledby="hallDropdown">
+    <li><a class="dropdown-item" href="/admin/add-sdstudent">Add Sd Student</a></li>
+    <li><a class="dropdown-item" href="/admin/view-sdstudent">SD Students List</a></li>
+    
+  </ul>
+</li>
+          <li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle" href="#" id="hallDropdown" role="button" data-bs-toggle="dropdown">
+    BG Change
+  </a>
+  <ul class="dropdown-menu dropdown-menu-dark shadow" aria-labelledby="hallDropdown">
+    <li><a class="dropdown-item" href="/admin/bg-change/sd-certificate">Skill Development Certificate</a></li>
+    <li><a class="dropdown-item" href="/admin/bg-change/certificate1">Certificate 1</a></li>
+    <li><a class="dropdown-item" href="/admin/bg-change/certificate2">Certificate 2</a></li>
+    <li><a class="dropdown-item" href="/admin/bg-change/marksheet">Mark Sheet</a></li>
+    <li><a class="dropdown-item" href="/admin/bg-change/id-card">ID Card</a></li>
+    <li><a class="dropdown-item" href="/admin/bg-change/sd-id-front">SD ID Front</a></li>
+    <li><a class="dropdown-item" href="/admin/bg-change/sd-id-back">SD ID Back</a></li>
+  </ul>
+</li>
+
+        </ul>
+
+        <!-- Center: Search -->
+        <form action="/admin/search" method="get" class="d-flex mx-lg-auto my-2 my-lg-0 w-50">
+          <input class="form-control me-2" type="search" name="q" placeholder="Search" aria-label="Search">
+          <button class="btn btn-outline-light" type="submit">Search</button>
+        </form>
+
+        <!-- Right: Account -->
+        <div class="dropdown ms-lg-3">
+          <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            {{#if admin}}
+              Admin
+            {{else}}
+              Account
+            {{/if}}
+          </button>
+          <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow">
+            {{#if admin}}
+              <li><a class="dropdown-item" href="/admin/logout">Logout</a></li>
+            {{else}}
+              <li><a class="dropdown-item" href="/admin/login">Login</a></li>
+            {{/if}}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+{{/unless}}
+
+
+<script>
+    // Search autocomplete
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.querySelector('input[name="q"]');
+        const searchForm = document.querySelector('form[action="/admin/search"]');
+        
+        if (searchInput) {
+            // Clear search on page load
+            searchInput.value = '';
+            
+            // Optional: Focus on search input
+            searchInput.addEventListener('focus', function() {
+                this.select();
+            });
+            
+            // Optional: Add keyboard shortcut (Ctrl+K)
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    searchInput.focus();
+                    searchInput.select();
+                }
+            });
+        }
+    });
+</script>

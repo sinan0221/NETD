@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{student.name}} - ID Card</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    .id-card-container {
+      width: 2.63in;
+      height: 3.88in;
+      position: relative;
+      background-image: url('/images/id-card.jpg');
+      background-size: cover;
+      background-position: center;
+      border: 1px solid #ccc;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+      color: #000;
+      padding: 12px;
+    }
+
+    .photo {
+      width: 98px;
+      height: 115px;
+      border-radius: 10px;
+      object-fit: cover;
+      display: block;
+      margin: 42px auto 10px auto;
+    }
+    .name{
+        text-align: center;
+        font-size: 11px;
+
+    }
+    .issue{
+      text-align: center;
+        font-size: 11px;
+        margin-top: -16px; 
+        
+    }
+    .issue strong{
+        font-size: 12px;
+    }
+
+    .id-info {
+      
+      font-size: 11px;
+      margin-top: -7px;
+      line-height: 0.25;
+      margin-left: 15px;
+    }
+
+    .id-info strong {
+      font-size: 12px;
+    }
+
+    .principal {
+  text-align: right;
+  margin-top: -62px;   /* moves it up */
+  margin-bottom: 0;   /* remove large bottom gap */
+  font-size: 12px;
+  
+}
+.netd {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 25px; /* adjust as needed */
+}
+
+.netd img {
+  width: 250px;  /* adjust based on how wide you want the banner/logo */
+  height: auto;  /* keeps the aspect ratio */
+  object-fit: contain;
+}
+
+
+    .atc-name {
+      position: absolute;
+        max-width: 200px;   /* ← choose your width */
+  word-wrap: break-word;
+      bottom: 12px;
+      width: 100%;
+      margin-left: 7px;
+      margin-bottom: -11px;
+      font-size: 9px;
+      color: #fff;
+      font-weight: bold;
+      
+      padding: 4px 0;
+    }
+
+    button {
+      margin-top: 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      font-size: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="idCard" class="id-card-container">
+    <img src="/studentImages/{{student._id}}.jpg" alt="Student Photo" class="photo">
+
+    <div style="text-align:center; color:#ff0; font-weight:bold; margin-top:-10px;"></div>
+   <div class="name"><p><strong>NAME:</strong> {{student.fullName}}</p></div> 
+  <div class="issue"><p><strong>Issue:</strong> {{issueDate}}</p></div> 
+    <div class="id-info">
+      
+      
+      <p><strong>Enrolment No:</strong> {{student.regNo}}</p>
+      <p><strong>Course Name:</strong> {{student.courseName}}</p>
+      <p><strong>Expiry Date:</strong> {{expiryDate}}</p>
+    </div>
+   <div class="netd">
+  <img src="/images/id-title.jpg" alt="NETD Logo">
+</div>
+
+
+    <div class="principal">Principal</div>
+
+    <div class="atc-name">
+      ATC Name:{{centreName}},{{centreAddress}}
+    </div>
+  </div>
+
+  <button onclick="downloadPDF()">Download as PDF</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script>
+    async function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const card = document.getElementById('idCard');
+
+      const canvas = await html2canvas(card, { scale: 4 });
+      const imgData = canvas.toDataURL('image/png');
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'in',
+        format: [2.63, 3.88]
+      });
+
+      pdf.addImage(imgData, 'PNG', 0, 0, 2.63, 3.88);
+      pdf.save('{{student.name}}_ID_Card.pdf');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,462 @@
+<style>
+/* Professional Dark Blue & Golden Brown Theme */
+:root {
+  --dark-blue: rgba(0,78,137,1);
+  --golden-brown: rgba(176,149,114,1);
+  --white: #ffffff;
+  --dark-blue-hover: rgba(0,60,110,1);
+  --golden-brown-hover: rgba(156,129,94,1);
+  --transition: all 0.3s ease;
+}
+
+/* ===== Section Styling ===== */
+section {
+  padding: 40px 20px;
+  background-color: #f2f6fa;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ===== Container ===== */
+.container {
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  max-width: 95%;    
+  margin: auto;
+}
+
+/* ===== Heading ===== */
+.container h2 {
+  color: var(--dark-blue);
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-align: center;
+  border-bottom: 2px solid var(--golden-brown);
+  padding-bottom: 10px;
+  font-size: 26px;
+  letter-spacing: 1px;
+}
+
+/* ===== Center Info ===== */
+.container pre {
+  color: #333;
+  font-size: 16px;
+  margin-bottom: 25px;
+  padding: 15px;
+  background: linear-gradient(135deg, rgba(0,78,137,0.05), rgba(176,149,114,0.05));
+  border-radius: 8px;
+  border-left: 4px solid var(--dark-blue);
+  line-height: 1.6;
+}
+
+/* ===== Grade Display ===== */
+.container .btn-success {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  border: none;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 6px;
+  transition: var(--transition);
+  color: white !important;
+  display: inline-block;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0,78,137,0.2);
+}
+
+.container .btn-success:hover {
+  background: linear-gradient(135deg, var(--dark-blue-hover), var(--dark-blue));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,78,137,0.3);
+}
+
+/* ===== Add Batch Wrapper ===== */
+.add-batch-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.add-batch-wrapper .btn-success {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  border: none;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: var(--transition);
+}
+.add-batch-wrapper .btn-success {
+    margin-top: 15px; /* moves button down */
+}
+
+.add-batch-wrapper .btn-success:hover {
+  background: linear-gradient(135deg, var(--dark-blue-hover), var(--dark-blue));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,78,137,0.3);
+}
+
+/* ===== Table ===== */
+.table {
+  margin-top: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  width: 100%;
+  border: 1px solid rgba(0,78,137,0.1);
+}
+
+.table thead th {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  color: var(--white);
+  font-weight: 600;
+  text-align: center;
+  font-size: 15px;
+  padding: 14px;
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.table thead th::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--golden-brown), transparent);
+  transition: left 0.6s ease;
+}
+
+.table thead th:hover::before {
+  left: 100%;
+}
+
+.table tbody td {
+  text-align: center;
+  vertical-align: middle;
+  padding: 14px;
+  font-size: 15px;
+  color: #333;
+  border-bottom: 2px solid rgba(176,149,114,0.3);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 1px solid #eee;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(0,78,137,0.03);
+  transition: var(--transition);
+}
+
+/* ===== Action Buttons ===== */
+.btn-sm {
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  margin: 2px;
+  transition: var(--transition);
+  border: none;
+}
+
+/* View Students Button */
+.btn-view {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  color: var(--white);
+}
+
+.btn-view:hover {
+  background: linear-gradient(135deg, var(--dark-blue-hover), var(--dark-blue));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,78,137,0.3);
+  color: var(--white);
+}
+
+/* Edit buttons */
+.btn-edit {
+  background: linear-gradient(135deg, var(--golden-brown), var(--golden-brown-hover));
+  color: var(--white);
+  border: none;
+}
+/* Fee Button Styling */
+.btn-fee {
+  background: linear-gradient(135deg, #28a745, #218838) !important;
+  color: white !important;
+  border: none;
+}
+
+.btn-fee:hover {
+  background: linear-gradient(135deg, #218838, #28a745) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+  color: white !important;
+}
+
+.btn-edit:hover {
+  background: linear-gradient(135deg, var(--golden-brown-hover), var(--golden-brown));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(176,149,114,0.3);
+  color: var(--white);
+}
+
+/* Applied Certificate button */
+.btn-success:not(.container .btn-success):not(.add-batch-wrapper .btn-success) {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: var(--white);
+}
+
+.btn-success:not(.container .btn-success):not(.add-batch-wrapper .btn-success):hover {
+  background: linear-gradient(135deg, #218838, #28a745);
+  transform: translateY(-2px);
+  color: var(--white);
+}
+
+/* Apply Certificate button */
+.btn-outline-dark {
+  border: 1px solid var(--dark-blue);
+  color: var(--dark-blue);
+  background: transparent;
+}
+
+.btn-outline-dark:hover {
+  background: var(--dark-blue);
+  color: var(--white);
+  transform: translateY(-2px);
+}
+
+/* Mode button */
+.btn-warning {
+  background: linear-gradient(135deg, #ffc107, #e0a800);
+  color: #212529;
+  border: none;
+}
+
+.btn-warning:hover {
+  background: linear-gradient(135deg, #e0a800, #ffc107);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+  color: #212529;
+}
+
+/* Download Hall Ticket button */
+.btn-primary {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  color: var(--white);
+  border: none;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--dark-blue-hover), var(--dark-blue));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,78,137,0.3);
+  color: var(--white);
+}
+
+/* Small download button in batch ID */
+.btn-sm .fa-download {
+  color: var(--dark-blue);
+}
+
+.btn-sm:hover .fa-download {
+  color: var(--white);
+}
+
+/* Delete button */
+.btn-danger {
+  background: linear-gradient(135deg, #dc3545, #c82333) !important;
+  border: none;
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #c82333, #dc3545) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Certificate Action Section */
+.table tbody td:nth-child(5) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Form button inline */
+form[style*="display: inline"] {
+  display: inline;
+  margin: 0;
+}
+
+/* Icon spacing */
+.btn i {
+  margin-right: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+    max-width: 100%;
+  }
+  
+  .table thead {
+    display: none;
+  }
+  
+  .table, .table tbody, .table tr, .table td {
+    display: block;
+    width: 100%;
+  }
+  
+  .table tr {
+    margin-bottom: 15px;
+    border: 1px solid rgba(0,78,137,0.1);
+    border-radius: 8px;
+  }
+  
+  .table td {
+    text-align: right;
+    padding-left: 50%;
+    position: relative;
+    border-bottom: 1px solid rgba(176,149,114,0.2);
+  }
+  
+  .table td:before {
+    content: attr(data-label);
+    position: absolute;
+    left: 15px;
+    width: 45%;
+    padding-right: 10px;
+    white-space: nowrap;
+    text-align: left;
+    font-weight: 600;
+    color: var(--dark-blue);
+  }
+  
+  .table tbody td:nth-child(5) {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+</style>
+
+<section>
+    <div class="container">
+        <a href="javascript:void(0);" class="btn btn-success" onclick="showAllGradeInstructions('{{this.grade}}','{{this.stars}}')">
+            Grade : {{grade}} {{stars}}
+        </a>
+        
+        <h2>BATCHES</h2>
+        
+       <pre>
+Center Name   : {{center.centreName}}
+Center Id     : {{center.centreId}}
+Director Name : {{center.centreDirector}}
+</pre>
+
+        
+        <div class="add-batch-wrapper">
+            <a href="/user/add-batch" class="btn btn-success">Add Batch</a>
+        </div>
+        
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Batch No</th>
+                    <th scope="col">BATCH ID</th>
+                    <th scope="col">BATCH NAME</th>
+                    <th scope="col">HALL TICKET</th>
+                    <th scope="col">APPLY CERTIFICATE</th>
+                    <th scope="col">ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each batches}}
+                <tr>
+                    <td data-label="Batch No">{{this.batchNo}}</td>
+                    <td data-label="Batch ID">
+                        {{this.batchId}}
+                        <a href="/user/batch-idcards-download/{{this._id}}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-download"></i>
+                        </a>
+                    </td>
+                    <td data-label="Batch Name">{{this.batchName}}</td>
+                    <td data-label="Hall Ticket">
+                        <a href="/user/batch-halltickets-download/{{this._id}}" class="btn btn-primary">
+                            <i class="fas fa-download"></i> Download All Hall Tickets
+                        </a>
+                    </td>
+                    <td data-label="Apply Certificate">
+                        {{#if this.courseStartDate}}
+                            <button class="btn btn-success btn-sm">
+                                <i class="fas fa-check-circle"></i> Applied
+                            </button>
+                            <a href="/user/edit-schedule/{{this._id}}" class="btn btn-sm btn-edit">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                        {{else}}
+                            <a href="/user/course-schedule/{{this._id}}" class="btn btn-outline-dark btn-sm">
+                                Apply Certificate
+                            </a>
+                        {{/if}}
+                        
+                        <form action="/user/toggle-certificate-batch/{{this._id}}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn btn-warning btn-sm">
+                                <i class="fas fa-sync-alt"></i> Mode ({{this.certificateType}})
+                            </button>
+                        </form>
+                    </td>
+                    <td data-label="Action">
+                      
+                        <a href="/user/view-bstudent/{{this._id}}" class="btn btn-sm btn-view">View Students</a>
+                          <button class="btn btn-sm btn-fee" onclick="showFeeCard('{{this._id}}', '{{this.batchName}}')">
+      <i class="fas fa-money-bill-wave"></i> Fee
+    </button>
+                        <a href="/user/edit-batch/{{this._id}}" class="btn btn-sm btn-edit">
+                            <i class="fa fa-edit"></i>
+                        </a>
+                        
+                        <a href="/user/delete-batch/{{this._id}}" 
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Are you sure you want to delete this batch?');">
+                           <i class="fas fa-trash"></i>
+                        </a>
+                        
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    
+    
+    <script>
+    function showAllGradeInstructions() {
+        let message = `📌 Grade & Star Instructions:\n\n` +
+        
+        `1) D Grade ⭐\n` +
+        `- If a student is not registered within 6 months.\n` +
+        `- Not eligible to conduct other government or semi-government courses, nor for bonuses.\n\n` +
+
+        `2) C Grade ⭐⭐\n` +
+        `- Register 10 to 25 students within 6 months.\n` +
+        `- Not eligible to conduct other government or semi-government courses, nor for bonuses.\n\n` +
+
+        `3) B Grade ⭐⭐⭐\n` +
+        `- Register 26 to 50 students within 1 year.\n` +
+        `- Eligible to conduct other government or semi-government courses according to allotment, but not eligible for bonuses.\n\n` +
+
+        `4) A Grade ⭐⭐⭐⭐\n` +
+        `- Register 51 to 90 students within 1 year.\n` +
+        `- Eligible to conduct other government or semi-government courses, but not eligible for bonuses.\n\n` +
+
+        `5) A+ Grade ⭐⭐⭐⭐⭐\n` +
+        `- Register more than 91 students within 1 year.\n` +
+        `- Eligible to conduct other government or semi-government courses, and also eligible for bonuses.\n`;
+
+        alert(message);
+    }
+    </script>
+</section>

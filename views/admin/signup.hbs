@@ -1,0 +1,350 @@
+<style>
+/* Signup Page CSS - Optimized for your exact HTML structure */
+:root {
+    --primary: #2c3e50;
+    --secondary: #3498db;
+    --accent: #e74c3c;
+    --success: #27ae60;
+    --warning: #f39c12;
+    --light: #ecf0f1;
+    --dark: #2c3e50;
+    --gray: #95a5a6;
+    --light-gray: #f8f9fa;
+    --dark-blue: #2980b9;
+    --text-dark: #2c3e50;
+    --text-light: #ffffff;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+/* Hide navbar on signup page */
+.signup-page .navbar {
+    display: none !important;
+}
+
+/* Global Styles */
+.signup-page {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
+    color: var(--text-dark) !important;
+    line-height: 1.6 !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Row Layout - Full height centering */
+.signup-page .row {
+    min-height: 100vh !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 2rem 1rem !important;
+}
+
+/* Column centering */
+.signup-page .col-md-6 {
+    max-width: 500px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+}
+
+/* Container - Main card styling */
+.signup-page .container {
+    background: var(--text-light) !important;
+    border-radius: 15px !important;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+    padding: 3rem 2.5rem !important;
+    margin: 0 !important;
+    position: relative !important;
+    overflow: hidden !important;
+    animation: slideIn 0.6s ease forwards !important;
+}
+
+/* Top gradient border */
+.signup-page .container::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 5px !important;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%) !important;
+}
+
+/* Header styling */
+.signup-page h2 {
+    color: var(--primary) !important;
+    font-size: 2.2rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 2rem !important;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--dark-blue) 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    text-align: center !important;
+}
+
+/* Form styling */
+.signup-page form {
+    width: 100% !important;
+}
+
+/* Form groups */
+.signup-page .form-group {
+    margin-bottom: 1.5rem !important;
+    position: relative !important;
+}
+
+/* Labels */
+.signup-page label {
+    display: block !important;
+    color: var(--text-dark) !important;
+    font-weight: 600 !important;
+    margin-bottom: 0.6rem !important;
+    font-size: 0.95rem !important;
+}
+
+/* Input fields - Complete override */
+.signup-page .form-control {
+    width: 100% !important;
+    padding: 12px 15px !important;
+    border: 2px solid #e1e8ed !important;
+    border-radius: 8px !important;
+    font-size: 1rem !important;
+    color: var(--text-dark) !important;
+    background-color: var(--text-light) !important;
+    transition: var(--transition) !important;
+    box-sizing: border-box !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    min-width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    margin: 0 !important;
+}
+
+.signup-page .form-control:focus {
+    outline: none !important;
+    border-color: var(--secondary) !important;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1) !important;
+    transform: translateY(-1px) !important;
+    background-color: var(--text-light) !important;
+    color: var(--text-dark) !important;
+}
+
+.signup-page .form-control::placeholder {
+    color: var(--gray) !important;
+    font-weight: 400 !important;
+}
+
+.signup-page .form-control:hover {
+    border-color: var(--secondary) !important;
+}
+
+/* Checkbox styling */
+.signup-page .form-check {
+    margin: 1.5rem 0 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.signup-page .form-check-input {
+    width: 18px !important;
+    height: 18px !important;
+    margin-right: 10px !important;
+    accent-color: var(--secondary) !important;
+    cursor: pointer !important;
+}
+
+.signup-page .form-check-label {
+    color: var(--text-dark) !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+    user-select: none !important;
+}
+
+/* Link styling */
+.signup-page a {
+    color: var(--secondary) !important;
+    text-decoration: none !important;
+    font-weight: 500 !important;
+    transition: var(--transition) !important;
+    display: inline-block !important;
+    margin-bottom: 1.5rem !important;
+}
+
+.signup-page a:hover {
+    color: var(--dark-blue) !important;
+    text-decoration: underline !important;
+    transform: translateX(5px) !important;
+}
+
+/* Button styling */
+.signup-page .btn {
+    padding: 12px 25px !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: var(--transition) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+
+.signup-page .btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%) !important;
+    color: var(--text-light) !important;
+    box-shadow: var(--shadow) !important;
+}
+
+.signup-page .btn-primary:hover {
+    background: linear-gradient(135deg, var(--dark) 0%, var(--primary) 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(44, 62, 80, 0.3) !important;
+    color: var(--text-light) !important;
+}
+
+.signup-page .btn-primary:active {
+    transform: translateY(0) !important;
+}
+
+.signup-page .float-right {
+    float: right !important;
+}
+
+/* Animation */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Focus effects */
+.signup-page .form-group {
+    position: relative;
+}
+
+.signup-page .form-group::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--dark-blue) 100%);
+    transition: var(--transition);
+}
+
+.signup-page .form-group:focus-within::after {
+    width: 100%;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .signup-page .container {
+        margin: 1rem !important;
+        padding: 2rem 1.5rem !important;
+    }
+    
+    .signup-page h2 {
+        font-size: 1.8rem !important;
+    }
+    
+    .signup-page .btn {
+        width: 100% !important;
+        margin-top: 1rem !important;
+    }
+    
+    .signup-page .float-right {
+        float: none !important;
+    }
+    
+    .signup-page a {
+        display: block !important;
+        text-align: center !important;
+        margin-bottom: 2rem !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .signup-page .row {
+        padding: 1rem !important;
+    }
+    
+    .signup-page .container {
+        padding: 1.5rem 1rem !important;
+    }
+    
+    .signup-page h2 {
+        font-size: 1.6rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+}
+
+/* Validation states */
+.signup-page .form-control:valid {
+    border-color: var(--success) !important;
+}
+
+.signup-page .form-control:invalid:not(:placeholder-shown) {
+    border-color: var(--accent) !important;
+}
+
+/* Loading state */
+.signup-page .btn-primary:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+</style>
+
+<body class="signup-page">
+
+ <div class="row">
+    <div class="col-md-6 m-auto">
+        <div class="container mt-5 pl-5">
+            <h2 class="text-center">Create New Account</h2>
+            <form action="/admin/signup" method="post">
+
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" class="form-control" name="Name" placeholder="Enter Your Name">
+                </div>
+                <div class="form-group">
+                    <label>User Id</label>
+                    <input type="text" class="form-control" name="User-Id" placeholder="Enter User Id">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" class="form-control" name="password" id="password" placeholder="Enter Password">
+                </div>
+                <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="showPassword" onclick="showPass()">
+                    <label class="form-check-label" for="showPassword">Show password</label>
+                </div>
+                <a href="/login">Already Have Account?</a>
+                <button type="submit" class="btn btn-primary float-right">signup</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showPass() {
+        let passwordInput = document.getElementById("password");
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+        } else {
+            passwordInput.type = "password";
+        }
+    }
+</script>
+</body>

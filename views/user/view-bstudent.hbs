@@ -1,0 +1,592 @@
+<style>
+/* ===== UNIFIED PROFESSIONAL DARK BLUE & GOLDEN BROWN THEME ===== */
+:root {
+  --dark-blue: rgba(0,78,137,1);
+  --golden-brown: rgba(176,149,114,1);
+  --white: #ffffff;
+  --dark-blue-hover: rgba(0,60,110,1);
+  --golden-brown-hover: rgba(156,129,94,1);
+  --light-bg: #f2f6fa;
+  --light-gray: #f8f9fa;
+  --medium-gray: #e9ecef;
+  --dark-gray: #343a40;
+  --success-green: #28a745;
+  --danger-red: #dc3545;
+  --warning-orange: #fd7e14;
+  --transition: all 0.3s ease;
+}
+
+/* ===== Base Container Styling ===== */
+section {
+  padding: 40px 20px;
+  background-color: var(--light-bg);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.container {
+  background: var(--white);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  max-width: 95%;
+  margin: auto;
+  border-top: 4px solid var(--dark-blue);
+}
+
+/* ===== Heading Styles ===== */
+.container h2 {
+  color: var(--dark-blue);
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-align: center;
+  border-bottom: 2px solid var(--golden-brown);
+  padding-bottom: 15px;
+  font-size: 26px;
+  letter-spacing: 1px;
+  position: relative;
+}
+
+/* ===== Action Buttons (Top Right) ===== */
+.container .btn-success,
+.container .btn-outline-dark {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  border: none;
+  font-weight: 600;
+  padding: 6px 14px; /* Reduced padding */
+  border-radius: 8px;
+  transition: var(--transition);
+  color: var(--white);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.container .btn-success:hover,
+.container .btn-outline-dark:hover {
+  background: linear-gradient(135deg, var(--dark-blue-hover), var(--dark-blue));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,78,137,0.3);
+  color: var(--white);
+}
+
+.btn-outline-dark {
+  background: transparent !important;
+  border: 2px solid var(--dark-blue) !important;
+  color: var(--dark-blue) !important;
+}
+
+.btn-outline-dark:hover {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover)) !important;
+  color: var(--white) !important;
+}
+
+/* ===== Table Styling ===== */
+.table {
+  margin-top: 50px; /* Reduced from 50px */
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--white);
+  width: 100%;
+  border: 1px solid rgba(0,78,137,0.1);
+  box-shadow: 0 4px 12px rgba(0,78,137,0.1);
+  border-collapse: separate !important; /* Important for border spacing */
+  border-spacing: 0;
+}
+
+.table thead th {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  color: var(--white);
+  font-weight: 600;
+  text-align: center;
+  font-size: 15px;
+  padding: 14px;
+  border: none;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table thead th::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--golden-brown), transparent);
+  transition: left 0.6s ease;
+}
+
+.table thead th:hover::before {
+  left: 100%;
+}
+
+.table tbody tr {
+  position: relative;
+}
+
+/* GOLDEN LINE AFTER EVERY ROW - FIXED */
+.table tbody td {
+  text-align: center;
+  vertical-align: middle;
+  padding: 14px;
+  font-size: 15px;
+  color: #333;
+  transition: var(--transition);
+  border-bottom: none !important; /* Remove default borders */
+}
+
+/* Golden line using border-bottom on td elements */
+.table tbody td {
+  border-bottom: 1px solid rgba(176,149,114,0.3) !important; /* Golden brown line */
+}
+
+/* Remove border from last row's cells */
+.table tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+/* Add golden line to the last row using after pseudo-element */
+.table tbody tr:last-child::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(176,149,114,0.3);
+}
+
+.table tbody tr:hover {
+  background-color: rgba(0,78,137,0.03);
+}
+
+.table tbody tr:hover td {
+  color: var(--dark-blue);
+  font-weight: 500;
+}
+
+/* ===== Action Buttons in Tables ===== */
+.btn-sm {
+  font-size: 13px;
+  padding: 4px 8px; /* Reduced padding */
+  border-radius: 5px;
+  margin: 2px;
+  transition: var(--transition);
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Primary buttons (Blue theme) */
+.btn-primary {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  color: var(--white);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--dark-blue-hover), var(--dark-blue));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,78,137,0.3);
+  color: var(--white);
+}
+
+/* Warning buttons (Golden Brown theme) */
+.btn-warning {
+  background: linear-gradient(135deg, var(--golden-brown), var(--golden-brown-hover));
+  color: var(--white);
+  border: none;
+}
+
+.btn-warning:hover {
+  background: linear-gradient(135deg, var(--golden-brown-hover), var(--golden-brown));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(176,149,114,0.3);
+  color: var(--white);
+}
+
+/* Success buttons */
+.btn-success {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: var(--white);
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #218838, #28a745);
+  transform: translateY(-2px);
+  color: var(--white);
+}
+
+/* Info buttons */
+.btn-info {
+  background: linear-gradient(135deg, #17a2b8, #138496);
+  color: var(--white);
+}
+
+.btn-info:hover {
+  background: linear-gradient(135deg, #138496, #17a2b8);
+  transform: translateY(-2px);
+  color: var(--white);
+}
+
+/* Danger buttons */
+.btn-danger {
+  background: linear-gradient(135deg, #dc3545, #c82333) !important;
+  border: none;
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #c82333, #dc3545) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+  color: var(--white);
+}
+
+/* ===== Student Photo Styling ===== */
+.student-photo {
+  width: 55px;
+  height: 55px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover)) padding-box,
+              linear-gradient(135deg, var(--golden-brown), var(--golden-brown-hover)) border-box;
+  transition: all 0.4s ease;
+  box-shadow: 0 4px 12px rgba(0,78,137,0.2);
+}
+
+.student-photo:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0,78,137,0.3);
+}
+
+/* ===== Badge Styling ===== */
+.badge {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.bg-success {
+  background: linear-gradient(135deg, #28a745, #218838) !important;
+}
+
+.bg-warning {
+  background: linear-gradient(135deg, var(--golden-brown), var(--golden-brown-hover)) !important;
+  color: var(--white) !important;
+}
+
+/* ===== Button Hover Effects ===== */
+.btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn:hover::before {
+  left: 100%;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,78,137,0.25);
+}
+
+/* ===== Special Button Styles ===== */
+.btn-hallticket {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  color: var(--white);
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 8px;
+  transition: var(--transition);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  border: none;
+}
+
+.btn-hallticket:hover {
+  background: linear-gradient(135deg, var(--dark-blue-hover), var(--dark-blue));
+  color: var(--white);
+  transform: translateY(-2px);
+}
+
+.btn-register {
+  background: linear-gradient(135deg, #6c757d, #495057);
+  color: var(--white);
+  border: none;
+}
+
+.btn-register:hover {
+  background: linear-gradient(135deg, #495057, #6c757d);
+  color: var(--white);
+}
+
+/* ===== Supply Button ===== */
+.supply-btn {
+  background: linear-gradient(135deg, #e17055, #d63031) !important;
+  color: var(--white);
+  border: none;
+}
+
+.supply-btn:hover {
+  background: linear-gradient(135deg, #d63031, #e17055) !important;
+  color: var(--white);
+}
+
+/* ===== Form Button Styling ===== */
+.form .btn-warning {
+  background: linear-gradient(135deg, var(--golden-brown), var(--golden-brown-hover));
+  color: var(--white);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.form .btn-warning:hover {
+  background: linear-gradient(135deg, var(--golden-brown-hover), var(--golden-brown));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(176,149,114,0.3);
+}
+
+/* ===== Certificate Type Display ===== */
+.certificate-type {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  background: linear-gradient(135deg, var(--golden-brown), var(--golden-brown-hover));
+  color: var(--white);
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+/* ===== MARK BUTTONS ALIGNMENT - FIXED ===== */
+.table tbody td:nth-child(6) { /* Mark column */
+  min-width: 150px; /* Reduced width */
+  max-width: 250px;
+  text-align: left;
+  padding: 10px;
+}
+
+/* Mark buttons container */
+.mark-buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+/* Individual mark buttons - reduced width */
+.table tbody td:nth-child(6) .btn-sm {
+  display: block;
+  margin: 0 0 5px 0;
+  width: 100%;
+  height: 40px;
+  text-align: center;
+  padding: 4px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table tbody td:nth-child(6) .btn-sm {
+  display: flex;
+  justify-content: center;   /* Horizontal center */
+  align-items: center;       /* Vertical center */
+  text-align: center;
+}
+
+.table tbody td:nth-child(6) .btn-sm i {
+  margin-right: 6px;
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* ===== Animations ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.table tbody tr {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.table tbody tr:nth-child(even) {
+  animation-delay: 0.1s;
+}
+
+.table tbody tr:nth-child(odd) {
+  animation-delay: 0.2s;
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+  section {
+    padding: 20px 10px;
+  }
+  
+  .container {
+    padding: 15px;
+  }
+  
+  .container h2 {
+    font-size: 22px;
+  }
+  
+  .table thead th,
+  .table tbody td {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+  
+  .btn, .btn-sm {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  
+  .student-photo {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .table tbody td:nth-child(6) {
+    min-width: 180px;
+  }
+  
+  .table tbody td:nth-child(6) .btn-sm {
+    width: auto;
+    display: inline-block;
+    margin: 2px;
+  }
+}
+</style>
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Student Management Portal</h2>
+    <a href="/user/add-student" class="btn btn-outline-dark btn-sm">
+      <i class="fas fa-user-plus me-2"></i> Register Student
+    </a>
+  </div>
+
+  <table class="table table-bordered align-middle">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>ID CARD</th>
+        <th>CANDIDATES</th>
+        <th>Course</th>
+        <th>Photo</th>
+        <th>Mark</th>
+        <th>Hall Ticket Portal</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each students}}
+      <tr>
+        <td>{{inc @index}}</td>
+        <td>
+          {{this.regNo}}
+          <a href="/user/id-card-preview/{{this._id}}" class="btn btn-sm btn-primary">
+            <i class="fas fa-download"></i> Download
+          </a>
+        </td>
+        <td>{{this.fullName}}</td>
+        <td>{{this.courseName}}</td>
+        <td>
+          <img src="/studentImages/{{this._id}}.jpg"
+               alt="photo"
+               class="student-photo">
+        </td>
+        <td>
+          <!-- Mark buttons in container for better alignment -->
+          <div class="mark-buttons-container">
+            <a href="/user/add-mark/{{this._id}}" class="btn btn-sm btn-primary">
+              <i class="fas fa-plus-circle me-1"></i> Add Mark
+            </a>
+            
+            <a href="/user/mark-list/{{this._id}}" class="btn btn-sm btn-info">
+              <i class="fas fa-list me-1"></i> View Mark List
+            </a>
+            
+            {{#if this.hasSupply}}
+              <a href="/user/combined-marklist/{{this._id}}" class="btn btn-success btn-sm">
+                <i class="fas fa-file-alt me-1"></i> Supply Mark List
+              </a>
+            {{else}}
+              {{#if this.hasFailed}}
+                <a href="/admin/add-supply-mark/{{this._id}}" class="btn btn-sm supply-btn">
+                  <i class="fas fa-redo-alt me-1"></i> Add Supply
+                </a>
+              {{/if}}
+            {{/if}}
+          </div>
+        </td>
+        <td>
+          <!-- Application Form Button -->
+          <a href="#" 
+             class="btn btn-warning btn-sm mb-1"
+             onclick="return showInstructions('/user/app-form/{{this._id}}');">
+             <i class="fas fa-file-signature me-1"></i> Apply Hall Ticket
+          </a>
+
+          <!-- Hall Ticket Button (only if approved) -->
+          {{#if this.approved}}
+          <a href="/user/hall-ticket/{{_id}}" 
+             class="btn btn-hallticket btn-sm mb-1">
+             Hall Ticket
+          </a>
+          {{/if}}
+        </td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  /**
+   * Show instructions before redirecting to a page
+   * @param {string} url - The URL to go to after confirmation
+   */
+  function showInstructions(url) {
+    let message = "📌 Steps Before Filling Registration Form:\n\n" +
+                  "1. Read all instructions carefully.\n" +
+                  "2. Ensure details (Name, Register No, Centre) are correct.\n" +
+                  "3. Once submitted, you cannot edit.\n" +
+                  "4. Registration will be sent for Admin approval.\n" +
+                  "5. Approval will only get after 24 hours.\n" +
+                  "6. Only after approval, Hall Ticket will be available.\n\n" +
+                  "👉 Click OK to continue.";
+
+    if (confirm(message)) {
+      window.location.href = url;
+      return false;
+    } else {
+      return false;
+    }
+  }
+</script>

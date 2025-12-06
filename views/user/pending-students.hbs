@@ -1,0 +1,148 @@
+<style>
+/* ===== Students List Section ===== */
+.student-table {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  background: #fff;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ===== Table Header ===== */
+.student-table thead th {
+  background: #1f3555;
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 14px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===== Table Body ===== */
+.student-table tbody td {
+  text-align: center;
+  vertical-align: middle;
+  padding: 12px;
+  font-size: 15px;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  transition: background 0.3s ease;
+}
+
+.student-table tbody tr:hover {
+  background: #f9fbfd;
+}
+
+/* ===== Photo Column ===== */
+.student-photo {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #1f3555;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: transform 0.3s ease;
+}
+
+.student-photo:hover {
+  transform: scale(1.1);
+}
+
+/* ===== Buttons ===== */
+.btn.btn-sm {
+  border: 2px solid #1f3555;
+  color: #1f3555;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+.btn.btn-sm:hover {
+  background: #1f3555;
+  color: #fff;
+}
+
+.btn-success.btn-sm {
+  background: #198754;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.btn-success.btn-sm:hover {
+  background: #146c43;
+  transform: scale(1.05);
+}
+
+.btn-danger.btn-sm {
+  background: #dc3545;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.btn-danger.btn-sm:hover {
+  background: #b02a37;
+  transform: scale(1.05);
+}
+</style>
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Pending Activation - Students</h2>
+  </div>
+
+  {{#if pendingStudents.length}}
+  <table class="table table-striped table-bordered align-middle student-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Reg No</th>
+        <th>Name</th>
+        <th>Course</th>
+        <th>Admission Year</th>
+        <th>Photo</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each pendingStudents}}
+      <tr>
+        <td>{{inc @index}}</td>
+        <td>{{this.regNo}}</td>
+        <td>{{this.fullName}}</td>
+        <td>{{this.batchDetails.batchName}}</td>
+        <td>{{this.admissionYear}}</td>
+        <td>
+          <img src="/studentImages/{{this._id}}.jpg" alt="photo" class="student-photo">
+        </td>
+        <td>
+          
+
+          <a href="/user/delete-student/{{this._id}}" 
+             class="btn btn-danger btn-sm"
+             onclick="return confirm('Are you sure you want to delete this student?');">
+            Delete
+          </a>
+        </td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+  {{else}}
+  <div class="alert alert-info text-center mt-4">
+    No students pending activation.
+  </div>
+  {{/if}}
+</div>
+

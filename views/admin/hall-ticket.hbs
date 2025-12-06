@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hall Ticket</title>
+  <style>
+    body {
+      font-family: "Times New Roman", serif;
+      margin: 0;
+      padding: 0;
+      background: #fdfdfd;
+    }
+
+    .hallticket-container {
+      border: 2px solid #000;
+      padding: 20px 30px;
+      max-width: 900px;
+      margin: 20px auto;
+      background: #fff;
+    }
+
+    /* ===== Cut Line ===== */
+    .cut-line {
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    /* ===== Header ===== */
+    .header {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .header h2 {
+      margin: 2px 0;
+      font-size: 20px;
+      font-weight: bold;
+      text-decoration: underline;
+    }
+    .header h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: normal;
+    }
+
+    /* ===== Top Row (logo, qr, photo) ===== */
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 15px 0;
+    }
+    .logo, .photo {
+      width: 120px;
+      height: 140px;
+      
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .logo img, .photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .qr {
+      text-align: center;
+      flex: 1;
+    }
+    .qr-box {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+  border: 1px  #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.qr-box img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+
+    .qr p {
+      margin-top: 5px;
+      font-weight: bold;
+    }
+
+    /* ===== Details Table (two columns) ===== */
+    .details {
+      margin-top: 15px;
+    }
+    .details table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .details td {
+      border: 1px solid #000;
+      padding: 6px 10px;
+      font-size: 14px;
+      width: 50%;
+      vertical-align: top;
+    }
+    .details .label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    /* ===== Signature Section ===== */
+    .sign-section {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+    .sign-box {
+      width: 45%;
+      text-align: center;
+    }
+    .sign-box p {
+      margin-top: 50px;
+      border-top: 1px solid #000;
+      display: inline-block;
+      padding-top: 5px;
+      font-size: 13px;
+    }
+
+    /* ===== Instructions ===== */
+ .instructions {
+    font-size: 12px;
+  line-height: 1.4;
+  border-top: 2px solid #000;
+  padding-top: 10px;
+  page-break-inside: avoid; /* don't split mid-list */
+}
+
+    .instructions h3 {
+      font-size: 15px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .instructions ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .instructions h2 {
+      margin: 2px 0;
+      font-size: 20px;
+      font-weight: bold;
+      text-decoration: underline;
+      text-align: center;
+    }
+    .instructions h10 {
+      
+      font-weight: bold;
+      text-align: center;
+    }
+   .page-break {
+  page-break-before: always;
+
+
+}
+.instructions ul li:last-child {
+  margin-bottom: 70px; /* give extra space so it's never cut */
+}
+.hallticket-container:last-child {
+  margin-bottom: 0;
+}
+
+    /* ===== PDF Formatting ===== */
+  #ticket {
+ width: 100%;       /* Let html2pdf scale automatically */
+  box-sizing: border-box;
+  background: #fff;
+  padding: 20px 30px;
+  overflow: visible !important;
+}
+  </style>
+</head>
+<body>
+  <div id="ticket" class="hallticket-container">
+
+   
+
+    <div class="header">
+      <h2>OFFICE OF THE NETD</h2>
+      <h2>BOARD OF EXAMINATIONS</h2>
+      <h3>भारत सरकार</h3>
+    </div>
+
+    <div class="top-row">
+      <div class="logo">
+        <img src="/images/netd.jpeg" alt="Logo">
+      </div>
+      <div class="qr">
+        <div class="qr-box">
+            <img src="/images/qr.jpg" alt="qr code">
+            </div>
+        <p>HALL TICKET</p>
+      </div>
+      <div class="photo">
+        <img src="/studentImages/{{_id}}.jpg" alt="Candidate Photo">
+      </div>
+    </div>
+
+    <div class="details">
+      <table>
+        <tr>
+          <td>
+            <span class="label">Register Number:</span>
+            {{applicationForm.registerNumber}}
+          </td>
+          <td>
+            <span class="label">Name of Training Center:</span>
+            {{applicationForm.studyCentre}}
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <span class="label">Name of Candidate:</span>
+            {{applicationForm.candidateName}}
+          </td>
+          <td>
+            <span class="label">Date of Examination:</span>
+            {{applicationForm.examDate}}
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <span class="label">Name of the Course:</span>
+            {{applicationForm.courseName}}
+          </td>
+          <td>
+            <span class="label">Time of Examination:</span>
+            {{applicationForm.examTime}}
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <span class="label">Location:</span>
+            {{applicationForm.examCentre}}
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="sign-section">
+      <div class="sign-box">
+        <p>Candidate Signature</p>
+      </div>
+      <div class="sign-box">
+        
+        <p>Authorised Signatory</p>
+      </div>
+    </div>
+    <div class="page-break"></div> <!-- start new page -->
+
+    <!-- Instructions -->
+    <div class="instructions">
+      
+      <ul>
+        <li> ATC copy, application for final examination and hall ticket, all the 3 must be filled and signed by the student themselves and submit to training centre.</li> 
+        <li>A student registered under ATC must get registered with NETD within a period of 30 days of time.</li>
+        <li>  The students who have not completed the academic period (course duration) will not be allowed to write the examination </li> 
+        <li>  The certification fees (Rs. 1000/1200/2700/2800 as per the duration of the course) collected from the student will not exceed the indicated amount. Students must be aware of the examination fees remitting to NETD.</li> 
+        <li>Filled hall ticket must kept under the custody of ATC and issue one week before final examination. If it is a 2 years programme ask the students to keep hall ticket for another year.</li> 
+        <li>ATC copy of all students must compulsorily kept under ATC custody for any kind of enquiry in future. Missing of ATC copy will be assumed as non-registration of particular student.</li> 
+        <li>Student name and course name in the certificate will be the same as entered in the yellow colour application form.
+          Before sending, check the application carefully to scrutinise the name entered in the application and in the qualifying certificate are one and same. Reprinting of certificate due to spelling mistake will charged.</li> 
+         <li>The ATC must be very careful about the student name, course name entered in the application as the same is printing on the certificate.
+         <li>The application filled by the ATC other than the students will be rejected.</li> 
+         <li>nclose their qualifying certificate copy as prescribed for each course</li>
+          <li>Training fees must be collected before examination no students shall be allowed to write examination before completing the training fees.</li>
+          <li>NETD strictly bans collecting training fees from the students who have already attended their final examinations.</li>
+          <li>NETD doesn't have any connection with the training fees collected by ATC. (NETD receives only certificate fee from students).</li>
+          <li>ATC do not collect training fees in the name of NETD.</li>
+           <li>Course completion certificate & Mark card will be issued to ATC within 45 days after final examination held by NETD authority.</li>
+          <li>Students could register their complaints, enquiries, suggestions through our official mail id " netddirector</li>
+      </ul>
+    </div>
+     
+      <div class="instructions ">
+        <h2>OFFICE OF THE NETD <br> BOARD OF EXAMINATIONS</h2>
+        <div style="text-align:center;  font-size:12px;">
+  एक स्वायत्त निकाय है और एक राष्ट्रीय आईटी विकास
+</div>
+
+        <h3>भारत सरकार</h3>
+        <ul>
+        <li>This Hall Ticket Is Valid Only If The Candidate's Photograph And Signature Images Are Elegible</li>
+<li>Candidates Will Be Permitted To Appear For The Examination Only After Their Credentials Are Verifier By Centre Officials.</li>
+<li>Candidates Should Take Their Places In The Examination Hall At Least 10 Minutes Before The Commencement Of the Examination.</li>
+<li>Candidates Presenting Themselves Half An Hour A fier The Appointed Time Will Not Be Admitted To The
+Examination Hall.</li>
+<li>Candidates Should Bring With Them Their Hall Ticket Each Day Ofthe Examination For Inspection.</li>
+<li>Candidates Should Fill The Facing Sheet Of the Answer Book In Block Letters.</li>
+<li>No Candidate Will Be Allowed To Leave The Examination Hall Till The Expiry Of Half An Hour After The Commencement Of The Examination.</li>
+<li>Candidates Are Prohibited From Bringing Into The Examination Hall Any Book Or Portion Of Bo Manuscript Or Paper And From Communicating With Any Person Inside Or Outside. Copying Or Ott Unfair Practices By The Candidate Is Strictly Prohibited.</li>
+<li>When The Candidate Need Supplemental Sheets Or Any Other Assistance He/she Should Stand Up In The Place.</li>
+<li>When The Candidate Has Finished Writing He/she Shall Stand Up In The Place So That The Invigilator May Collect The Answer Book. </li>
+      </ul>
+
+
+      </div>
+
+  </div>
+
+  <div class="btn-container" style="text-align:center; margin-top:20px;">
+    <button class="btn" onclick="downloadPDF()">Download as PDF</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+ {{!-- function downloadPDF() {
+  const element = document.getElementById('ticket');
+
+  const opt = {
+    margin:       [10, 10, 10, 10],   // 10mm margins
+    filename:     'Hall_Ticket.pdf',
+    image:        { type: 'jpeg', quality: 1 },
+    html2canvas:  { scale: 3, scrollY: 0, useCORS: true },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak:    { mode: ['css', 'legacy'], before: '.page-break' }
+  };
+
+  html2pdf().set(opt).from(element).save();
+} --}}
+function downloadPDF() {
+  const element = document.getElementById('ticket');
+
+  const opt = {
+    margin:       [10, 10, 15, 10], // added extra bottom margin
+    filename:     'Hall_Ticket.pdf',
+    image:        { type: 'jpeg', quality: 1 },
+    html2canvas:  { scale: 3, scrollY: 0, useCORS: true },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak:    { mode: ['css', 'legacy', 'avoid-all'] } // 👈 avoid cutting last lines
+  };
+
+  html2pdf().set(opt).from(element).save();
+}
+  </script>
+</body>
+</html>

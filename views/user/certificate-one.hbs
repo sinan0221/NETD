@@ -1,0 +1,504 @@
+{{!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificate - {{student.fullName}}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Times New Roman", serif;
+      background: #f5f5f5;
+    }
+
+    .certificate-container {
+      width: 1000px;      /* match your certificate size */
+      height: 1400px;     /* adjust based on template image */
+      margin: 20px auto;
+      background: url("/images/certificate-bg.jpg") no-repeat center top;
+      background-size: cover;
+      position: relative;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+
+    /* === Positioned fields === */
+    .student-name {
+      position: absolute;
+      top: 702px;      /* adjust carefully */
+      left: 550px;
+      font-size: 26px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #000;
+
+    }
+    /* === Student Photo Box === */
+.student-photo {
+  position: absolute;
+  top: 533px;      /* adjust depending on your background */
+  right: 70px;    /* move left/right as needed */
+  width: 120px;    /* standard passport size width */
+  height: 150px;   /* standard passport size height */
+    /* professional dark blue border */
+  border-radius: 8px;         /* slight rounded corners */
+  background: #fff;           /* white background behind photo */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+.student-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;   /* keeps face centered, no distortion */
+}
+
+
+    .course-name {
+      position: absolute;
+      top: 802px;
+      left: 287px;
+      font-size: 20px;
+    }
+
+    .duration {
+      position: absolute;
+      top: 852px;
+      left: 98px;
+      font-size: 20px;
+    }
+
+    .grade {
+      position: absolute;
+      top: 900px;
+      left: 80px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .exam-date {
+      position: absolute;
+      top: 950px;
+      left: 250px;
+      font-size: 20px;
+    }
+
+    .issue-date {
+      position: absolute;
+      top: 950px;
+      left: 250px;
+      font-size: 20px;
+    }
+
+    .signature {
+      position: absolute;
+      bottom: 120px;
+      right: 200px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    /* Institution Logo */
+.institution-logo {
+  position: absolute;
+  bottom: 250px;  /* distance from bottom */
+  left: 80px;     /* adjust as needed */
+  width: 150px;   /* or adjust */
+  height: auto;
+}
+
+.institution-logo img {
+  width: 100%;
+  height: auto;
+}
+
+/* Department Logo */
+.department-logo {
+  position: absolute;
+  bottom: 250px;  /* same vertical as institution logo */
+  right: 80px;    /* adjust as needed */
+  width: 120px;
+  height: auto;
+}
+
+.department-logo img {
+  width: 100%;
+  height: auto;
+}
+
+
+    /* === Print button === */
+    .print-button {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #1f3555;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .print-button:hover {
+      background: #15263f;
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+      .print-button {
+        display: none;
+      }
+      .certificate-container {
+        box-shadow: none;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="certificate-container">
+    <!-- Dynamic Fields -->
+    <div class="student-photo">
+  <img src="{{student.photo}}" alt="Student Photo">
+</div>
+
+    <div class="student-name">{{student.fullName}}</div>
+    <div class="course-name">{{student.courseName}}</div>
+    <div class="duration">{{student.duration}}</div>
+    <div class="grade">{{student.grade}}</div>
+    <div class="exam-date"></div>
+    <div class="issue-date"> {{issueDate}}</div>
+    <div class="signature">Chairman / Board of Examiners</div>
+     <div class="institution-logo">
+  <img src="{{logos.institution}}" alt="Institution Logo" style="width:100px; height:100px;">
+</div>
+<div class="department-logo">
+  <img src="{{logos.department}}" alt="Department Logo" style="width:100px; height:100px;">
+</div>
+
+  </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <button class="print-button no-print" id="downloadPDF">
+    <i class="fas fa-download"></i> Download Certificate
+</button>
+<script>
+  document.getElementById('downloadPDF').addEventListener('click', function() {
+    const element = document.querySelector('.certificate-container'); // the container to convert
+
+    const opt = {
+      margin: 0,
+      filename: 'Certificate_{{student.marks.registrationNo}}.pdf', // dynamic filename
+      image: { type: 'jpeg', quality: 1 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        scrollY: 0,  // prevents partial capture when page is scrolled
+        windowWidth: document.body.scrollWidth,
+        windowHeight: document.body.scrollHeight
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait'
+      },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } // ensures content is not cut-off
+    };
+
+    html2pdf().set(opt).from(element).save();
+  });
+</script>
+
+
+
+</body>
+</html> --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificate - {{student.fullName}}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: "Times New Roman", serif;
+    background: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  /* ✅ A4 Container — perfectly fits one page */
+  .certificate-container {
+    width: 210mm;       /* A4 width */
+    height: 296mm;      /* Slightly less than A4 height to prevent overflow */
+    margin: 10px auto;
+    background: url("/images/certificate-bg.jpg") no-repeat center top;
+    background-size: cover;
+    position: relative;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    overflow: hidden;   /* Ensures nothing spills outside */
+    page-break-after: always;
+  }
+
+  /* === Positioned fields === */
+  .student-name {
+    position: absolute;
+    bottom: 525px;
+    left: 115mm;
+    font-size: 26px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #000;
+  }
+
+  .student-photo {
+    position: absolute;
+    bottom: 570px;
+    left: 649px;
+    width: 90px;
+    height: 130px;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    overflow: hidden;
+  }
+
+  .student-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .course-name {
+    position: absolute;
+    bottom: 450px;
+    left: 60mm;
+    font-size: 20px;
+  }
+
+  .duration {
+    position: absolute;
+    bottom: 410px;
+    left: 20mm;
+    font-size: 20px;
+  }
+
+  .grade {
+    position: absolute;
+    bottom: 372px;
+    left: 17mm;
+    font-size: 20px;
+    font-weight: bold;
+  }
+
+  .exam-date {
+    position: absolute;
+    top: 190mm;
+    left: 53mm;
+    font-size: 20px;
+  }
+
+  .issue-date {
+    position: absolute;
+    bottom: 335px;
+    left: 53mm;
+    font-size: 20px;
+  }
+
+  
+
+  /* Institution Logo */
+  .institution-logo {
+    position: absolute;
+   bottom: 210px;
+    left: 345px;
+    width: 80px;
+    height: auto;
+  }
+
+  .institution-logo img {
+    width: 100%;
+    height: auto;
+  }
+
+  /* Department Logo */
+  .department-logo {
+    position: absolute;
+    bottom: 210px;
+    left: 80px;
+    width: 120px;
+    height: auto;
+  }
+
+  .department-logo img {
+    width: 100%;
+    height: auto;
+  }
+
+  /* Download Button */
+  .print-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #1f3555;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 100;
+  }
+
+  .print-button:hover {
+    background: #15263f;
+  }
+
+  /* ✅ Ensure PDF fits exactly on one page */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  @media print {
+    html, body {
+      width: 210mm;
+      height: 297mm;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: white;
+    }
+
+    .certificate-container {
+      margin: 0;
+      box-shadow: none;
+      transform: scale(0.995); /* Tiny shrink to prevent overflow */
+      transform-origin: top center;
+    }
+
+    .print-button {
+      display: none;
+    }
+  }
+
+  /* Success message */
+  .success-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #4CAF50;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 5px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: none;
+    z-index: 1000;
+  }
+</style>
+
+</head>
+<body>
+  <div class="success-message" id="successMessage">
+    <i class="fas fa-check-circle"></i> Certificate downloaded successfully!
+  </div>
+  
+  <div class="certificate-container">
+    <!-- Dynamic Fields -->
+    <div class="student-photo">
+      <img src="{{student.photo}}" alt="Student Photo">
+    </div>
+
+    <div class="student-name">{{student.fullName}}</div>
+    <div class="course-name">{{student.courseName}}</div>
+    <div class="duration">{{student.duration}}</div>
+    <div class="grade">{{student.grade}}</div>
+    <div class="exam-date"></div>
+    <div class="issue-date">{{issueDate}}</div>
+    
+    <div class="institution-logo">
+  {{#if institutionLogo}}
+    <img src="{{institutionLogo}}" alt="Institution Logo">
+  {{else}}
+    <span>No Institution Logo</span>
+  {{/if}}
+</div>
+
+<div class="department-logo">
+  {{#if departmentLogo}}
+    <img src="{{departmentLogo}}" alt="Department Logo">
+  {{else}}
+    <span>No Department Logo</span>
+  {{/if}}
+</div>
+
+  </div>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <button class="print-button no-print" id="downloadPDF">
+    <i class="fas fa-download"></i> Download Certificate
+  </button>
+  
+  <script>
+    document.getElementById('downloadPDF').addEventListener('click', function() {
+      const element = document.querySelector('.certificate-container');
+      const button = this;
+      const originalText = button.innerHTML;
+      
+      // Show loading state
+      button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+      button.disabled = true;
+      
+      const opt = {
+        margin: 0,
+        filename: 'Certificate_{{student.marks.registrationNo}}.pdf',
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          scrollY: 0,
+          windowWidth: document.documentElement.scrollWidth,
+          windowHeight: document.documentElement.scrollHeight
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'portrait'
+        },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        // Reset button state
+        button.innerHTML = originalText;
+        button.disabled = false;
+        
+        // Show success message
+        const successMessage = document.getElementById('successMessage');
+        successMessage.style.display = 'block';
+        setTimeout(() => {
+          successMessage.style.display = 'none';
+        }, 3000);
+      });
+    });
+  </script>
+</body>
+</html>

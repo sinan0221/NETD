@@ -1,0 +1,669 @@
+{{!-- <section class="form-section">
+  <style>
+    .form-section {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .course-form-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+      backdrop-filter: blur(10px);
+    }
+
+    .form-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .form-header h2 {
+      color: #2c3e50;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .form-header p {
+      color: #7f8c8d;
+      font-size: 16px;
+      margin: 0;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      color: #2c3e50;
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e9ecef;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+      color: #2c3e50;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .form-control:hover {
+      border-color: #adb5bd;
+    }
+
+    .input-icon {
+      position: absolute;
+      right: 16px;
+      top: 40px;
+      color: #667eea;
+      font-size: 18px;
+    }
+
+    .date-input-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .location-input {
+      position: relative;
+    }
+
+    .location-suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 2px solid #e9ecef;
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+
+    .location-suggestion {
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f3f4;
+      transition: background-color 0.2s ease;
+    }
+
+    .location-suggestion:hover {
+      background-color: #f8f9fa;
+    }
+
+    .location-suggestion:last-child {
+      border-bottom: none;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 8px;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .form-divider {
+      text-align: center;
+      margin: 24px 0;
+      position: relative;
+    }
+
+    .form-divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #e9ecef;
+    }
+
+    .form-divider span {
+      background: white;
+      padding: 0 16px;
+      color: #7f8c8d;
+      font-size: 14px;
+    }
+
+    /* Animation for form elements */
+    .form-group {
+      animation: slideUp 0.5s ease forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .form-group:nth-child(1) { animation-delay: 0.1s; }
+    .form-group:nth-child(2) { animation-delay: 0.2s; }
+    .form-group:nth-child(3) { animation-delay: 0.3s; }
+    .form-group:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes slideUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .course-form-container {
+        padding: 30px 20px;
+        margin: 20px;
+      }
+
+      .date-input-group {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .form-header h2 {
+        font-size: 24px;
+      }
+    }
+
+    /* Custom calendar icon */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      background: transparent;
+      bottom: 0;
+      color: transparent;
+      cursor: pointer;
+      height: auto;
+      left: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: auto;
+    }
+
+    /* Validation styles */
+    .form-control.invalid {
+      border-color: #e74c3c;
+      background: #fdf2f2;
+    }
+
+    .error-message {
+      color: #e74c3c;
+      font-size: 12px;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .form-control.invalid + .error-message {
+      display: block;
+    }
+  </style>
+
+  <div class="course-form-container">
+    <div class="form-header">
+      <h2>Course Schedule</h2>
+      <p>Enter the course dates and examination location</p>
+    </div>
+
+<form id="courseForm" method="POST" action="/admin/edit-schedule/{{batchId}}">
+      <div class="form-group">
+        <label class="form-label" for="startDate">Start Date</label>
+        <input type="date" class="form-control" id="startDate" name="startDate" value="{{batch.courseStartDate}}" required>
+        <i class="input-icon fas fa-calendar-alt"></i>
+        <div class="error-message">Please select a valid start date</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="endDate">End Date</label>
+       
+<input type="date" class="form-control" id="endDate" name="endDate" value="{{batch.courseEndDate}}" required>
+        <i class="input-icon fas fa-calendar-alt"></i>
+        <div class="error-message">Please select a valid end date</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="examLocation">Exam Location</label>
+        <div class="location-input">
+          <input type="text" class="form-control" id="examLocation" placeholder="Enter exam venue or address" name="examLocation" value="{{batch.examLocation}}" required>
+          <i class="input-icon fas fa-map-marker-alt"></i>
+          <div class="location-suggestions" id="locationSuggestions">
+            <!-- Suggestions will be populated by JavaScript -->
+          </div>
+        </div>
+        <div class="error-message">Please enter a valid exam location</div>
+      </div>
+
+      <button type="submit" class="submit-btn">
+        <i class="fas fa-save"></i> Save Schedule
+      </button>
+    </form>
+  </div>
+
+  <script>
+    // Form validation and functionality
+    document.getElementById('courseForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const startDate = document.getElementById('startDate');
+      const endDate = document.getElementById('endDate');
+      const examLocation = document.getElementById('examLocation');
+      let isValid = true;
+
+      // Reset previous validation states
+      [startDate, endDate, examLocation].forEach(input => {
+        input.classList.remove('invalid');
+      });
+
+      // Validate dates
+      if (!startDate.value) {
+        startDate.classList.add('invalid');
+        isValid = false;
+      }
+
+      if (!endDate.value) {
+        endDate.classList.add('invalid');
+        isValid = false;
+      }
+
+      if (startDate.value && endDate.value) {
+        const start = new Date(startDate.value);
+        const end = new Date(endDate.value);
+        if (end <= start) {
+          endDate.classList.add('invalid');
+          endDate.nextElementSibling.textContent = 'End date must be after start date';
+          isValid = false;
+        }
+      }
+
+      // Validate location
+      if (!examLocation.value.trim()) {
+        examLocation.classList.add('invalid');
+        isValid = false;
+      }
+
+      if (isValid) {
+        // Form is valid - you can submit the data here
+        const formData = {
+          startDate: startDate.value,
+          endDate: endDate.value,
+          examLocation: examLocation.value.trim()
+        };
+        
+        console.log('Form data:', formData);
+        
+        // Show success message (you can replace this with actual form submission)
+        alert('Course schedule saved successfully!');
+        this.reset();
+      }
+    });
+
+    // Location suggestions (mock data)
+    const locationSuggestions = [
+      "Main Campus - Building A",
+      "Main Campus - Building B",
+      "City Center Campus",
+      "North Campus - Lecture Hall 1",
+      "South Campus - Conference Center",
+      "Online - Virtual Classroom",
+      "Regional Center - Downtown",
+      "Tech Park - Innovation Hub"
+    ];
+
+    const examLocation = document.getElementById('examLocation');
+    const locationSuggestionsDiv = document.getElementById('locationSuggestions');
+
+    examLocation.addEventListener('focus', function() {
+      showLocationSuggestions();
+    });
+
+    examLocation.addEventListener('input', function() {
+      showLocationSuggestions();
+    });
+
+    function showLocationSuggestions() {
+      const input = examLocation.value.toLowerCase();
+      const filteredSuggestions = locationSuggestions.filter(location => 
+        location.toLowerCase().includes(input)
+      );
+
+      if (filteredSuggestions.length > 0 && input.length > 0) {
+        locationSuggestionsDiv.innerHTML = filteredSuggestions
+          .map(location => `<div class="location-suggestion">${location}</div>`)
+          .join('');
+        locationSuggestionsDiv.style.display = 'block';
+      } else {
+        locationSuggestionsDiv.style.display = 'none';
+      }
+    }
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.location-input')) {
+        locationSuggestionsDiv.style.display = 'none';
+      }
+    });
+
+    // Handle suggestion click
+    locationSuggestionsDiv.addEventListener('click', function(e) {
+      if (e.target.classList.contains('location-suggestion')) {
+        examLocation.value = e.target.textContent;
+        locationSuggestionsDiv.style.display = 'none';
+      }
+    });
+
+    // Set minimum date to today for start date
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('startDate').min = today;
+    document.getElementById('endDate').min = today;
+  </script>
+</section> --}}
+<section class="form-section">
+  <style>
+    .form-section {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .course-form-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+      backdrop-filter: blur(10px);
+    }
+
+    .form-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .form-header h2 {
+      color: #2c3e50;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .form-header p {
+      color: #7f8c8d;
+      font-size: 16px;
+      margin: 0;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+      position: relative;
+      animation: slideUp 0.5s ease forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .form-group:nth-child(1) { animation-delay: 0.1s; }
+    .form-group:nth-child(2) { animation-delay: 0.2s; }
+    .form-group:nth-child(3) { animation-delay: 0.3s; }
+    .form-group:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes slideUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      color: #2c3e50;
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e9ecef;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+      color: #2c3e50;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .input-icon {
+      position: absolute;
+      right: 16px;
+      top: 40px;
+      color: #667eea;
+      font-size: 18px;
+    }
+
+    .location-input {
+      position: relative;
+    }
+
+    .location-suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 2px solid #e9ecef;
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+
+    .location-suggestion {
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f3f4;
+      transition: background-color 0.2s ease;
+    }
+
+    .location-suggestion:hover {
+      background-color: #f8f9fa;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 8px;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .form-control.invalid {
+      border-color: #e74c3c;
+      background: #fdf2f2;
+    }
+
+    .error-message {
+      color: #e74c3c;
+      font-size: 12px;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .form-control.invalid + .error-message {
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .course-form-container {
+        padding: 30px 20px;
+        margin: 20px;
+      }
+    }
+  </style>
+
+  <div class="course-form-container">
+    <div class="form-header">
+      <h2>Course Schedule</h2>
+      <p>Enter or edit the course dates and exam location</p>
+    </div>
+
+    <!-- ✅ Fixed form action -->
+    <form id="courseForm" method="POST" action="/admin/edit-schedule/{{batch._id}}">
+      <div class="form-group">
+        <label class="form-label" for="startDate">Start Date</label>
+        <input type="date" class="form-control" id="startDate" name="startDate" value="{{batch.courseStartDate}}" required>
+        <i class="input-icon fas fa-calendar-alt"></i>
+        <div class="error-message">Please select a valid start date</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="endDate">End Date</label>
+        <input type="date" class="form-control" id="endDate" name="endDate" value="{{batch.courseEndDate}}" required>
+        <i class="input-icon fas fa-calendar-alt"></i>
+        <div class="error-message">Please select a valid end date</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="examLocation">Exam Location</label>
+        <div class="location-input">
+          <input type="text" class="form-control" id="examLocation" name="examLocation" placeholder="Enter exam venue or address" value="{{batch.examLocation}}" required>
+          <i class="input-icon fas fa-map-marker-alt"></i>
+          <div class="location-suggestions" id="locationSuggestions"></div>
+        </div>
+        <div class="error-message">Please enter a valid exam location</div>
+      </div>
+
+      <button type="submit" class="submit-btn">
+        <i class="fas fa-save"></i> Save Schedule
+      </button>
+    </form>
+  </div>
+
+  <script>
+    // ✅ Allow real form submission but show warnings if invalid
+    document.getElementById('courseForm').addEventListener('submit', function(e) {
+      const startDate = document.getElementById('startDate');
+      const endDate = document.getElementById('endDate');
+      const examLocation = document.getElementById('examLocation');
+      let isValid = true;
+
+      [startDate, endDate, examLocation].forEach(input => input.classList.remove('invalid'));
+
+      if (!startDate.value) { startDate.classList.add('invalid'); isValid = false; }
+      if (!endDate.value) { endDate.classList.add('invalid'); isValid = false; }
+      if (startDate.value && endDate.value && new Date(endDate.value) <= new Date(startDate.value)) {
+        endDate.classList.add('invalid');
+        alert("End date must be after start date!");
+        isValid = false;
+      }
+      if (!examLocation.value.trim()) { examLocation.classList.add('invalid'); isValid = false; }
+
+      if (!isValid) e.preventDefault(); // stop submit only if invalid
+    });
+
+    // ✅ Location suggestions (optional)
+    const locations = [
+      "Main Campus - Building A", "Main Campus - Building B",
+      "City Center Campus", "North Campus - Lecture Hall 1",
+      "South Campus - Conference Center", "Online - Virtual Classroom",
+      "Regional Center - Downtown", "Tech Park - Innovation Hub"
+    ];
+
+    const locationInput = document.getElementById('examLocation');
+    const suggestionBox = document.getElementById('locationSuggestions');
+
+    locationInput.addEventListener('input', () => {
+      const query = locationInput.value.toLowerCase();
+      const results = locations.filter(l => l.toLowerCase().includes(query));
+      suggestionBox.innerHTML = results.map(r => `<div class="location-suggestion">${r}</div>`).join('');
+      suggestionBox.style.display = results.length ? 'block' : 'none';
+    });
+
+    suggestionBox.addEventListener('click', e => {
+      if (e.target.classList.contains('location-suggestion')) {
+        locationInput.value = e.target.textContent;
+        suggestionBox.style.display = 'none';
+      }
+    });
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.location-input')) suggestionBox.style.display = 'none';
+    });
+
+    // ✅ Prevent selecting past dates
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('startDate').min = today;
+    document.getElementById('endDate').min = today;
+  </script>
+</section>

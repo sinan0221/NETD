@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Timetable</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #4cc9f0;
+            --light-bg: #f8f9fa;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --card-border: 1px solid #e9ecef;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .page-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: 2px;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            background-color: #ffffff;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 1rem 1.5rem;
+            border-bottom: none;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-control, .form-select {
+            border: 1.5px solid #e1e5eb;
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            color: var(--text-primary) !important;
+            background-color: #ffffff !important;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.15);
+            background-color: #ffffff !important;
+            color: var(--text-primary) !important;
+        }
+
+        /* Explicitly set text color for all input types */
+        input.form-control,
+        select.form-select,
+        textarea.form-control {
+            color: var(--text-primary) !important;
+            background-color: #ffffff !important;
+        }
+
+        input.form-control::placeholder,
+        textarea.form-control::placeholder,
+        select.form-select:invalid {
+            color: #6c757d !important;
+            opacity: 0.8;
+        }
+
+        .form-control::placeholder {
+            color: #6c757d;
+            opacity: 0.8;
+        }
+
+        .row-box {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+            border-left: 4px solid var(--primary-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+        }
+
+        .row-box:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-left-color: var(--accent-color);
+        }
+
+        .remove-row-btn {
+            margin-top: 0.5rem;
+            padding: 0.5rem 1.25rem;
+            font-size: 0.9rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            color: #ffffff !important;
+        }
+
+        .remove-row-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.2);
+        }
+
+        #addRowBtn {
+            background: linear-gradient(135deg, var(--success-color), #27ae60);
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1.25rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: white !important;
+        }
+
+        #addRowBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: white !important;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color), #27ae60);
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.2);
+            color: white !important;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(46, 204, 113, 0.3);
+            background: linear-gradient(135deg, #27ae60, var(--success-color));
+        }
+
+        .required-asterisk {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e1e5eb, transparent);
+            margin: 2rem 0;
+        }
+
+        .info-badge {
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            line-height: 1.5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff !important;
+            border: 1.5px solid #e1e5eb;
+            color: var(--text-primary) !important;
+        }
+
+        textarea.form-control:focus {
+            background-color: #ffffff !important;
+            color: var(--text-primary) !important;
+        }
+
+        /* Ensure all text in form is readable */
+        input, select, textarea {
+            color: var(--text-primary) !important;
+        }
+
+        /* Specific fix for date input */
+        input[type="date"] {
+            color: var(--text-primary) !important;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.5);
+        }
+
+        input[type="number"] {
+            color: var(--text-primary) !important;
+        }
+
+        /* Mobile responsive adjustments */
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.5rem;
+            }
+            
+            .card-body {
+                padding: 1.25rem;
+            }
+            
+            .row-box {
+                padding: 1.25rem;
+            }
+            
+            .btn-success {
+                width: 100%;
+                padding: 0.75rem 1.5rem;
+            }
+        }
+
+        /* Row counter styling */
+        .row-counter {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-size: 0.8rem;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .row-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px dashed #e1e5eb;
+        }
+
+        .row-title {
+            font-weight: 600;
+            color: var(--secondary-color);
+            font-size: 1rem;
+        }
+
+        /* Make sure all text is visible */
+        h1, h2, h3, h4, h5, h6, p, span, div, label, small {
+            color: var(--text-primary) !important;
+        }
+
+        /* Fix for button text colors */
+        .btn {
+            color: white !important;
+        }
+
+        .btn-outline-secondary {
+            color: #6c757d !important;
+            border-color: #6c757d;
+        }
+
+        .btn-outline-secondary:hover {
+            color: white !important;
+            background-color: #6c757d;
+        }
+    </style>
+
+</head>
+
+<body>
+    {{> user-header}}
+
+    <div class="container py-4">
+        <!-- Page Header -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5">
+            <div>
+                <h3 class="page-title">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Create Examination Timetable
+                </h3>
+                <p class="page-subtitle mt-2 mb-0">Fill in the details below to create a new examination schedule</p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <a href="/user/view-timetable" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Timetables
+                </a>
+            </div>
+        </div>
+
+        <form action="/user/save-timetable" method="POST">
+            <!-- Batch Selection -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-users me-2"></i>Batch Selection
+                </div>
+                <div class="card-body">
+                    <div class="info-badge">
+                        <i class="fas fa-info-circle me-1"></i> Select the batch for which you're creating the timetable
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Select Batch <span class="required-asterisk">*</span></label>
+                        <select class="form-select" name="batchId" required>
+                            <option value="">-- Select Batch --</option>
+                            {{#each batches}}
+                            <option value="{{this._id}}">{{this.batchName}} ({{this.batchNo}})</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Header Info -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-info-circle me-2"></i>Main Timetable Details
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Course Name <span class="required-asterisk">*</span></label>
+                            <input type="text" class="form-control" name="courseName" placeholder="e.g., Diploma in Pharmacy / DMLT" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Semester Title <span class="required-asterisk">*</span></label>
+                            <input type="text" class="form-control" name="semesterTitle" placeholder="e.g., IVth Semester Public Examination Time Table" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Exam Month & Year <span class="required-asterisk">*</span></label>
+                            <input type="text" class="form-control" name="examMonthYear" placeholder="e.g., August 2025" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subjects Table -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-calendar-day me-2"></i>Exam Schedule Entries
+                    </div>
+                    <button type="button" class="btn" id="addRowBtn">
+                        <i class="fas fa-plus-circle me-1"></i> Add New Row
+                    </button>
+                </div>
+
+                <div class="card-body" id="rowsContainer">
+                    <!-- Default Empty Row -->
+                    <div class="row-box row-item">
+                        <div class="row-header">
+                            <span class="row-counter">1</span>
+                            <span class="row-title">Exam Entry</span>
+                        </div>
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-1">
+                                <label class="form-label">Sr No.</label>
+                                <input type="number" class="form-control" name="srNo[]" placeholder="1" min="1" required>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label">Date <span class="required-asterisk">*</span></label>
+                                <input type="date" class="form-control" name="date[]" required>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Time <span class="required-asterisk">*</span></label>
+                                <input type="text" class="form-control" name="time[]" placeholder="02.00pm to 05.00pm" required>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label">Course <span class="required-asterisk">*</span></label>
+                                <input type="text" class="form-control" name="course[]" placeholder="DMLT / DPhA2" required>
+                            </div>
+
+                            <div class="col-md-1">
+                                <label class="form-label">Year <span class="required-asterisk">*</span></label>
+                                <input type="number" class="form-control" name="year[]" placeholder="2" min="1" max="5" required>
+                            </div>
+
+                            <div class="col-md-1">
+                                <label class="form-label">Sem <span class="required-asterisk">*</span></label>
+                                <input type="text" class="form-control" name="sem[]" placeholder="IV" required>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label">Paper Name <span class="required-asterisk">*</span></label>
+                                <input type="text" class="form-control" name="paperName[]" placeholder="Pharmacology - IV" required>
+                            </div>
+
+                            <div class="col-md-12 text-end mt-3">
+                                <button type="button" class="btn btn-outline-danger remove-row-btn">
+                                    <i class="fas fa-trash-alt me-1"></i> Remove Entry
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-sticky-note me-2"></i>Notes Section
+                </div>
+                <div class="card-body">
+                    <label class="form-label">Additional Notes (Optional)</label>
+                    <div class="info-badge">
+                        <i class="fas fa-lightbulb me-1"></i> These notes will appear at the bottom of the timetable
+                    </div>
+                    <textarea class="form-control" name="notes" rows="4" placeholder="Add any important notes or instructions...">
+1. Candidate should note the dates and sequence carefully.
+2. If holiday occurs exam continues as per schedule.
+3. Board reserves right to change schedule.
+                    </textarea>
+                    <div class="text-muted mt-2">
+                        <small><i class="fas fa-exclamation-circle me-1"></i> Use bullet points for better readability</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="text-center text-md-end mt-5">
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="fas fa-save me-2"></i> Save Timetable
+                </button>
+                <button type="reset" class="btn btn-outline-secondary btn-lg ms-2">
+                    <i class="fas fa-redo me-2"></i> Reset Form
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Handle Dynamic Rows
+        document.addEventListener("DOMContentLoaded", function () {
+            const addRowBtn = document.getElementById("addRowBtn");
+            const container = document.getElementById("rowsContainer");
+
+            // Function to update row counters
+            function updateRowCounters() {
+                const rows = container.querySelectorAll(".row-item");
+                rows.forEach((row, index) => {
+                    const counter = row.querySelector(".row-counter");
+                    if (counter) {
+                        counter.textContent = index + 1;
+                    }
+                });
+            }
+
+            // Add new row
+            addRowBtn.addEventListener("click", () => {
+                const rows = container.querySelectorAll(".row-item");
+                const newRow = rows[0].cloneNode(true);
+                
+                // Clear all inputs in the new row
+                newRow.querySelectorAll("input").forEach(inp => {
+                    if (inp.type === 'number' && inp.name === 'srNo[]') {
+                        inp.value = rows.length + 1;
+                    } else if (inp.type === 'date') {
+                        inp.value = '';
+                    } else {
+                        inp.value = "";
+                    }
+                });
+                
+                // Add to container
+                container.appendChild(newRow);
+                
+                // Update counters
+                updateRowCounters();
+                
+                // Scroll to the new row
+                newRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
+                // Highlight the new row briefly
+                newRow.style.backgroundColor = 'rgba(76, 201, 240, 0.1)';
+                setTimeout(() => {
+                    newRow.style.backgroundColor = '';
+                }, 1000);
+            });
+
+            // Remove row
+            container.addEventListener("click", (e) => {
+                if (e.target.closest(".remove-row-btn")) {
+                    const rows = container.querySelectorAll(".row-item");
+                    if (rows.length > 1) {
+                        const rowToRemove = e.target.closest(".row-item");
+                        rowToRemove.style.opacity = '0.5';
+                        rowToRemove.style.transform = 'translateX(-20px)';
+                        
+                        setTimeout(() => {
+                            rowToRemove.remove();
+                            updateRowCounters();
+                        }, 300);
+                    } else {
+                        // Show warning if trying to remove the last row
+                        alert("You must have at least one exam entry. Add a new row before removing this one.");
+                    }
+                }
+            });
+
+            // Initialize row counter
+            updateRowCounters();
+        });
+    </script>
+
+</body>
+</html>

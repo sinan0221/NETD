@@ -1,0 +1,471 @@
+<header>
+<style>
+   /* Professional Dark Blue & Golden Brown Theme - Enhanced */
+   :root {
+     --dark-blue: rgba(0,78,137,1);
+     --golden-brown: rgba(176,149,114,1);
+     --white: #ffffff;
+     --light-blue: rgba(0,78,137,0.1);
+     --dark-blue-hover: rgba(0,60,110,1);
+     --golden-brown-hover: rgba(156,129,94,1);
+     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+     --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+     --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.25);
+     --glass-effect: rgba(255, 255, 255, 0.08);
+   }
+
+   /* Navbar Styling - Enhanced */
+   .navbar {
+     background: linear-gradient(135deg, var(--dark-blue) 0%, rgba(0,60,110,1) 100%) !important;
+     box-shadow: var(--shadow);
+     padding: 0.7rem 1.5rem;
+     position: relative;
+     z-index: 1030 !important;
+     border-bottom: 3px solid var(--golden-brown);
+     animation: slideDown 0.6s ease-out;
+     backdrop-filter: blur(10px);
+   }
+
+   @keyframes slideDown {
+     from {
+       transform: translateY(-100%);
+       opacity: 0;
+     }
+     to {
+       transform: translateY(0);
+       opacity: 1;
+     }
+   }
+
+   .navbar-brand {
+     font-weight: 800;
+     font-size: 2rem;
+     color: var(--white) !important;
+     display: flex;
+     align-items: center;
+     position: relative;
+     transition: var(--transition);
+     letter-spacing: 0.5px;
+     text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+   }
+
+   .navbar-brand::before {
+     content: '';
+     position: absolute;
+     bottom: -8px;
+     left: 0;
+     width: 0;
+     height: 3px;
+     background: linear-gradient(90deg, var(--golden-brown), transparent);
+     transition: width 0.4s ease;
+   }
+
+   .navbar-brand:hover::before {
+     width: 100%;
+   }
+
+   .navbar-brand:hover {
+     color: var(--white) !important;
+     transform: translateY(-2px);
+     text-shadow: 0 4px 8px rgba(0,0,0,0.4);
+   }
+
+   .navbar-toggler {
+     border: 2px solid var(--golden-brown);
+     padding: 6px 10px;
+     transition: var(--transition);
+     background: rgba(176,149,114,0.1);
+   }
+
+   .navbar-toggler:hover {
+     background: rgba(176,149,114,0.2);
+     transform: scale(1.05);
+     box-shadow: 0 0 15px rgba(176,149,114,0.3);
+   }
+
+   .navbar-toggler-icon {
+     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(176,149,114,1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+   }
+
+   .navbar-nav {
+     margin-left: 40px;
+     position: relative;
+     z-index: 1031;
+   }
+
+   .nav-item {
+     margin: 0 10px;
+     position: relative;
+   }
+
+   .nav-link {
+     color: rgba(255, 255, 255, 0.95) !important;
+     font-weight: 600;
+     font-size: 1.05rem;
+     padding: 10px 20px !important;
+     border-radius: 8px;
+     transition: var(--transition);
+     position: relative;
+     overflow: hidden;
+     letter-spacing: 0.3px;
+   }
+
+   .nav-link::before {
+     content: '';
+     position: absolute;
+     top: 0;
+     left: -100%;
+     width: 100%;
+     height: 100%;
+     background: linear-gradient(90deg, transparent, var(--golden-brown), transparent);
+     transition: left 0.6s ease;
+   }
+
+   .nav-link:hover::before {
+     left: 100%;
+   }
+
+   .nav-link::after {
+     content: '';
+     position: absolute;
+     bottom: 0;
+     left: 50%;
+     width: 0;
+     height: 2px;
+     background: var(--golden-brown);
+     transition: all 0.3s ease;
+     transform: translateX(-50%);
+   }
+
+   .nav-link:hover::after {
+     width: 80%;
+   }
+
+   .nav-link:hover, .nav-link:focus {
+     color: var(--white) !important;
+     background-color: rgba(176,149,114,0.15);
+     transform: translateY(-2px);
+     box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+   }
+
+   .nav-link.active {
+     color: var(--white) !important;
+     background: linear-gradient(135deg, var(--golden-brown), var(--golden-brown-hover));
+     font-weight: 700;
+     box-shadow: 0 6px 20px rgba(176,149,114,0.4);
+     border: 1px solid rgba(255,255,255,0.2);
+   }
+
+   .nav-link.active::after {
+     content: '';
+     position: absolute;
+     bottom: 0;
+     left: 15px;
+     right: 15px;
+     height: 2px;
+     background-color: var(--white);
+     border-radius: 2px;
+     animation: pulse 2s infinite;
+     width: auto;
+   }
+
+   @keyframes pulse {
+     0%, 100% { 
+       opacity: 1;
+       box-shadow: 0 0 10px rgba(255,255,255,0.5);
+     }
+     50% { 
+       opacity: 0.7;
+       box-shadow: 0 0 20px rgba(255,255,255,0.8);
+     }
+   }
+
+   .nav-link.disabled {
+     color: rgba(255, 255, 255, 0.4) !important;
+   }
+
+   /* Dropdown Styling - Enhanced */
+   .nav-item.dropdown {
+     position: relative;
+     z-index: 10000;
+   }
+
+   .dropdown-menu {
+     z-index: 10001 !important;
+     position: absolute !important;
+     border: none;
+     box-shadow: var(--shadow-hover);
+     border-radius: 12px;
+     background: linear-gradient(135deg, var(--dark-blue) 0%, var(--dark-blue-hover) 100%);
+     min-width: 220px;
+     border: 2px solid var(--golden-brown);
+     animation: fadeInUp 0.4s ease-out;
+     backdrop-filter: blur(10px);
+     padding: 8px;
+   }
+
+   @keyframes fadeInUp {
+     from {
+       opacity: 0;
+       transform: translateY(15px) scale(0.95);
+     }
+     to {
+       opacity: 1;
+       transform: translateY(0) scale(1);
+     }
+   }
+
+   .dropdown-menu-dark {
+     background: linear-gradient(135deg, var(--dark-blue) 0%, var(--dark-blue-hover) 100%) !important;
+     border: 2px solid var(--golden-brown);
+   }
+
+   .dropdown-menu-dark .dropdown-item {
+     color: var(--white);
+     font-weight: 600;
+     padding: 12px 20px;
+     transition: var(--transition);
+     border-radius: 8px;
+     margin: 4px 0;
+     position: relative;
+     overflow: hidden;
+   }
+
+   .dropdown-menu-dark .dropdown-item::before {
+     content: '';
+     position: absolute;
+     left: -100%;
+     top: 0;
+     width: 100%;
+     height: 100%;
+     background: linear-gradient(90deg, transparent, var(--golden-brown), transparent);
+     transition: left 0.4s ease;
+   }
+
+   .dropdown-menu-dark .dropdown-item:hover::before {
+     left: 100%;
+   }
+
+   .dropdown-menu-dark .dropdown-item:hover,
+   .dropdown-menu-dark .dropdown-item:focus {
+     background: var(--golden-brown) !important;
+     color: var(--dark-blue) !important;
+     transform: translateX(8px);
+     box-shadow: 0 4px 15px rgba(176,149,114,0.4);
+   }
+
+   .dropdown-menu-dark .dropdown-item:active {
+     background: var(--golden-brown-hover) !important;
+     color: var(--dark-blue) !important;
+   }
+
+   /* Account Dropdown Styling - Enhanced */
+   .dropdown {
+     margin-left: 20px;
+     position: relative;
+     z-index: 1030;
+   }
+
+   .btn-secondary {
+     background: linear-gradient(135deg, rgba(176,149,114,0.2), rgba(176,149,114,0.1)) !important;
+     border: 2px solid var(--golden-brown) !important;
+     color: var(--white) !important;
+     transition: var(--transition);
+     font-weight: 600;
+     padding: 8px 20px;
+     border-radius: 8px;
+     backdrop-filter: blur(10px);
+   }
+
+   .btn-secondary:hover {
+     background: linear-gradient(135deg, rgba(176,149,114,0.3), rgba(176,149,114,0.2)) !important;
+     border-color: var(--golden-brown) !important;
+     color: var(--white) !important;
+     transform: translateY(-2px);
+     box-shadow: 0 6px 20px rgba(176,149,114,0.3);
+   }
+
+   .dropdown-toggle::after {
+     margin-left: 8px;
+     border-top: 0.4em solid var(--golden-brown);
+     transition: transform 0.3s ease;
+   }
+
+   .btn-secondary:hover .dropdown-toggle::after {
+     transform: rotate(180deg);
+   }
+
+   /* Animation for navbar items - Enhanced */
+   @keyframes fadeIn {
+     from {
+       opacity: 0;
+       transform: translateY(-15px) scale(0.95);
+     }
+     to {
+       opacity: 1;
+       transform: translateY(0) scale(1);
+     }
+   }
+
+   .navbar-nav .nav-item {
+     animation: fadeIn 0.6s ease forwards;
+   }
+
+   .navbar-nav .nav-item:nth-child(1) { animation-delay: 0.1s; }
+   .navbar-nav .nav-item:nth-child(2) { animation-delay: 0.2s; }
+   .navbar-nav .nav-item:nth-child(3) { animation-delay: 0.3s; }
+   .navbar-nav .nav-item:nth-child(4) { animation-delay: 0.4s; }
+
+   /* Responsive Adjustments - Enhanced */
+   @media (max-width: 991.98px) {
+     .navbar {
+       padding: 0.6rem 1rem;
+     }
+     
+     .navbar-nav {
+       margin-left: 0;
+       margin-top: 20px;
+       margin-bottom: 20px;
+     }
+     
+     .nav-item {
+       margin: 8px 0;
+     }
+     
+     .nav-link {
+       padding: 12px 20px !important;
+       font-size: 1.1rem;
+     }
+     
+     .dropdown {
+       margin-left: 0;
+       margin-top: 15px;
+       width: 100%;
+     }
+     
+     .btn-secondary {
+       width: 100%;
+       text-align: left;
+       padding: 12px 20px;
+     }
+
+     .navbar-collapse {
+       position: relative;
+       z-index: 1030;
+       background: linear-gradient(135deg, var(--dark-blue) 0%, var(--dark-blue-hover) 100%);
+       border-radius: 12px;
+       margin-top: 10px;
+       padding: 15px;
+       border: 2px solid var(--golden-brown);
+     }
+   }
+
+   /* Additional professional enhancements */
+   .navbar-container {
+     max-width: 1400px;
+     margin: 0 auto;
+   }
+
+   /* Glass morphism effect for modern look */
+   .navbar-glass {
+     background: linear-gradient(135deg, 
+       rgba(0,78,137,0.95) 0%, 
+       rgba(0,60,110,0.95) 100%) !important;
+     backdrop-filter: blur(20px);
+     -webkit-backdrop-filter: blur(20px);
+   }
+
+   /* Professional hover states */
+   .nav-link, .btn-secondary, .dropdown-item {
+     position: relative;
+     z-index: 1;
+   }
+
+   /* Enhanced focus states for accessibility */
+   .nav-link:focus-visible,
+   .btn-secondary:focus-visible,
+   .dropdown-item:focus-visible {
+     outline: 2px solid var(--golden-brown);
+     outline-offset: 2px;
+   }
+
+   /* Smooth scrolling for better UX */
+   html {
+     scroll-behavior: smooth;
+   }
+
+   /* Professional loading states */
+   .nav-link.loading {
+     position: relative;
+     color: transparent !important;
+   }
+
+   .nav-link.loading::after {
+     content: '';
+     position: absolute;
+     top: 50%;
+     left: 50%;
+     width: 20px;
+     height: 20px;
+     margin: -10px 0 0 -10px;
+     border: 2px solid transparent;
+     border-top: 2px solid var(--golden-brown);
+     border-radius: 50%;
+     animation: spin 1s linear infinite;
+   }
+
+   @keyframes spin {
+     0% { transform: rotate(0deg); }
+     100% { transform: rotate(360deg); }
+   }
+</style>
+
+{{#unless hideNavbar}}
+<nav class="navbar navbar-expand-lg navbar-glass">
+  <div class="container-fluid navbar-container">
+    <a class="navbar-brand" href="/student">
+      <i class="fas fa-graduation-cap me-2"></i>
+      NETD
+    </a>
+    
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02" aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    
+    <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="/student">
+            <i class="fas fa-home me-2"></i>Home
+          </a>
+        </li>
+        
+        
+      </ul>
+      
+      <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-user-circle me-2"></i>
+          {{#if student}}
+            {{student.fullName}}
+          {{else}}
+            Account
+          {{/if}}
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark">
+          {{#if student}}
+          <li><a class="dropdown-item" href="/student/logout">
+            <i class="fas fa-sign-out-alt me-2"></i>Logout
+          </a></li>
+          {{else}}
+          <li><a class="dropdown-item" href="/student/login">
+            <i class="fas fa-sign-in-alt me-2"></i>Login
+          </a></li>
+          {{/if}}
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+{{/unless}}
+</header>

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NETD Supply Statement of Marks</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      margin: 0;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+
+    .mark-container {
+      width: 210mm;
+      min-height: 297mm;
+      margin: auto;
+      background: url('/images/Marklist-bg.jpg') no-repeat center center;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      background-size: cover;
+      position: relative;
+      padding: 275px 60px 20px 60px;
+      box-sizing: border-box;
+      background-color: white;
+      border: 2px solid #d63031; /* Red border for supply */
+    }
+
+    
+
+    .supply-notice {
+     
+      padding: -10px;
+      
+      margin: 2px 0;
+      text-align: center;
+      font-weight: bold;
+      color: #d63031;
+    }
+
+    .details {
+      margin-bottom: 10px;
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 10px;
+      padding-bottom: 5px;
+      
+     
+    }
+
+    .details p {
+      margin: 3px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+
+    th, td {
+      border: 1px solid #000;
+      padding: 6px;
+      text-align: center;
+    }
+
+    th {
+      background: #ffebee; /* Light red background for supply */
+      font-weight: bold;
+    }
+
+    .total-row {
+      font-weight: bold;
+      background: #e8e8e8;
+    }
+
+    .footer {
+      margin-top: 10px;
+      padding-top: 5px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .marks-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 10px;
+    }
+
+    .grade-result {
+      font-weight: bold;
+      font-size: 13px;
+      padding: 4px 10px;
+      background: #e8f5e9;
+      border: 1px solid #4caf50;
+      text-align: center;
+      min-width: 150px;
+      line-height: 1.4;
+      height: auto;
+      align-self: flex-start;
+    }
+
+    .grade-failed {
+      background: #ffebee;
+      border: 1px solid #ef5350;
+    }
+
+    .logos {
+  position: absolute;
+  bottom: 170px;              /* keep logos fixed at bottom */
+  left: -100px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;                 /* spacing between logos */
+}
+
+.logo-box {
+  width: 100px;
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent;   /* remove white box */
+  border: none;              /* remove dashed border */
+  box-shadow: none;          /* remove shadow */
+}
+
+.logo-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;       /* keep correct proportion */
+  border: none;
+  border-radius: 0;          /* no rounding */
+}
+
+   .sign {
+  position: absolute;       /* 👈 critical — allows bottom/right to work */
+  bottom: 180px;             /* move it down (smaller = lower) */
+  right: 60px;              /* move it right (smaller = further right) */
+  text-align: right;
+  font-weight: bold;
+  font-size: 13px;
+  min-width: 200px;
+}
+
+
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #d63031;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      
+      .mark-container {
+        box-shadow: none;
+        border: 2px solid #d63031;
+        transform: scale(0.95);
+        transform-origin: top left;
+      }
+      
+      .btn {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="mark-container">
+    {{#if student.supplyMarks}}
+      
+
+      <div class="supply-notice">
+        SUPPLY EXAMINATION RESULTS ONLY
+      </div>
+
+      <div class="details">
+        <p><strong>Registration Number:</strong> {{student.supplyMarks.registrationNo}}</p>
+        <p><strong>This supply mark sheet is Awarded to:</strong> {{student.supplyMarks.candidateName}}</p>
+        <p><strong>Course:</strong> {{student.supplyMarks.course}}</p>
+        <p><strong>Course Duration:</strong> {{student.supplyMarks.courseDuration}}</p>
+        <p><strong>Training Centre:</strong> {{student.supplyMarks.institute}}</p>
+        <p><strong>Examination Type:</strong> Supply Examination</p>
+      </div>
+
+      <table id="marksTable">
+        <thead>
+          <tr>
+            <th rowspan="2">S.No</th>
+            <th rowspan="2">Name of Subject (Supply)</th>
+            <th colspan="3">Theory Marks</th>
+            <th colspan="3">Practical Marks</th>
+            <th colspan="3">Total Marks</th>
+            <th rowspan="2">Result</th>
+          </tr>
+          <tr>
+            <th>Max</th><th>Min</th><th>Obt</th>
+            <th>Max</th><th>Min</th><th>Obt</th>
+            <th>Max</th><th>Min</th><th>Obt</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each student.supplyMarks.subjects}}
+          <tr>
+            <td>{{add @index 1}}</td>
+            <td>{{this.subject}}</td>
+            <td>{{this.theoryMax}}</td>
+            <td>{{this.theoryMin}}</td>
+            <td>{{this.theoryObt}}</td>
+            <td>{{this.practicalMax}}</td>
+            <td>{{this.practicalMin}}</td>
+            <td>{{this.practicalObt}}</td>
+            <td>{{this.totalMax}}</td>
+            <td>{{this.totalMin}}</td>
+            <td>{{this.totalObt}}</td>
+            <td class="result-cell">{{this.result}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td colspan="2"><strong>Total in Words</strong></td>
+            <td colspan="9">{{student.supplyMarks.totalWords}}</td>
+            <td>{{student.supplyMarks.overallResult}}</td>
+          </tr>
+          <tr class="total-row">
+            <td colspan="2"><strong>Maximum Total</strong></td>
+            <td colspan="3">{{student.supplyMarks.maxTotal}}</td>
+            <td colspan="3"><strong>Obtained Total</strong></td>
+            <td colspan="3">{{student.supplyMarks.obtainedTotal}}</td>
+            <td><strong>Grade</strong></td>
+            <td>{{student.supplyMarks.grade}}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="footer">
+        <div>
+          <p><strong>Place of Issue:</strong> NETD (HO)</p>
+          <p><strong>Date of Issue:</strong> {{formatDate currentDate}}</p>
+        </div>
+        <div class="grade-result {{#if (eq student.supplyMarks.overallResult 'FAILED')}}grade-failed{{/if}}">
+          {{student.supplyMarks.grade}}
+        </div>
+      </div>
+
+      <div class="marks-bottom">
+        <div class="logos">
+          <div class="logo-box">
+            {{#if departmentLogoPath}}
+              <img src="{{departmentLogoPath}}" alt="Department Logo" crossorigin="anonymous">
+            {{else}}
+              <img src="/images/default-department-logo.png" alt="Default Department Logo" crossorigin="anonymous">
+            {{/if}}
+          </div>
+
+          <div class="logo-box">
+            {{#if logoPath}}
+              <img src="{{logoPath}}" alt="Institution Logo" crossorigin="anonymous">
+            {{else}}
+              <img src="/images/default-institution-logo.png" alt="Default Institution Logo" crossorigin="anonymous">
+            {{/if}}
+          </div>
+        </div>
+
+        <div class="sign">
+          Chairman/<br>
+          Board of Examiners NETD
+        </div>
+      </div>
+
+    {{else}}
+      <div class="no-marks">
+        <h3>No Supply Marks Available</h3>
+        <p>Supply marks have not been entered for this student yet.</p>
+        <a href="/admin/add-supply-mark/{{studentId}}" class="btn">Add Supply Marks</a>
+      </div>
+    {{/if}}
+    <div style="height:40px;"></div>
+  </div>
+
+  <button id="downloadPdf" class="btn" style="text-align: center; margin: 20px auto; display: block;">Download as PDF</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const resultCells = document.querySelectorAll('.result-cell');
+      resultCells.forEach(cell => {
+        if (cell.textContent.trim() === 'PASSED') {
+          cell.style.color = 'green';
+          cell.style.fontWeight = 'bold';
+        } else if (cell.textContent.trim() === 'FAILED') {
+          cell.style.color = 'red';
+          cell.style.fontWeight = 'bold';
+        }
+      });
+    });
+
+    document.getElementById('downloadPdf').addEventListener('click', function() {
+      const element = document.querySelector('.mark-container');
+      const opt = {
+        margin: 0,
+        filename: 'Supply_Marksheet_{{student.supplyMarks.registrationNo}}.pdf',
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          scrollY: 0,
+          windowWidth: document.body.scrollWidth,
+          windowHeight: document.body.scrollHeight
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'portrait'
+        },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      html2pdf().set(opt).from(element).save();
+    });
+  </script>
+</body>
+</html>

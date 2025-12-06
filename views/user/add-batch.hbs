@@ -1,0 +1,98 @@
+<style>
+    /* Section container */
+section {
+  background: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 500px;
+  margin: 30px auto;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Heading */
+section h2 {
+  color: #1f3555; /* navy blue */
+  font-size: 22px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #2d4a70;
+  padding-bottom: 8px;
+  text-align: center;
+}
+
+/* Form Groups */
+.form-group {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Labels */
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #2d4a70;
+}
+
+/* Inputs */
+.form-group input {
+  padding: 10px;
+  border: 1px solid #ccd6e0;
+  border-radius: 6px;
+  background: #f9fbfd;
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+
+/* Input focus effect */
+.form-group input:focus {
+  border-color: #1f3555;
+  box-shadow: 0 0 6px rgba(31, 53, 85, 0.3);
+  outline: none;
+}
+
+/* Submit Button */
+.btn-submit {
+  display: inline-block;
+  width: 100%;
+  padding: 12px;
+  background: #1f3555; /* navy */
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-submit:hover {
+  background: #2d4a70;
+}
+
+
+</style>
+<section>
+  <div class="content">
+    <h2>Batch Details:</h2>
+    <form action="/user/add-batch" method="post">
+      <div class="form-group">
+        <label>Batch No.</label>
+        <input type="text" name="batchNo" required>
+      </div>
+      <div class="form-group">
+        <label>Batch Id</label>
+        <input type="text" name="batchId" required>
+      </div>
+      <div class="form-group">
+        <label>Batch Name</label>
+        <input type="text" name="batchName" required>
+      </div>
+      <div class="form-group">
+        <label>No Of Students</label>
+        <input type="number" name="nostudents" required>
+      </div>
+      <button type="submit" class="btn-submit">Submit</button>
+    </form>
+  </div>
+</section>

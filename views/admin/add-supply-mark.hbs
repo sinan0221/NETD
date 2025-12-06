@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Supply Marks - NETD</title>
+    <style>
+        /* Reuse your existing CSS from add-mark.hbs */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Times New Roman', serif;
+        }
+        
+        body {
+            background-color: #f0f0f0;
+            padding: 20px;
+            color: #000;
+            line-height: 1.4;
+        }
+        
+        .marksheet-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ccc;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+        }
+        
+        .main-title {
+            font-size: 22px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            color: #d63031;
+        }
+        
+        .supply-notice {
+            background-color: #ffeaa7;
+            padding: 10px;
+            border: 1px solid #fdcb6e;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .failed-subjects {
+            background-color: #ffebee;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #ef5350;
+        }
+        
+        .failed-subjects h3 {
+            color: #c62828;
+            margin-bottom: 10px;
+        }
+        
+        .failed-list {
+            list-style-type: none;
+        }
+        
+        .failed-list li {
+            padding: 5px;
+            border-bottom: 1px dashed #ccc;
+        }
+        
+        /* Rest of your existing CSS from add-mark.hbs */
+        .department {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .diploma-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .score-sheet {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+            text-decoration: underline;
+        }
+        
+        .student-info {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #000;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .info-label {
+            width: 200px;
+            font-weight: bold;
+        }
+        
+        .info-value {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        
+        .marks-table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        .marks-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 850px;
+        }
+        
+        .marks-table th, .marks-table td {
+            border: 1px solid #000;
+            padding: 5px 8px;
+            text-align: center;
+        }
+        
+        .marks-table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        
+        .subject-name {
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        .subject-input {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            background: transparent;
+        }
+        
+        .mark-input {
+            width: 50px;
+            padding: 3px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+        
+        .controls {
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        button {
+            padding: 8px 15px;
+            margin: 0 5px;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #34495e;
+        }
+        
+        .supply-btn {
+            background-color: #e17055;
+        }
+        
+        .supply-btn:hover {
+            background-color: #d63031;
+        }
+        
+        .delete-btn {
+            background-color: #e74c3c;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .total-section {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #000;
+        }
+        
+        .total-row {
+            display: flex;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .total-label {
+            width: 150px;
+            font-weight: bold;
+        }
+        
+        .total-value {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .grade-section {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #000;
+        }
+        
+        .grade-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .grade-details {
+            font-size: 14px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        
+        .result-cell {
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .marks-table {
+                font-size: 12px;
+            }
+            
+            .marks-table th, .marks-table td {
+                padding: 3px 5px;
+            }
+            
+            .mark-input {
+                width: 40px;
+            }
+            
+            .info-label, .total-label {
+                width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="marksheet-container">
+        <div class="header">
+            <div class="main-title">SUPPLY EXAMINATION - NATIONAL EDUCATION TRAINING & DEVELOPMENT</div>
+            <div class="supply-notice">
+                SUPPLY EXAMINATION MARK SHEET - For Failed Subjects Only
+            </div>
+            <div class="department">
+                <label>Department:</label>
+                <input type="text" name="department" id="department" value="{{regularMarks.department}}">
+            </div>
+            <div class="diploma-title">
+                <label>Exam Title:</label>
+                <input type="text" name="examTitle" id="examTitle" value="SUPPLY - {{regularMarks.examTitle}}">
+            </div>
+            <div class="score-sheet">SUPPLY SCORE SHEET</div>
+        </div>
+
+        <!-- Failed Subjects Summary -->
+        <div class="failed-subjects">
+            <h3>Failed Subjects ({{failedSubjects.length}})</h3>
+            <ul class="failed-list">
+                {{#each failedSubjects}}
+                <li>{{this.subject}} - Theory: {{this.theoryObt}}/{{this.theoryMin}} | Practical: {{this.practicalObt}}/{{this.practicalMin}}</li>
+                {{/each}}
+            </ul>
+        </div>
+
+        <form action="/admin/add-supply-mark" method="POST">
+            <input type="hidden" name="studentId" value="{{studentId}}">
+            
+            <!-- Hidden fields for calculated totals -->
+            <input type="hidden" name="totalWords" id="totalWordsInput" value="">
+            <input type="hidden" name="maxTotal" id="maxTotalInput" value="">
+            <input type="hidden" name="obtainedTotal" id="obtainedTotalInput" value="">
+            <input type="hidden" name="overallResult" id="overallResultInput" value="">
+            <input type="hidden" name="grade" id="gradeInput" value="">
+
+            <div class="student-info">
+                <div class="info-row">
+                    <div class="info-label">Name of Candidate:</div>
+                    <div class="info-value">
+                        <input type="text" name="candidateName" id="candidateName" value="{{regularMarks.candidateName}}" readonly style="background-color: #f0f0f0;">
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Address:</div>
+                    <div class="info-value">
+                        <input type="text" name="address" id="address" value="{{regularMarks.address}}" readonly style="background-color: #f0f0f0;">
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Name of Institute:</div>
+                    <div class="info-value">
+                        <input type="text" name="institute" id="institute" value="{{regularMarks.institute}}" readonly style="background-color: #f0f0f0;">
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Examination:</div>
+                    <div class="info-value">
+                        <input type="text" name="examination" id="examination" value="SUPPLY EXAMINATION" readonly style="background-color: #f0f0f0;">
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Course:</div>
+                    <div class="info-value">
+                        <input type="text" name="course" id="course" value="{{regularMarks.course}}" readonly style="background-color: #f0f0f0;">
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Course Duration:</div>
+                    <div class="info-value">
+                        <input type="text" name="courseDuration" id="courseDuration" value="{{regularMarks.courseDuration}}" readonly style="background-color: #f0f0f0;">
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Student Registration No.:</div>
+                    <div class="info-value">
+                        <input type="text" name="registrationNo" id="registrationNo" value="{{regularMarks.registrationNo}}" readonly style="background-color: #f0f0f0;">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button type="button" id="calculate" class="supply-btn">Calculate Supply Results</button>
+                <button type="submit" class="supply-btn">Save Supply Marks</button>
+            </div>
+            
+            <div class="marks-table-container">
+                <table class="marks-table" id="marksTable">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">S.No</th>
+                            <th rowspan="2">Name of Subject (Supply)</th>
+                            <th colspan="3">Theory Marks</th>
+                            <th colspan="3">Practical Marks</th>
+                            <th colspan="3">Total Marks</th>
+                            <th rowspan="2">Result</th>
+                            <th rowspan="2">Original Result</th>
+                        </tr>
+                        <tr>
+                            <th>Max</th>
+                            <th>Min</th>
+                            <th>Obt</th>
+                            <th>Max</th>
+                            <th>Min</th>
+                            <th>Obt</th>
+                            <th>Max</th>
+                            <th>Min</th>
+                            <th>Obt</th>
+                        </tr>
+                    </thead>
+                    <tbody id="marksBody">
+                        {{#each failedSubjects}}
+                        <tr>
+                            <td>{{add @index 1}}</td>
+                            <td class="subject-name">
+                                <input type="text" class="subject-input" name="subjectName" value="{{this.subject}}" readonly style="background-color: #f0f0f0;">
+                            </td>
+                            <td><input type="number" class="mark-input theoryMax" name="theoryMax" value="{{this.theoryMax}}" min="0"></td>
+                            <td><input type="number" class="mark-input theoryMin" name="theoryMin" value="{{this.theoryMin}}" min="0"></td>
+                            <td><input type="number" class="mark-input theoryObt" name="theoryObt" value="0" min="0"></td>
+                            <td><input type="number" class="mark-input practicalMax" name="practicalMax" value="{{this.practicalMax}}" min="0"></td>
+                            <td><input type="number" class="mark-input practicalMin" name="practicalMin" value="{{this.practicalMin}}" min="0"></td>
+                            <td><input type="number" class="mark-input practicalObt" name="practicalObt" value="0" min="0"></td>
+                            <td class="total-max">{{this.theoryMax}}</td>
+                            <td class="total-min">{{this.theoryMin}}</td>
+                            <td class="total-obt">0</td>
+                            <td class="result-cell">-</td>
+                            <td class="original-result" style="color: red; font-weight: bold;">FAILED</td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+        
+        <div class="total-section">
+            <div class="total-row">
+                <div class="total-label">Total in Words</div>
+                <div class="total-value" id="totalWords">ZERO</div>
+            </div>
+            <div class="total-row">
+                <div class="total-label">Maximum Total</div>
+                <div class="total-value" id="maxTotal">0</div>
+            </div>
+            <div class="total-row">
+                <div class="total-label">Obtained Total</div>
+                <div class="total-value" id="obtainedTotal">0</div>
+            </div>
+            <div class="total-row">
+                <div class="total-label">Overall Result</div>
+                <div class="total-value" id="overallResult">-</div>
+            </div>
+            <div class="total-row">
+                <div class="total-label">Grade</div>
+                <div class="total-value" id="grade">-</div>
+            </div>
+        </div>
+        
+        <div class="grade-section">
+            <div class="grade-title">SUPPLY GRADING SYSTEM</div>
+            <div class="grade-details">
+                80% Grade: A+ (Excellent), 70 to 79% Grade: A (Very good), 60% to 69% Grade: B+ (Good), 
+                50 to 59% Grade: B (Satisfactory), 40 to 49% Grade: C, Below 40% Fail
+            </div>
+        </div>
+        
+        <div class="footer">
+            Official Supply Mark Sheet - NATIONAL EDUCATION TRAINING & DEVELOPMENT
+        </div>
+    </div>
+
+    <script>
+        // Reuse your existing JavaScript from add-mark.hbs with minor modifications
+        document.addEventListener('DOMContentLoaded', function() {
+            const calculateBtn = document.getElementById('calculate');
+            const form = document.querySelector('form');
+            
+            // Calculate initial results
+            calculateResults();
+            updateFormData();
+            
+            // Calculate button event
+            calculateBtn.addEventListener('click', function() {
+                calculateResults();
+                updateFormData();
+            });
+            
+            // Form submission handler
+            form.addEventListener('submit', function(e) {
+                updateFormData();
+                updateInputNames();
+                
+                const subjects = document.querySelectorAll('#marksBody tr');
+                if (subjects.length === 0) {
+                    e.preventDefault();
+                    alert('No supply subjects found');
+                    return;
+                }
+            });
+            
+            // Add event listeners to mark inputs for auto-calculation
+            document.querySelectorAll('.mark-input').forEach(input => {
+                input.addEventListener('input', function() {
+                    calculateAllRowResults();
+                    calculateResults();
+                    updateFormData();
+                });
+            });
+            
+            function calculateAllRowResults() {
+                const rows = document.querySelectorAll('#marksBody tr');
+                rows.forEach(row => {
+                    calculateRowResults(row);
+                });
+            }
+            
+            function calculateRowResults(row) {
+                const inputs = row.querySelectorAll('input');
+                const theoryMax = parseInt(inputs[1].value) || 0;
+                const theoryMin = parseInt(inputs[2].value) || 0;
+                const theoryObt = parseInt(inputs[3].value) || 0;
+                const practicalMax = parseInt(inputs[4].value) || 0;
+                const practicalMin = parseInt(inputs[5].value) || 0;
+                const practicalObt = parseInt(inputs[6].value) || 0;
+                
+                // Update total cells
+                row.querySelector('.total-max').textContent = theoryMax + practicalMax;
+                row.querySelector('.total-min').textContent = theoryMin + practicalMin;
+                row.querySelector('.total-obt').textContent = theoryObt + practicalObt;
+                
+                // Update result
+                const theoryPassed = theoryObt >= theoryMin;
+                const practicalPassed = practicalObt >= practicalMin;
+                const resultCell = row.querySelector('.result-cell');
+                resultCell.textContent = (theoryPassed && practicalPassed) ? 'PASSED' : 'FAILED';
+                resultCell.style.color = (theoryPassed && practicalPassed) ? 'green' : 'red';
+            }
+            
+            function updateInputNames() {
+                const rows = document.querySelectorAll('#marksBody tr');
+                rows.forEach((row, index) => {
+                    const inputs = row.querySelectorAll('input');
+                    inputs[0].name = `subjectName[${index}]`;
+                    inputs[1].name = `theoryMax[${index}]`;
+                    inputs[2].name = `theoryMin[${index}]`;
+                    inputs[3].name = `theoryObt[${index}]`;
+                    inputs[4].name = `practicalMax[${index}]`;
+                    inputs[5].name = `practicalMin[${index}]`;
+                    inputs[6].name = `practicalObt[${index}]`;
+                });
+            }
+            
+            function updateFormData() {
+                document.getElementById('totalWordsInput').value = document.getElementById('totalWords').textContent;
+                document.getElementById('maxTotalInput').value = document.getElementById('maxTotal').textContent;
+                document.getElementById('obtainedTotalInput').value = document.getElementById('obtainedTotal').textContent;
+                document.getElementById('overallResultInput').value = document.getElementById('overallResult').textContent;
+                document.getElementById('gradeInput').value = document.getElementById('grade').textContent;
+            }
+            
+            function calculateResults() {
+                const rows = document.querySelectorAll('#marksBody tr');
+                let maxTotal = 0;
+                let obtainedTotal = 0;
+                let allPassed = true;
+                
+                rows.forEach(row => {
+                    const inputs = row.querySelectorAll('input');
+                    const theoryMax = parseInt(inputs[1].value) || 0;
+                    const theoryObt = parseInt(inputs[3].value) || 0;
+                    const practicalMax = parseInt(inputs[4].value) || 0;
+                    const practicalObt = parseInt(inputs[6].value) || 0;
+                    
+                    const totalMax = theoryMax + practicalMax;
+                    const totalObt = theoryObt + practicalObt;
+                    
+                    maxTotal += totalMax;
+                    obtainedTotal += totalObt;
+                    
+                    const theoryPassed = parseInt(inputs[3].value) >= parseInt(inputs[2].value);
+                    const practicalPassed = parseInt(inputs[6].value) >= parseInt(inputs[5].value);
+                    const subjectPassed = theoryPassed && practicalPassed;
+                    
+                    if (!subjectPassed) {
+                        allPassed = false;
+                    }
+                });
+                
+                // Update overall results
+                document.getElementById('maxTotal').textContent = maxTotal;
+                document.getElementById('obtainedTotal').textContent = obtainedTotal;
+                document.getElementById('overallResult').textContent = allPassed ? 'PASSED' : 'FAILED';
+                document.getElementById('overallResult').style.color = allPassed ? 'green' : 'red';
+                
+                // Calculate percentage and grade
+                const percentage = maxTotal > 0 ? (obtainedTotal / maxTotal) * 100 : 0;
+                let grade = '';
+                
+                if (percentage >= 80) {
+                    grade = 'PASSED WITH A+ GRADE ';
+                } else if (percentage >= 70) {
+                    grade = 'PASSED WITH A GRADE ';
+                } else if (percentage >= 60) {
+                    grade = 'PASSED WITH B+ GRADE ';
+                } else if (percentage >= 50) {
+                    grade = 'PASSED WITH B GRADE ';
+                } else if (percentage >= 40) {
+                    grade = 'PASSED WITH C GRADE';
+                } else {
+                    grade = 'FAILED';
+                }
+                
+                document.getElementById('grade').textContent = allPassed ? grade : 'FAILED';
+                document.getElementById('grade').style.color = allPassed ? 'green' : 'red';
+                
+                // Update total in words
+                document.getElementById('totalWords').textContent = numberToWords(obtainedTotal);
+            }
+            
+            function numberToWords(num) {
+                const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 
+                              'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+                const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+                
+                if (num === 0) return 'Zero';
+                
+                let words = '';
+                
+                if (num >= 1000) {
+                    words += ones[Math.floor(num / 1000)] + ' Thousand ';
+                    num %= 1000;
+                }
+                
+                if (num >= 100) {
+                    words += ones[Math.floor(num / 100)] + ' Hundred ';
+                    num %= 100;
+                }
+                
+                if (num >= 20) {
+                    words += tens[Math.floor(num / 10)] + ' ';
+                    num %= 10;
+                }
+                
+                if (num > 0) {
+                    words += ones[num] + ' ';
+                }
+                
+                return words.trim() + ' Only';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Batch Certificates</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    body {
+      background: #f0f0f0;
+      font-family: "Times New Roman", serif;
+      margin: 0;
+      padding: 20px;
+    }
+    .certificate-wrapper {
+      page-break-after: always;
+    }
+    .print-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #1f3555;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      z-index: 9999;
+    }
+    @page {
+      size: A4;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <button class="print-button" id="downloadAll">Download All Certificates</button>
+
+  {{#each certificates}}
+    <div class="certificate-wrapper">
+      {{> (lookup this 'template') this}}
+    </div>
+  {{/each}}
+
+  <script>
+    document.getElementById('downloadAll').addEventListener('click', () => {
+      const element = document.body;
+      const opt = {
+        margin: 0,
+        filename: 'Batch_{{batchId}}_Certificates.pdf',
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(element).save();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,556 @@
+<style>
+:root {
+  --primary-blue: #1a365d;
+  --secondary-blue: #2c5282;
+  --accent-gold: #d4af37;
+  --light-gold: #f0e6d2;
+  --dark-blue: #0f2646;
+  --light-blue: #f7fafc;
+  --success-green: #38a169;
+  --warning-orange: #ed8936;
+  --danger-red: #e53e3e;
+}
+
+/* ===== Main Container ===== */
+.view-batch-section {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 40px 20px;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* ===== Card Container ===== */
+.batch-container {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08),
+              0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+  padding: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.batch-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent-gold), var(--secondary-blue));
+}
+
+/* ===== Header Section ===== */
+.batch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  padding-bottom: 25px;
+  border-bottom: 2px solid var(--light-blue);
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-icon {
+  background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+  width: 60px;
+  height: 60px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 20px rgba(26, 54, 93, 0.2);
+}
+
+.header-icon i {
+  font-size: 28px;
+  color: white;
+}
+
+.header-text h1 {
+  color: var(--primary-blue);
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+}
+
+.header-text p {
+  color: #64748b;
+  font-size: 16px;
+  margin: 0;
+  font-weight: 500;
+}
+
+.batch-count {
+  background: linear-gradient(135deg, var(--accent-gold), #b8941b);
+  color: var(--primary-blue);
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.batch-count:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 25px rgba(212, 175, 55, 0.35);
+}
+
+/* ===== Table Styling ===== */
+.batch-table-container {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  background: white;
+}
+
+.batch-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+}
+
+.batch-table thead {
+  background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+}
+
+.batch-table th {
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 22px 20px;
+  text-align: center;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.batch-table th:last-child {
+  border-right: none;
+}
+
+.batch-table th::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20px;
+  right: 20px;
+  height: 3px;
+  background: var(--accent-gold);
+  opacity: 0.7;
+}
+
+.batch-table tbody tr {
+  transition: all 0.25s ease;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.batch-table tbody tr:hover {
+  background: linear-gradient(90deg, rgba(26, 54, 93, 0.03), rgba(212, 175, 55, 0.03));
+  transform: translateX(4px);
+}
+
+.batch-table td {
+  padding: 24px 20px;
+  text-align: center;
+  color: #334155;
+  font-size: 15px;
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+/* ===== Batch Number Styling ===== */
+.batch-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+  color: white;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 16px;
+  box-shadow: 0 6px 15px rgba(26, 54, 93, 0.15);
+  margin: 0 auto;
+}
+
+/* ===== Batch ID Styling ===== */
+.batch-id {
+  font-family: 'Monaco', 'Courier New', monospace;
+  background: #f8fafc;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border-left: 4px solid var(--accent-gold);
+  color: var(--primary-blue);
+  font-weight: 600;
+  font-size: 14px;
+  display: inline-block;
+}
+
+/* ===== Batch Name Styling ===== */
+.batch-name {
+  color: var(--primary-blue);
+  font-weight: 600;
+  font-size: 16px;
+  position: relative;
+  padding-left: 30px;
+}
+
+.batch-name::before {
+  content: '📚';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+}
+
+/* ===== PDF Button Styling ===== */
+.pdf-view-btn {
+  background: linear-gradient(135deg, var(--danger-red), #c53030);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 15px rgba(229, 62, 62, 0.2);
+  text-decoration: none;
+  min-width: 140px;
+  justify-content: center;
+}
+
+.pdf-view-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 25px rgba(229, 62, 62, 0.3);
+  background: linear-gradient(135deg, #c53030, var(--danger-red));
+  color: white;
+  text-decoration: none;
+}
+
+.pdf-view-btn i {
+  font-size: 16px;
+}
+
+/* ===== Empty State ===== */
+.empty-state {
+  text-align: center;
+  padding: 60px 40px;
+}
+
+.empty-icon {
+  font-size: 64px;
+  color: #cbd5e0;
+  margin-bottom: 20px;
+}
+
+.empty-state h3 {
+  color: var(--primary-blue);
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+
+.empty-state p {
+  color: #64748b;
+  font-size: 16px;
+  max-width: 400px;
+  margin: 0 auto 30px;
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 1024px) {
+  .batch-container {
+    padding: 30px;
+  }
+  
+  .batch-header {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+  
+  .header-title {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .view-batch-section {
+    padding: 20px 15px;
+  }
+  
+  .batch-container {
+    padding: 25px 20px;
+    border-radius: 16px;
+  }
+  
+  .batch-table {
+    display: block;
+    overflow-x: auto;
+  }
+  
+  .batch-table th,
+  .batch-table td {
+    padding: 18px 15px;
+    min-width: 150px;
+  }
+  
+  .pdf-view-btn {
+    min-width: 120px;
+    padding: 10px 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-text h1 {
+    font-size: 26px;
+  }
+  
+  .batch-count {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+  
+  .batch-table th,
+  .batch-table td {
+    padding: 15px 12px;
+    min-width: 120px;
+  }
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.batch-table tbody tr {
+  animation: fadeIn 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.batch-table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+.batch-table tbody tr:nth-child(2) { animation-delay: 0.2s; }
+.batch-table tbody tr:nth-child(3) { animation-delay: 0.3s; }
+.batch-table tbody tr:nth-child(4) { animation-delay: 0.4s; }
+.batch-table tbody tr:nth-child(5) { animation-delay: 0.5s; }
+.batch-table tbody tr:nth-child(6) { animation-delay: 0.6s; }
+.batch-table tbody tr:nth-child(7) { animation-delay: 0.7s; }
+.batch-table tbody tr:nth-child(8) { animation-delay: 0.8s; }
+.batch-table tbody tr:nth-child(9) { animation-delay: 0.9s; }
+.batch-table tbody tr:nth-child(10) { animation-delay: 1s; }
+
+/* ===== Loading State ===== */
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 8px;
+  height: 20px;
+  margin: 8px 0;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===== Print Styles ===== */
+@media print {
+  .view-batch-section {
+    background: white;
+    padding: 0;
+  }
+  
+  .batch-container {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+  
+  .pdf-view-btn {
+    display: none;
+  }
+  
+  .batch-table th {
+    background: #f1f5f9 !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact;
+  }
+}
+</style>
+
+<section class="view-batch-section">
+    <div class="batch-container">
+        <!-- Header -->
+        <div class="batch-header">
+            <div class="header-title">
+                <div class="header-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="header-text">
+                    <h1>BATCH SCHEDULES</h1>
+                    <p>View and manage all training batch timetables</p>
+                </div>
+            </div>
+            <div class="batch-count">
+                <i class="fas fa-layer-group"></i>
+                <span>{{batches.length}} Batches Available</span>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="batch-table-container">
+            <table class="batch-table">
+                <thead>
+                    <tr>
+                        <th>Batch No</th>
+                       
+                        <th>Batch Name</th>
+                        <th>Time table</th>
+                        <th>Hall Ticket</th>
+                         <th>Question Paper</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#if batches.length}}
+                        {{#each batches}}
+                        <tr>
+                            <td>
+                                <div class="batch-number">{{this.batchNo}}</div>
+                            </td>
+                           
+                            <td>
+                                <div class="batch-name">{{this.batchName}}</div>
+                            </td>
+                     <td>
+  {{#if this.timetable}}
+    <a href="/user/preview-pdf/{{this._id}}" target="_blank" class="pdf-view-btn">
+      <i class="fas fa-file-pdf"></i>
+      View PDF
+    </a>
+  {{else}}
+    <span class="no-timetable">No timetable added</span>
+  {{/if}}
+</td>
+ <td><a href="/user/batch-halltickets-download/{{this._id}}" class="btn btn-primary">
+  <i class="fas fa-download"></i> Download All Hall Tickets
+</a></td>
+
+
+
+                        </tr>
+                        {{/each}}
+                    {{else}}
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state">
+                                    <div class="empty-icon">
+                                        <i class="far fa-calendar-times"></i>
+                                    </div>
+                                    <h3>No Batches Found</h3>
+                                    <p>There are currently no batches scheduled. Please check back later.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {{/if}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- Font Awesome for Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<script>
+// Add interactivity
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to table rows
+    const tableRows = document.querySelectorAll('.batch-table tbody tr');
+    
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.1)';
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.style.boxShadow = 'none';
+        });
+    });
+    
+    // Add click animation to PDF buttons
+    const pdfButtons = document.querySelectorAll('.pdf-view-btn');
+    
+    pdfButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            // Create ripple effect
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.cssText = `
+                position: absolute;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.5);
+                transform: scale(0);
+                animation: ripple 0.6s linear;
+                width: ${size}px;
+                height: ${size}px;
+                top: ${y}px;
+                left: ${x}px;
+                pointer-events: none;
+            `;
+            
+            this.style.position = 'relative';
+            this.style.overflow = 'hidden';
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+});
+
+// Add CSS for ripple effect
+const style = document.createElement('style');
+style.textContent = `
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+`;
+document.head.appendChild(style);
+</script>

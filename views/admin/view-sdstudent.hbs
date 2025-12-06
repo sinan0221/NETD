@@ -1,0 +1,536 @@
+{{!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill Development Students</title>
+  <link rel="stylesheet" href="/stylesheets/bootstrap.min.css">
+  <style>
+    body {
+      background: #f8f9fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      margin-top: 40px;
+    }
+    .table th {
+      background-color: #dc3545;
+      color: white;
+      text-align: center;
+    }
+    .table td {
+      vertical-align: middle;
+      text-align: center;
+    }
+    .photo {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+    .btn-sm {
+      padding: 3px 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h3 class="fw-bold text-danger">Skill Development Students</h3>
+      <a href="/admin/add-sdstudent" class="btn btn-danger btn-sm">+ Add Student</a>
+    </div>
+
+    {{#if sdstudents.length}}
+    <table class="table table-bordered table-hover shadow-sm">
+      <thead>
+        <tr>
+            <th>ID</th>
+          <th>Photo</th>
+          
+          <th>Full Name</th>
+          <th>Skill</th>
+          <th>Centre Name</th>
+          <th>Mobile</th>
+          <th>Certiificate</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each sdstudents}}
+        <tr>
+            <td>{{this.regNo}}
+                <a href="/admin/hallticket/{{this._id}}" class="btn btn-sm btn-outline-danger">Download</a>
+            </td>
+          <td>
+  <img src="/studentImages/{{this._id}}.jpg" alt="Photo" class="photo" onerror="this.src='/images/default-user.png'">
+</td>
+
+          
+          <td>{{this.fullName}}</td>
+          <td>{{this.skill}}</td>
+          <td>{{this.centreName}}</td>
+          <td>{{this.number}}</td>
+          <td>
+              <a href="/admin/sdcertificate-preview/{{this._id}}" class="btn btn-sm btn-outline-primary">
+    Preview
+  </a>
+  <a href="/admin/sdcertificate-pdf/{{this._id}}" class="btn btn-sm btn-outline-success">
+    Download
+  </a>
+
+</td>
+          <td>
+          
+            <a href="/admin/delete-student/{{this._id}}" 
+     class="btn btn-danger btn-sm"
+     onclick="return confirm('Are you sure you want to delete this student?');">
+     <i class="fas fa-trash"></i>
+  </a>
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    {{else}}
+      <div class="alert alert-warning text-center">
+        No Skill Development students found.
+      </div>
+    {{/if}}
+  </div>
+</body>
+</html> --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill Development Program - Student Management</title>
+  <link rel="stylesheet" href="/stylesheets/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-blue: #2c5aa0;
+      --dark-blue: #1e3a6e;
+      --light-blue: #e8f0fe;
+      --accent-blue: #3a70c2;
+      --text-dark: #2d3748;
+      --text-light: #718096;
+      --border-light: #e2e8f0;
+      --white: #ffffff;
+    }
+
+    body {
+      background-color: #f7fafc;
+      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      color: var(--text-dark);
+      min-height: 100vh;
+    }
+
+    .main-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Header Section */
+    .page-header {
+      background: var(--white);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+      margin-bottom: 2rem;
+      border: 1px solid var(--border-light);
+    }
+
+    .page-title {
+      color: var(--dark-blue);
+      font-weight: 700;
+      font-size: 2rem;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .page-title i {
+      color: var(--primary-blue);
+    }
+
+    .student-count {
+      color: var(--text-light);
+      font-size: 1rem;
+      font-weight: 500;
+      margin-top: 8px;
+    }
+
+    /* Action Button */
+    .btn-primary {
+      background: var(--primary-blue);
+      border: none;
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(44, 90, 160, 0.2);
+    }
+
+    .btn-primary:hover {
+      background: var(--dark-blue);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
+    }
+
+    /* Table Styling */
+    .data-table {
+      background: var(--white);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--border-light);
+    }
+
+    .table-header {
+      background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+      color: var(--white);
+    }
+
+    .table-header th {
+      padding: 18px 16px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: none;
+      position: relative;
+    }
+
+    .table-header th:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 20%;
+      height: 60%;
+      width: 1px;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .table-body td {
+      padding: 16px;
+      vertical-align: middle;
+      border-color: var(--border-light);
+      font-size: 0.9rem;
+      color: var(--text-dark);
+    }
+
+    .table-body tr {
+      transition: background-color 0.2s ease;
+    }
+
+    .table-body tr:hover {
+      background-color: var(--light-blue);
+    }
+
+    .table-body tr:not(:last-child) {
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    /* Student Photo */
+    .student-photo {
+      width: 56px;
+      height: 56px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 2px solid var(--border-light);
+      transition: all 0.2s ease;
+    }
+
+    .student-photo:hover {
+      border-color: var(--primary-blue);
+      transform: scale(1.05);
+    }
+
+    /* Status Badges */
+    .badge {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .badge-certificate {
+      background: #e6f4ea;
+      color: #137333;
+      border: 1px solid #a8dab5;
+    }
+
+    /* Action Buttons */
+    .btn-action {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      border: 1px solid;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 2px;
+    }
+
+    .btn-download {
+      background: var(--white);
+      color: var(--primary-blue);
+      border-color: var(--primary-blue);
+    }
+
+    .btn-download:hover {
+      background: var(--primary-blue);
+      color: var(--white);
+      transform: translateY(-1px);
+    }
+
+    .btn-preview {
+      background: var(--white);
+      color: #d97706;
+      border-color: #d97706;
+    }
+
+    .btn-preview:hover {
+      background: #d97706;
+      color: var(--white);
+      transform: translateY(-1px);
+    }
+
+    .btn-delete {
+      background: var(--white);
+      color: #dc2626;
+      border-color: #dc2626;
+      padding: 8px 12px;
+    }
+
+    .btn-delete:hover {
+      background: #dc2626;
+      color: var(--white);
+      transform: translateY(-1px);
+    }
+
+    /* ID Column */
+    .student-id {
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-weight: 600;
+      color: var(--dark-blue);
+      background: var(--light-blue);
+      padding: 8px 12px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-light);
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      color: var(--border-light);
+      margin-bottom: 1rem;
+    }
+
+    .empty-state h4 {
+      color: var(--text-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .main-container {
+        padding: 15px;
+      }
+
+      .page-header {
+        padding: 1.5rem;
+        text-align: center;
+      }
+
+      .page-title {
+        font-size: 1.5rem;
+        justify-content: center;
+      }
+
+      .table-responsive {
+        border-radius: 8px;
+      }
+
+      .table-header th {
+        padding: 12px 8px;
+        font-size: 0.8rem;
+      }
+
+      .table-body td {
+        padding: 12px 8px;
+        font-size: 0.85rem;
+      }
+
+      .btn-action {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
+
+      .student-photo {
+        width: 48px;
+        height: 48px;
+      }
+    }
+
+    /* Animation */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .table-body tr {
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    .table-body tr:nth-child(1) { animation-delay: 0.1s; }
+    .table-body tr:nth-child(2) { animation-delay: 0.15s; }
+    .table-body tr:nth-child(3) { animation-delay: 0.2s; }
+    .table-body tr:nth-child(4) { animation-delay: 0.25s; }
+    .table-body tr:nth-child(5) { animation-delay: 0.3s; }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <h1 class="page-title">
+            <i class="fas fa-users-gear"></i>
+            Skill Development Program
+          </h1>
+          <div class="student-count">
+            {{sdstudents.length}} Students Registered
+          </div>
+        </div>
+        <a href="/admin/add-sdstudent" class="btn btn-primary">
+          <i class="fas fa-user-plus"></i>
+          Add New Student
+        </a>
+      </div>
+    </div>
+
+    <!-- Students Table -->
+    {{#if sdstudents.length}}
+    <div class="data-table">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-header">
+            <tr>
+              <th>Student ID</th>
+              <th>Profile</th>
+              <th>Full Name</th>
+              <th>Skill Program</th>
+              
+              <th>Contact</th>
+              <th>Documents</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody class="table-body">
+            {{#each sdstudents}}
+            <tr>
+              <td>
+                
+
+                <div class="student-id">{{this.regNo}}</div>
+                <a href="/admin/sdc-idcard-preview/{{this._id}}" class="btn btn-sm btn-outline-info mt-2">
+  <i class="fas fa-id-card"></i> ID 
+</a>
+
+              </td>
+              <td>
+                <img src="/studentImages/{{this._id}}.jpg" 
+                     alt="Student Photo" 
+                     class="student-photo"
+                     onerror="this.src='/images/default-user.png'">
+              </td>
+              <td>
+                <strong>{{this.fullName}}</strong>
+              </td>
+              <td>
+                <span class="badge badge-certificate">{{this.skill}}</span>
+              </td>
+              
+              <td>
+                <i class="fas fa-phone text-muted me-2"></i>
+                {{this.number}}
+              </td>
+              <td>
+                <div class="d-flex flex-column gap-2">
+                  <a href="/admin/sdcertificate-preview/{{this._id}}" class="btn-action btn-preview">
+                    <i class="fas fa-eye"></i>
+                    Preview Certificate
+                  </a>
+                  <a href="/admin/sdcertificate-pdf/{{this._id}}" class="btn-action btn-download">
+                    <i class="fas fa-file-pdf"></i>
+                    Download PDF
+                  </a>
+                </div>
+              </td>
+              <td>
+                <a href="/admin/delete-student/{{this._id}}" 
+                   class="btn-action btn-delete"
+                   onclick="return confirm('Are you sure you want to delete {{this.fullName}}? This action cannot be undone.');">
+                  <i class="fas fa-trash"></i>
+                  Remove
+                </a>
+              </td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {{else}}
+    <!-- Empty State -->
+    <div class="data-table">
+      <div class="empty-state">
+        <i class="fas fa-users-slash"></i>
+        <h4>No Students Found</h4>
+        <p>There are currently no students registered in the Skill Development Program.</p>
+        <a href="/admin/add-sdstudent" class="btn btn-primary mt-3">
+          <i class="fas fa-user-plus"></i>
+          Add First Student
+        </a>
+      </div>
+    </div>
+    {{/if}}
+  </div>
+
+  <script>
+    // Add confirmation for delete actions
+    document.addEventListener('DOMContentLoaded', function() {
+      const deleteButtons = document.querySelectorAll('.btn-delete');
+      deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+          if (!confirm('Are you sure you want to delete this student record? This action cannot be undone.')) {
+            e.preventDefault();
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

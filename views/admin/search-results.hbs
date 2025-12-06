@@ -1,0 +1,546 @@
+{{!-- 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results - NETD Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --dark-blue: rgba(0,78,137,1);
+            --golden-brown: rgba(176,149,114,1);
+        }
+        
+        .search-results-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .search-header-card {
+            background: linear-gradient(135deg, var(--dark-blue) 0%, rgba(0,60,110,1) 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .student-result-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .student-result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-color: var(--golden-brown);
+        }
+        
+        .student-photo-sm {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--golden-brown);
+        }
+        
+        .info-badge {
+            background: linear-gradient(135deg, var(--golden-brown), var(--golden-brown-hover));
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-action-sm {
+            padding: 6px 15px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px dashed #dee2e6;
+        }
+        
+        .search-again {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    
+    
+    <div class="search-results-container">
+        <!-- Search Header -->
+        <div class="search-header-card">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2 class="mb-3">
+                        <i class="fas fa-search me-2"></i>
+                        Search Results
+                    </h2>
+                    <p class="mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        Searching for: <strong class="text-warning">"{{keyword}}"</strong>
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="info-badge">
+                        <i class="fas fa-users me-1"></i>
+                        {{results.length}} student(s) found
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        {{#if results.length}}
+            <div class="row">
+                {{#each results}}
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="student-result-card">
+                        <div class="d-flex align-items-start mb-3">
+                            <!-- Student Photo -->
+                            <div class="me-3">
+                                <img src="/studentImages/{{this._id}}.jpg" 
+                                     alt="{{this.fullName}}"
+                                     class="student-photo-sm"
+                                     onerror="this.src='/images/default-user.png'">
+                            </div>
+                            
+                            <!-- Student Info -->
+                            <div class="flex-grow-1">
+                                <h5 class="mb-1 text-dark">{{this.fullName}}</h5>
+                                <p class="text-muted mb-1">
+                                    <i class="fas fa-id-card me-1"></i>
+                                    {{this.regNo}}
+                                </p>
+                                <p class="mb-1">
+                                    <i class="fas fa-book me-1 text-primary"></i>
+                                    {{this.courseName}}
+                                </p>
+                                <p class="mb-1">
+                                    <i class="fas fa-university me-1 text-success"></i>
+                                    {{this.centreName}}
+                                </p>
+                                {{#if this.batchName}}
+                                <p class="mb-2">
+                                    <i class="fas fa-users me-1 text-info"></i>
+                                    {{this.batchName}}
+                                </p>
+                                {{/if}}
+                            </div>
+                        </div>
+                        
+                        <!-- Status Badges -->
+                        <div class="d-flex gap-2 mb-3">
+                            {{#if this.approved}}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i> Approved
+                            </span>
+                            {{else}}
+                            <span class="badge bg-warning">
+                                <i class="fas fa-clock me-1"></i> Pending
+                            </span>
+                            {{/if}}
+                            
+                            {{#if this.marks}}
+                            <span class="badge bg-info">
+                                <i class="fas fa-chart-bar me-1"></i> Marks Added
+                            </span>
+                            {{/if}}
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            <a href="/admin/edit-student/{{this._id}}" 
+                               class="btn btn-primary btn-action-sm flex-grow-1">
+                                <i class="fas fa-edit me-1"></i> Edit
+                            </a>
+                            
+                            <a href="/admin/view-bstudent/{{this.batchId}}"
+                               class="btn btn-info btn-action-sm flex-grow-1">
+                                <i class="fas fa-users me-1"></i> View Batch
+                            </a>
+                            
+                            {{#if this.marks}}
+                            <a href="/admin/preview-marklist/{{this._id}}"
+                               class="btn btn-success btn-action-sm flex-grow-1">
+                                <i class="fas fa-file-alt me-1"></i> Marksheet
+                            </a>
+                            {{/if}}
+                        </div>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        {{else}}
+            <!-- No Results Found -->
+            <div class="no-results">
+                <i class="fas fa-search fa-4x text-muted mb-4"></i>
+                <h3 class="text-muted mb-3">No students found</h3>
+                <p class="text-muted mb-4">
+                    No students match your search for <strong>"{{keyword}}"</strong>
+                </p>
+                <a href="/admin/view-student" class="btn btn-primary btn-lg">
+                    <i class="fas fa-arrow-left me-2"></i> View All Students
+                </a>
+            </div>
+        {{/if}}
+        
+        <!-- Search Again Form -->
+        <div class="search-again">
+            <h5 class="mb-3">
+                <i class="fas fa-search me-2"></i>
+                Search Again
+            </h5>
+            <form action="/admin/search" method="get" class="row g-3">
+                <div class="col-md-8">
+                    <input type="text" 
+                           class="form-control form-control-lg" 
+                           name="q" 
+                           placeholder="Search by name, registration number, course..." 
+                           value="{{keyword}}"
+                           required>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-search me-2"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Highlight search term in results
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchTerm = "{{keyword}}";
+            if (searchTerm && searchTerm.trim() !== "") {
+                const elements = document.querySelectorAll('.student-result-card h5, .student-result-card p');
+                elements.forEach(element => {
+                    const html = element.innerHTML;
+                    const regex = new RegExp(`(${searchTerm})`, 'gi');
+                    const newHtml = html.replace(regex, '<mark class="bg-warning">$1</mark>');
+                    element.innerHTML = newHtml;
+                });
+            }
+        });
+    </script>
+</body>
+</html> --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results - NETD Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --dark-blue: rgba(0,78,137,1);
+            --golden-brown: rgba(176,149,114,1);
+        }
+        
+        .search-results-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .search-header-card {
+            background: linear-gradient(135deg, var(--dark-blue) 0%, rgba(0,60,110,1) 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .student-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .student-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .student-photo-sm {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--golden-brown);
+        }
+        
+        .skill-badge {
+            background: linear-gradient(135deg, #e17055, #d63031);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .regular-badge {
+            background: linear-gradient(135deg, var(--dark-blue), #0984e3);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-action-sm {
+            padding: 6px 15px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px dashed #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    
+    
+    <div class="search-results-container">
+        <!-- Search Header -->
+        <div class="search-header-card">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2 class="mb-3">
+                        <i class="fas fa-search me-2"></i>
+                        Search Results
+                    </h2>
+                    <p class="mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        Searching for: <strong class="text-warning">"{{keyword}}"</strong>
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="d-flex justify-content-end gap-3">
+                        <div class="text-center">
+                            <h4 class="mb-0 text-white">{{results.length}}</h4>
+                            <small class="text-light">Total Results</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        {{#if results.length}}
+            <div class="row">
+                {{#each results}}
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="student-card">
+                        <div class="d-flex align-items-start mb-3">
+                            <!-- Student Photo -->
+                            <div class="me-3">
+                                <img src="/studentImages/{{this._id}}.jpg" 
+                                     alt="{{this.fullName}}"
+                                     class="student-photo-sm"
+                                     onerror="this.src='/images/default-user.png'">
+                            </div>
+                            
+                            <!-- Student Info -->
+                            <div class="flex-grow-1">
+                                <!-- Type Badge -->
+                                {{#if (eq this.type "Skill Development")}}
+                                <span class="skill-badge mb-2 d-inline-block">
+                                    <i class="fas fa-tools me-1"></i> Skill Development
+                                </span>
+                                {{else}}
+                                <span class="regular-badge mb-2 d-inline-block">
+                                    <i class="fas fa-graduation-cap me-1"></i> Regular Student
+                                </span>
+                                {{/if}}
+                                
+                                <h5 class="mb-1 text-dark">{{this.fullName}}</h5>
+                                <p class="text-muted mb-1">
+                                    <i class="fas fa-id-card me-1"></i>
+                                    {{this.regNo}}
+                                </p>
+                                
+                                {{#if (eq this.type "Skill Development")}}
+                                <!-- Skill Development Student Info -->
+                                <p class="mb-1">
+                                    <i class="fas fa-tools me-1 text-warning"></i>
+                                    {{this.skill}}
+                                </p>
+                                {{else}}
+                                <!-- Regular Student Info -->
+                                <p class="mb-1">
+                                    <i class="fas fa-book me-1 text-primary"></i>
+                                    {{this.courseName}}
+                                </p>
+                                {{#if this.centreName}}
+                                <p class="mb-1">
+                                    <i class="fas fa-university me-1 text-success"></i>
+                                    {{this.centreName}}
+                                </p>
+                                {{/if}}
+                                {{#if this.batchName}}
+                                <p class="mb-2">
+                                    <i class="fas fa-users me-1 text-info"></i>
+                                    {{this.batchName}}
+                                </p>
+                                {{/if}}
+                                {{/if}}
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons (Different for each type) -->
+                        <div class="action-buttons">
+                            {{#if (eq this.type "Skill Development")}}
+                            <!-- Skill Development Student Actions -->
+                            <a href="/admin/sdcertificate-preview/{{this._id}}" 
+                               class="btn btn-warning btn-action-sm flex-grow-1">
+                                <i class="fas fa-certificate me-1"></i> Certificate
+                            </a>
+                            
+                            <a href="/admin/sdc-idcard-preview/{{this._id}}"
+                               class="btn btn-info btn-action-sm flex-grow-1">
+                                <i class="fas fa-id-card me-1"></i> ID Card
+                            </a>
+                            
+                            <a href="/admin/view-sdstudent" 
+                               class="btn btn-secondary btn-action-sm flex-grow-1">
+                                <i class="fas fa-eye me-1"></i> View
+                            </a>
+                            {{else}}
+                            <!-- Regular Student Actions -->
+                            <a href="/admin/edit-student/{{this._id}}" 
+                               class="btn btn-primary btn-action-sm flex-grow-1">
+                                <i class="fas fa-edit me-1"></i> Edit
+                            </a>
+                            
+                            {{#if this.batchId}}
+                            <a href="/admin/view-bstudent/{{this.batchId}}"
+                               class="btn btn-info btn-action-sm flex-grow-1">
+                                <i class="fas fa-users me-1"></i> Batch
+                            </a>
+                            {{/if}}
+                            
+                            {{#if this.marks}}
+                            <a href="/admin/preview-marklist/{{this._id}}"
+                               class="btn btn-success btn-action-sm flex-grow-1">
+                                <i class="fas fa-file-alt me-1"></i> Marks
+                            </a>
+                            {{else}}
+                            <a href="/admin/add-mark/{{this._id}}"
+                               class="btn btn-outline-success btn-action-sm flex-grow-1">
+                                <i class="fas fa-plus me-1"></i> Add Marks
+                            </a>
+                            {{/if}}
+                            {{/if}}
+                        </div>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        {{else}}
+            <!-- No Results Found -->
+            <div class="no-results">
+                <i class="fas fa-search fa-4x text-muted mb-4"></i>
+                <h3 class="text-muted mb-3">No students found</h3>
+                <p class="text-muted mb-4">
+                    No students match your search for <strong>"{{keyword}}"</strong>
+                </p>
+                <a href="/admin/view-student" class="btn btn-primary btn-lg">
+                    <i class="fas fa-arrow-left me-2"></i> View All Students
+                </a>
+            </div>
+        {{/if}}
+        
+        <!-- Search Again Form -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-search me-2"></i>
+                    Search Again
+                </h5>
+                <form action="/admin/search" method="get" class="row g-3">
+                    <div class="col-md-10">
+                        <input type="text" 
+                               class="form-control form-control-lg" 
+                               name="q" 
+                               placeholder="Search by name, registration number, course..." 
+                               value="{{keyword}}"
+                               required>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-search me-2"></i> Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Highlight search term in results
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchTerm = "{{keyword}}";
+            if (searchTerm && searchTerm.trim() !== "") {
+                const elements = document.querySelectorAll('.student-card h5, .student-card p');
+                elements.forEach(element => {
+                    const html = element.innerHTML;
+                    const regex = new RegExp(`(${searchTerm})`, 'gi');
+                    const newHtml = html.replace(regex, '<mark class="bg-warning">$1</mark>');
+                    element.innerHTML = newHtml;
+                });
+            }
+        });
+    </script>
+</body>
+</html>

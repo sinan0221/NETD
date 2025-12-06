@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Background - Admin</title>
+    <link rel="stylesheet" href="/stylesheets/sform.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .bg-change-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(31, 53, 85, 0.1);
+            margin: 20px auto;
+            max-width: 800px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            position: relative;
+        }
+
+        .bg-change-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1f3555, #3498db, #2980b9);
+            border-radius: 16px 16px 0 0;
+        }
+
+        .page-title {
+            color: #1f3555;
+            font-weight: 800;
+            font-size: 28px;
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 16px;
+        }
+
+        .page-title::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 6px;
+            background: linear-gradient(135deg, #1f3555 0%, #3498db 100%);
+            border-radius: 3px;
+        }
+
+        .bg-type-badge {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 16px;
+            display: inline-block;
+            margin-bottom: 30px;
+        }
+
+        .upload-form {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #e0e6ed;
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #1f3555;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #3498db;
+            border-radius: 8px;
+            background: #f8fafc;
+            transition: all 0.3s ease;
+        }
+
+        .file-input:focus {
+            border-color: #1f3555;
+            background: white;
+        }
+
+        .btn-upload {
+            background: linear-gradient(135deg, #1f3555 0%, #2c5282 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(31, 53, 85, 0.25);
+        }
+
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(31, 53, 85, 0.35);
+        }
+
+        .success-alert {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .file-info {
+            background: #e3f2fd;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #1f3555;
+        }
+    </style>
+</head>
+<body>
+    {{> admin-header}}
+
+    <div class="container">
+        <div class="bg-change-container">
+            <h1 class="page-title">Change Background Image</h1>
+            <div class="bg-type-badge">
+                <i class="fas fa-image me-2"></i>
+                {{bgTypes[bgType]}}
+            </div>
+
+            {{#if query.success}}
+            <div class="success-alert">
+                <i class="fas fa-check-circle me-2"></i>
+                Background image updated successfully!
+            </div>
+            {{/if}}
+
+            <!-- Upload Form Only - No Current Background Section -->
+            <div class="upload-form">
+                <h3 style="color: #1f3555; margin-bottom: 20px;">
+                    <i class="fas fa-upload me-2"></i>Upload New Background
+                </h3>
+                
+                <form action="/admin/bg-change/{{bgType}}" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-file-image me-2"></i>Select New Image File
+                        </label>
+                        <input type="file" 
+                               name="bgImage" 
+                               class="form-control file-input" 
+                               accept="image/*" 
+                               required
+                               id="fileInput">
+                        <div class="form-text">
+                            <i class="fas fa-exclamation-circle me-1"></i>
+                            Supported formats: JPG, PNG, JPEG. Max size: 10MB
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-upload">
+                        <i class="fas fa-sync-alt me-2"></i>Upload Background
+                    </button>
+                    
+                    <a href="/admin" class="btn btn-secondary ms-2">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </form>
+            </div>
+
+            <!-- Quick Navigation -->
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e6ed;">
+                <h4 style="color: #1f3555; margin-bottom: 15px;">Quick Navigation:</h4>
+                <div class="d-flex flex-wrap gap-2">
+                    {{#each bgTypes}}
+                    <a href="/admin/bg-change/{{@key}}" 
+                       class="btn btn-outline-primary btn-sm {{#eq @key ../bgType}}active{{/eq}}">
+                        {{this}}
+                    </a>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // File input change handler
+        document.getElementById('fileInput')?.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                console.log(`📁 Selected file: ${file.name} (${fileSize} MB)`);
+                
+                // Show file info
+                const fileInfo = document.createElement('div');
+                fileInfo.className = 'file-info mt-2';
+                fileInfo.innerHTML = `<i class="fas fa-file me-2"></i>Selected: ${file.name} (${fileSize} MB)`;
+                
+                // Remove existing file info
+                const existingInfo = this.parentNode.querySelector('.file-info');
+                if (existingInfo) {
+                    existingInfo.remove();
+                }
+                
+                this.parentNode.appendChild(fileInfo);
+            }
+        });
+    </script>
+</body>
+</html>

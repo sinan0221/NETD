@@ -1,0 +1,284 @@
+<style>
+/* Professional Dark Blue & Golden Brown Theme */
+:root {
+  --dark-blue: rgba(0,78,137,1);
+  --golden-brown: rgba(176,149,114,1);
+  --white: #ffffff;
+  --dark-blue-hover: rgba(0,60,110,1);
+  --golden-brown-hover: rgba(156,129,94,1);
+  --transition: all 0.3s ease;
+}
+
+/* ===== Section Styling ===== */
+section {
+  padding: 40px 20px;
+  background-color: #f2f6fa;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ===== Container ===== */
+.container {
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  max-width: 95%;    
+  margin: auto;
+}
+
+/* ===== Heading ===== */
+.container h2 {
+  color: var(--dark-blue);
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-align: center;
+  border-bottom: 2px solid var(--golden-brown);
+  padding-bottom: 10px;
+  font-size: 26px;
+  letter-spacing: 1px;
+}
+
+/* ===== Add Button Top Right ===== */
+.container .btn-success {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  border: none;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: var(--transition);
+}
+
+.container .btn-success:hover {
+  background: linear-gradient(135deg, var(--dark-blue-hover), var(--dark-blue));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,78,137,0.3);
+}
+
+/* ===== Table ===== */
+.table {
+  margin-top: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  width: 100%;
+  border: 1px solid rgba(0,78,137,0.1);
+}
+
+.table thead th {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  color: var(--white);
+  font-weight: 600;
+  text-align: center;
+  font-size: 15px;
+  padding: 14px;
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.table thead th::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--golden-brown), transparent);
+  transition: left 0.6s ease;
+}
+
+.table thead th:hover::before {
+  left: 100%;
+}
+
+.table tbody td {
+  text-align: center;
+  vertical-align: middle;
+  padding: 14px;
+  font-size: 15px;
+  color: #333;
+  border-bottom: 2px solid rgba(176,149,114,0.3);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 1px solid #eee;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(0,78,137,0.03);
+  transition: var(--transition);
+}
+
+/* ===== Action Buttons ===== */
+.btn-sm {
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  margin: 2px;
+  transition: var(--transition);
+  border: none;
+}
+
+/* Primary buttons */
+.btn-primary {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  color: var(--white);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--dark-blue-hover), var(--dark-blue));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,78,137,0.3);
+  color: var(--white);
+}
+
+/* Warning buttons */
+.btn-warning {
+  background: linear-gradient(135deg, var(--golden-brown), var(--golden-brown-hover));
+  color: var(--white);
+  border: none;
+}
+
+.btn-warning:hover {
+  background: linear-gradient(135deg, var(--golden-brown-hover), var(--golden-brown));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(176,149,114,0.3);
+  color: var(--white);
+}
+
+/* Success buttons */
+.btn-success {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: var(--white);
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #218838, #28a745);
+  transform: translateY(-2px);
+  color: var(--white);
+}
+
+/* Outline dark button */
+.btn-outline-dark {
+  border: 1px solid var(--dark-blue);
+  color: var(--dark-blue);
+  background: transparent;
+}
+
+.btn-outline-dark:hover {
+  background: var(--dark-blue);
+  color: var(--white);
+  transform: translateY(-2px);
+}
+
+/* Edit button */
+.btn-sm .fa-edit {
+  color: var(--dark-blue);
+}
+
+.btn-sm:hover .fa-edit {
+  color: var(--white);
+}
+
+/* Delete button */
+.btn-danger {
+  background: linear-gradient(135deg, #dc3545, #c82333) !important;
+  border: none;
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #c82333, #dc3545) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Icon spacing */
+.btn i {
+  margin-right: 4px;
+}
+</style>
+<section>
+    <div class="container">
+        <h2>BATCHES</h2>
+        <div class="d-flex justify-content-end">
+        <a href="/admin/add-batch/{{centreId}}" class="btn btn-success">Add Batch</a>
+
+        </div>
+        <table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Batch No</th>
+      <th scope="col">BATCH ID</th>
+      <th scope="col">BATCH NAME</th>
+      <th scope="col">HALL TICKET</th>
+      <th scope="col">CERTIFICATE ISSUE</th>
+      
+      <th scope="col">ACTION</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each batches }}
+    <tr>
+      
+      <td>{{this.batchNo}}</td>
+      <td>{{this.batchId}}
+        <a href="/admin/batch-idcards-download/{{this._id}}" class="btn btn-primary btn-sm ms-2">
+      <i class="fas fa-download"></i> 
+    </a>
+      </td>
+      <td>{{this.batchName}}</td>
+     <td>
+ <a href="/admin/batch-halltickets-download/{{this._id}}" class="btn btn-primary">
+  <i class="fas fa-download"></i> Download All Hall Tickets
+</a>
+</td>
+
+   <td>
+  <form action="/admin/toggle-certificate-batch/{{this._id}}" method="POST" style="display: inline;">
+    <button type="submit" class="btn btn-warning">
+      <i class="fas fa-sync-alt"></i> Mode ({{this.certificateType}})
+    </button>
+  </form>
+
+  {{#if this.appliedForCertificate}}
+    <button class="btn btn-success btn-sm">
+      <i class="fas fa-check-circle"></i> Applied
+    </button>
+    <a href="/admin/edit-schedule/{{this._id}}" class="btn btn-sm">
+      <i class="fa fa-edit"></i> Edit Schedule
+    </a>
+    <a href="/admin/batch-certificates-download/{{this._id}}" class="btn btn-primary btn-sm ms-2">
+      <i class="fas fa-download"></i> Download
+    </a>
+  {{else}}
+    <a href="/admin/course-schedule/{{this._id}}" class="btn btn-outline-dark btn-sm">
+      Apply Certificate
+    </a>
+  {{/if}}
+</td>
+
+
+
+
+
+
+
+      <td>
+        <a href="/admin/view-bstudent/{{this._id}}" class="btn btn-outline-dark btn-sm">View Students</a>
+
+        <a href="/admin/edit-batch/{{this._id}}" class="btn btn-sm"> <i class="fa fa-edit"></i></a>
+        <a href="/admin/delete-batch/{{this._id}}" 
+     class="btn btn-danger btn-sm"
+     onclick="return confirm('Are you sure you want to delete this batch?');">
+     <i class="fas fa-trash"></i>
+
+  </a>
+
+      </td>
+    </tr>
+    {{/each}}
+  
+  </tbody>
+</table>
+    </div>
+</section>

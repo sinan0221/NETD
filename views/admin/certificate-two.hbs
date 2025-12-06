@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificate - {{student.fullName}}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Times New Roman", serif;
+      background: #f5f5f5;
+    }
+
+    .certificate-container {
+      width: 1000px;      /* match your certificate size */
+      height: 1400px;     /* adjust based on template image */
+      margin: 20px auto;
+      background: url("/images/certificate-bg2.jpg") no-repeat center top;
+      background-size: cover;
+      position: relative;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+
+    /* === Positioned fields === */
+    .student-name {
+      position: absolute;
+      top: 700px;      /* adjust carefully */
+      left: 480px;
+      font-size: 26px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #000;
+    }
+    /* === Student Photo Box === */
+.student-photo {
+  position: absolute;
+  top: 533px;      /* adjust depending on your background */
+  right: 80px;    /* move left/right as needed */
+  width: 120px;    /* standard passport size width */
+  height: 150px;   /* standard passport size height */
+    /* professional dark blue border */
+  border-radius: 8px;         /* slight rounded corners */
+  background: #fff;           /* white background behind photo */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+.student-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;   /* keeps face centered, no distortion */
+}
+
+    .course-name {
+      position: absolute;
+      top: 794px;
+      left: 180px;
+      font-size: 20px;
+    }
+
+    .duration {
+      position: absolute;
+      top: 838px;
+      left: 280px;
+      font-size: 20px;
+    }
+
+    .grade {
+      position: absolute;
+      top: 927px;
+      left: 200px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .exam-date {
+      position: absolute;
+      top: 650px;
+      left: 650px;
+      font-size: 20px;
+    }
+
+    .issue-date {
+      position: absolute;
+      top: 975px;
+      left: 510px;
+      font-size: 18px;
+    }
+
+    .signature {
+      position: absolute;
+      bottom: 120px;
+      right: 200px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* === Print button === */
+    .print-button {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #1f3555;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .print-button:hover {
+      background: #15263f;
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+      .print-button {
+        display: none;
+      }
+      .certificate-container {
+        box-shadow: none;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="certificate-container">
+    <!-- Dynamic Fields -->
+     <div class="student-photo">
+  <img src="{{student.photo}}" alt="Student Photo">
+</div>
+    <div class="student-name">{{student.fullName}}</div>
+    <div class="course-name">{{student.courseName}}</div>
+    <div class="duration">{{student.duration}}</div>
+    <div class="grade">{{student.grade}}</div>
+    <div class="exam-date"></div>
+    <div class="issue-date">{{issueDate}}</div>
+    <div class="institution-logo">
+  <img src="{{logos.institution}}" alt="Institution Logo" style="width:100px; height:100px;">
+</div>
+<div class="department-logo">
+  <img src="{{logos.department}}" alt="Department Logo" style="width:100px; height:100px;">
+</div>
+  </div>
+
+  <button class="print-button" onclick="window.print()">
+    <i class="fas fa-print"></i> Print Certificate
+  </button>
+</body>
+</html>

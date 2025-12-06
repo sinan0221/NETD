@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Marks - NETD</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Times New Roman', serif;
+        }
+        
+        body {
+            background-color: #f0f0f0;
+            padding: 20px;
+            color: #000;
+            line-height: 1.4;
+        }
+        
+        .marksheet-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ccc;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+        }
+        
+        .main-title {
+            font-size: 22px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .department {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .diploma-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .score-sheet {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+            text-decoration: underline;
+        }
+        
+        .student-info {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #000;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .info-label {
+            width: 200px;
+            font-weight: bold;
+        }
+        
+        .info-value {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        
+        .marks-table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        .marks-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 850px;
+        }
+        
+        .marks-table th, .marks-table td {
+            border: 1px solid #000;
+            padding: 5px 8px;
+            text-align: center;
+        }
+        
+        .marks-table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        
+        .subject-name {
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        .subject-input {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            background: transparent;
+        }
+        
+        .mark-input {
+            width: 50px;
+            padding: 3px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+        
+        .controls {
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        button {
+            padding: 8px 15px;
+            margin: 0 5px;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #34495e;
+        }
+        
+        .delete-btn {
+            background-color: #e74c3c;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .total-section {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #000;
+        }
+        
+        .total-row {
+            display: flex;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .total-label {
+            width: 150px;
+            font-weight: bold;
+        }
+        
+        .total-value {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .grade-section {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #000;
+        }
+        
+        .grade-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .grade-details {
+            font-size: 14px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        
+        .result-cell {
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .marks-table {
+                font-size: 12px;
+            }
+            
+            .marks-table th, .marks-table td {
+                padding: 3px 5px;
+            }
+            
+            .mark-input {
+                width: 40px;
+            }
+            
+            .info-label, .total-label {
+                width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="marksheet-container">
+        <div class="header">
+            <div class="main-title">NATIONAL EDUCATION TRAINING & DEVELOPMENT</div>
+            <div class="department">
+                <label>Department:</label>
+                <input type="text" name="department" id="department" value="DEPARTMENT OF PARAMEDICAL EDUCATION">
+            </div>
+            <div class="diploma-title">
+                <label>Exam Title:</label>
+                <input type="text" name="examTitle" id="examTitle" value="DIPLOMA IN MEDICAL LABORATORY TECHNOLOGY - PUBLIC EXAMINATION 2023-2025">
+            </div>
+            <div class="score-sheet">SCORE SHEET</div>
+        </div>
+
+        <form action="/user/add-mark" method="POST">
+            <!-- hidden studentId -->
+            <input type="hidden" name="studentId" value="{{studentId}}">
+            
+            <!-- Hidden fields for calculated totals -->
+            <input type="hidden" name="centreId" value="{{student.centreId}}">
+            <input type="hidden" name="totalWords" id="totalWordsInput" value="">
+            <input type="hidden" name="maxTotal" id="maxTotalInput" value="">
+            <input type="hidden" name="obtainedTotal" id="obtainedTotalInput" value="">
+            <input type="hidden" name="overallResult" id="overallResultInput" value="">
+            <input type="hidden" name="grade" id="gradeInput" value="">
+
+            <div class="student-info">
+                <div class="info-row">
+                    <div class="info-label">Name of Candidate:</div>
+                    <div class="info-value">
+                        <input type="text" name="candidateName" id="candidateName" value="{{student.fullName}}" required>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Address:</div>
+                    <div class="info-value">
+                        <input type="text" name="address" id="address" value="{{student.address}}">
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Name of Institute:</div>
+                    <div class="info-value">
+                        <input type="text" name="institute" id="institute" value="{{centre.centreName}}">
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Examination:</div>
+                    <div class="info-value">
+                        <input type="text" name="examination" id="examination" value="1 SEMESTER">
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Course:</div>
+                    <div class="info-value">
+                        <input type="text" name="course" id="course" value="{{student.courseName}}">
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Course Duration:</div>
+                    <div class="info-value">
+                        <input type="text" name="courseDuration" id="courseDuration" value="{{student.courseDuration}}">
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Student Registration No.:</div>
+                    <div class="info-value">
+                        <input type="text" name="registrationNo" id="registrationNo" value="{{student.regNo}}">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button type="button" id="addRow">Add Subject</button>
+                <button type="button" id="calculate">Calculate Results</button>
+                <button type="submit">Apply Mark Sheet</button>
+            </div>
+            
+            <div class="marks-table-container">
+                <table class="marks-table" id="marksTable">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">S.No</th>
+                            <th rowspan="2">Name of Subject</th>
+                            <th colspan="3">Theory Marks</th>
+                            <th colspan="3">Practical Marks</th>
+                            <th colspan="3">Total Marks</th>
+                            <th rowspan="2">Result</th>
+                            <th rowspan="2">Action</th>
+                        </tr>
+                        <tr>
+                            <th>Max</th>
+                            <th>Min</th>
+                            <th>Obt</th>
+                            <th>Max</th>
+                            <th>Min</th>
+                            <th>Obt</th>
+                            <th>Max</th>
+                            <th>Min</th>
+                            <th>Obt</th>
+                        </tr>
+                    </thead>
+                    <tbody id="marksBody">
+                        <!-- Rows will be added dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </form>
+        
+        <div class="total-section">
+            <div class="total-row">
+                <div class="total-label">Total in Words</div>
+                <div class="total-value" id="totalWords">ZERO</div>
+            </div>
+            <div class="total-row">
+                <div class="total-label">Maximum Total</div>
+                <div class="total-value" id="maxTotal">0</div>
+            </div>
+            <div class="total-row">
+                <div class="total-label">Obtained Total</div>
+                <div class="total-value" id="obtainedTotal">0</div>
+            </div>
+            <div class="total-row">
+                <div class="total-label">Overall Result</div>
+                <div class="total-value" id="overallResult">-</div>
+            </div>
+            <div class="total-row">
+                <div class="total-label">Grade</div>
+                <div class="total-value" id="grade">-</div>
+            </div>
+        </div>
+        
+        <div class="grade-section">
+            <div class="grade-title">GRADING SYSTEM</div>
+            <div class="grade-details">
+                80% Grade: A+ (Excellent), 70 to 79% Grade: A (Very good), 60% to 69% Grade: B+ (Good), 
+                50 to 59% Grade: B (Satisfactory), 40 to 49% Grade: C, Below 40% Fail
+            </div>
+        </div>
+        
+        <div class="footer">
+            Official Mark Sheet - NATIONAL EDUCATION TRAINING & DEVELOPMENT
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const marksBody = document.getElementById('marksBody');
+            const addRowBtn = document.getElementById('addRow');
+            const calculateBtn = document.getElementById('calculate');
+            const form = document.querySelector('form');
+            
+            // Default subjects
+            const defaultSubjects = [
+                { name: "HUMAN ANATOMY & PHYSIOLOGY", theoryMax: 80, theoryMin: 30, theoryObt: 36, practicalMax: 70, practicalMin: 30, practicalObt: 50 },
+                { name: "MICROBIOLOGY & PARASITOLOGY", theoryMax: 80, theoryMin: 30, theoryObt: 34, practicalMax: 70, practicalMin: 30, practicalObt: 46 },
+                { name: "GENERAL SCIENCE", theoryMax: 80, theoryMin: 30, theoryObt: 20, practicalMax: 70, practicalMin: 30, practicalObt: 63 },
+                { name: "HEAMATOLOGY", theoryMax: 80, theoryMin: 30, theoryObt: 30, practicalMax: 70, practicalMin: 30, practicalObt: 40 }
+            ];
+            
+            // Initialize with default subjects
+            defaultSubjects.forEach((subject, index) => {
+                addSubjectRow(subject, index + 1);
+            });
+            
+            // Calculate initial results
+            calculateResults();
+            updateFormData();
+            
+            // Add row button event
+            addRowBtn.addEventListener('click', function() {
+                const rowCount = marksBody.children.length + 1;
+                addSubjectRow({
+                    name: "",
+                    theoryMax: 80,
+                    theoryMin: 30,
+                    theoryObt: 0,
+                    practicalMax: 70,
+                    practicalMin: 30,
+                    practicalObt: 0
+                }, rowCount);
+            });
+            
+            // Calculate button event
+            calculateBtn.addEventListener('click', function() {
+                calculateResults();
+                updateFormData();
+            });
+            
+            // Form submission handler
+            form.addEventListener('submit', function(e) {
+                updateFormData();
+                updateInputNames();
+                
+                // Basic validation
+                const candidateName = document.getElementById('candidateName').value.trim();
+                if (!candidateName) {
+                    e.preventDefault();
+                    alert('Please enter candidate name');
+                    return;
+                }
+                
+                const subjects = marksBody.querySelectorAll('tr');
+                if (subjects.length === 0) {
+                    e.preventDefault();
+                    alert('Please add at least one subject');
+                    return;
+                }
+                
+                // All good, form will submit
+            });
+            
+            // Function to add a subject row
+            function addSubjectRow(subject, serialNo) {
+                const row = document.createElement('tr');
+                
+                // Serial number
+                const serialCell = document.createElement('td');
+                serialCell.textContent = serialNo;
+                row.appendChild(serialCell);
+                
+                // Subject name
+                const subjectCell = document.createElement('td');
+                subjectCell.className = 'subject-name';
+                const subjectInput = document.createElement('input');
+                subjectInput.type = 'text';
+                subjectInput.className = 'subject-input';
+                subjectInput.value = subject.name;
+                subjectInput.placeholder = "Enter subject name";
+                subjectInput.required = true;
+                subjectCell.appendChild(subjectInput);
+                row.appendChild(subjectCell);
+                
+                // Theory marks
+                row.appendChild(createInputCell(subject.theoryMax, 'theoryMax'));
+                row.appendChild(createInputCell(subject.theoryMin, 'theoryMin'));
+                row.appendChild(createInputCell(subject.theoryObt, 'theoryObt'));
+                
+                // Practical marks
+                row.appendChild(createInputCell(subject.practicalMax, 'practicalMax'));
+                row.appendChild(createInputCell(subject.practicalMin, 'practicalMin'));
+                row.appendChild(createInputCell(subject.practicalObt, 'practicalObt'));
+                
+                // Total marks (calculated - read only)
+                const totalMaxCell = document.createElement('td');
+                totalMaxCell.className = 'total-max';
+                totalMaxCell.textContent = subject.theoryMax + subject.practicalMax;
+                row.appendChild(totalMaxCell);
+                
+                const totalMinCell = document.createElement('td');
+                totalMinCell.className = 'total-min';
+                totalMinCell.textContent = subject.theoryMin + subject.practicalMin;
+                row.appendChild(totalMinCell);
+                
+                const totalObtCell = document.createElement('td');
+                totalObtCell.className = 'total-obt';
+                totalObtCell.textContent = subject.theoryObt + subject.practicalObt;
+                row.appendChild(totalObtCell);
+                
+                // Result
+                const resultCell = document.createElement('td');
+                resultCell.className = 'result-cell';
+                const theoryPassed = subject.theoryObt >= subject.theoryMin;
+                const practicalPassed = subject.practicalObt >= subject.practicalMin;
+                resultCell.textContent = (theoryPassed && practicalPassed) ? 'PASSED' : 'FAILED';
+                resultCell.style.color = (theoryPassed && practicalPassed) ? 'green' : 'red';
+                row.appendChild(resultCell);
+                
+                // Delete button
+                const deleteCell = document.createElement('td');
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.type = 'button';
+                deleteBtn.addEventListener('click', function() {
+                    row.remove();
+                    updateSerialNumbers();
+                    calculateResults();
+                    updateFormData();
+                });
+                deleteCell.appendChild(deleteBtn);
+                row.appendChild(deleteCell);
+                
+                marksBody.appendChild(row);
+                
+                // Add event listeners to mark inputs for auto-calculation
+                const markInputs = row.querySelectorAll('.mark-input');
+                markInputs.forEach(input => {
+                    input.addEventListener('input', function() {
+                        calculateRowResults(row);
+                        calculateResults();
+                        updateFormData();
+                    });
+                });
+            }
+            
+            // Function to create input cell
+            function createInputCell(value, className) {
+                const cell = document.createElement('td');
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'mark-input ' + className;
+                input.value = value;
+                input.min = 0;
+                cell.appendChild(input);
+                return cell;
+            }
+            
+            // Function to calculate results for a single row
+            function calculateRowResults(row) {
+                const inputs = row.querySelectorAll('input');
+                const theoryMax = parseInt(inputs[1].value) || 0;
+                const theoryMin = parseInt(inputs[2].value) || 0;
+                const theoryObt = parseInt(inputs[3].value) || 0;
+                const practicalMax = parseInt(inputs[4].value) || 0;
+                const practicalMin = parseInt(inputs[5].value) || 0;
+                const practicalObt = parseInt(inputs[6].value) || 0;
+                
+                // Update total cells
+                row.querySelector('.total-max').textContent = theoryMax + practicalMax;
+                row.querySelector('.total-min').textContent = theoryMin + practicalMin;
+                row.querySelector('.total-obt').textContent = theoryObt + practicalObt;
+                
+                // Update result
+                const theoryPassed = theoryObt >= theoryMin;
+                const practicalPassed = practicalObt >= practicalMin;
+                const resultCell = row.querySelector('.result-cell');
+                resultCell.textContent = (theoryPassed && practicalPassed) ? 'PASSED' : 'FAILED';
+                resultCell.style.color = (theoryPassed && practicalPassed) ? 'green' : 'red';
+            }
+            
+            // Function to update serial numbers after deletion
+            function updateSerialNumbers() {
+                const rows = marksBody.children;
+                for (let i = 0; i < rows.length; i++) {
+                    rows[i].cells[0].textContent = i + 1;
+                }
+            }
+            
+            // Function to update input names for form submission
+            function updateInputNames() {
+                const rows = marksBody.querySelectorAll('tr');
+                rows.forEach((row, index) => {
+                    const inputs = row.querySelectorAll('input');
+                    inputs[0].name = `subjectName[${index}]`;
+                    inputs[1].name = `theoryMax[${index}]`;
+                    inputs[2].name = `theoryMin[${index}]`;
+                    inputs[3].name = `theoryObt[${index}]`;
+                    inputs[4].name = `practicalMax[${index}]`;
+                    inputs[5].name = `practicalMin[${index}]`;
+                    inputs[6].name = `practicalObt[${index}]`;
+                });
+            }
+            
+            // Function to update hidden form fields
+            function updateFormData() {
+                document.getElementById('totalWordsInput').value = document.getElementById('totalWords').textContent;
+                document.getElementById('maxTotalInput').value = document.getElementById('maxTotal').textContent;
+                document.getElementById('obtainedTotalInput').value = document.getElementById('obtainedTotal').textContent;
+                document.getElementById('overallResultInput').value = document.getElementById('overallResult').textContent;
+                document.getElementById('gradeInput').value = document.getElementById('grade').textContent;
+            }
+            
+            // Function to calculate results
+            function calculateResults() {
+                const rows = marksBody.children;
+                let maxTotal = 0;
+                let obtainedTotal = 0;
+                let allPassed = true;
+                
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    const inputs = row.querySelectorAll('input');
+                    
+                    // Get values
+                    const theoryMax = parseInt(inputs[1].value) || 0;
+                    const theoryMin = parseInt(inputs[2].value) || 0;
+                    const theoryObt = parseInt(inputs[3].value) || 0;
+                    const practicalMax = parseInt(inputs[4].value) || 0;
+                    const practicalMin = parseInt(inputs[5].value) || 0;
+                    const practicalObt = parseInt(inputs[6].value) || 0;
+                    
+                    // Calculate totals
+                    const totalMax = theoryMax + practicalMax;
+                    const totalMin = theoryMin + practicalMin;
+                    const totalObt = theoryObt + practicalObt;
+                    
+                    // Update totals for overall calculation
+                    maxTotal += totalMax;
+                    obtainedTotal += totalObt;
+                    
+                    // Determine pass/fail for this subject
+                    const theoryPassed = theoryObt >= theoryMin;
+                    const practicalPassed = practicalObt >= practicalMin;
+                    const subjectPassed = theoryPassed && practicalPassed;
+                    
+                    if (!subjectPassed) {
+                        allPassed = false;
+                    }
+                }
+                
+                // Update overall results
+                document.getElementById('maxTotal').textContent = maxTotal;
+                document.getElementById('obtainedTotal').textContent = obtainedTotal;
+                document.getElementById('overallResult').textContent = allPassed ? 'PASSED' : 'FAILED';
+                document.getElementById('overallResult').style.color = allPassed ? 'green' : 'red';
+                
+                // Calculate percentage and grade
+                const percentage = maxTotal > 0 ? (obtainedTotal / maxTotal) * 100 : 0;
+                let grade = '';
+                
+                if (percentage >= 80) {
+                    grade = 'PASSED WITH A+ GRADE ';
+                } else if (percentage >= 70) {
+                    grade = 'PASSED WITH A GRADE ';
+                } else if (percentage >= 60) {
+                    grade = 'PASSED WITH B+ GRADE ';
+                } else if (percentage >= 50) {
+                    grade = 'PASSED WITH B GRADE ';
+                } else if (percentage >= 40) {
+                    grade = 'PASSED WITH C GRADE';
+                } else {
+                    grade = 'FAILED';
+                }
+                
+                document.getElementById('grade').textContent = allPassed ? grade : 'FAILED';
+                document.getElementById('grade').style.color = allPassed ? 'green' : 'red';
+                
+                // Update total in words
+                document.getElementById('totalWords').textContent = numberToWords(obtainedTotal);
+            }
+            
+            // Function to convert number to words
+            function numberToWords(num) {
+                const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 
+                              'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Ninteen'];
+                const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+                
+                if (num === 0) return 'Zero';
+                
+                let words = '';
+                
+                if (num >= 1000) {
+                    words += ones[Math.floor(num / 1000)] + ' Thousand ';
+                    num %= 1000;
+                }
+                
+                if (num >= 100) {
+                    words += ones[Math.floor(num / 100)] + ' Hundred ';
+                    num %= 100;
+                }
+                
+                if (num >= 20) {
+                    words += tens[Math.floor(num / 10)] + ' ';
+                    num %= 10;
+                }
+                
+                if (num > 0) {
+                    words += ones[num] + ' ';
+                }
+                
+                return words.trim() + ' Only';
+            }
+        });
+    </script>
+</body>
+</html>
