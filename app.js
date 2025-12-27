@@ -10,10 +10,15 @@ const puppeteer = require('puppeteer');
 const fileUpload = require('express-fileupload');
 const hbs = require('hbs');
 const fs = require('fs').promises; 
+const uploadToDrive = require('./helpers/uploadToDrive');
+
 
 var adminRouter = require('./routes/admin');
 var userRouter = require('./routes/user');
 var studentRouter = require('./routes/student');
+const backupRouter = require('./routes/backup');
+const googleAuthRouter = require('./routes/googleAuth');
+
 
 var app = express();
 var db = require('./config/connection');
@@ -48,7 +53,65 @@ app.engine('hbs', exphbs.engine({
      contains: (array, value) => {
       if (!array || !Array.isArray(array)) return false;
       return array.includes(value);
-    }
+    },// ✅ ADD THESE FOR EDIT-STUDENT
+  
+    // Helper to convert any value to string
+    toString: function(value) {
+      if (!value) return '';
+      return value.toString();
+    },
+    
+    // Helper for comparing values (works for both ObjectId and strings)
+    ifEquals: function(a, b, options) {
+      if (a == b) { // Use loose comparison
+        return options.fn(this);
+      }
+      return options.inverse(this);
+    },
+    
+    // Helper for select option comparison (returns 'selected' if equal)
+    isSelected: function(a, b) {
+      return a == b ? 'selected' : '';
+    },
+    
+    // Helper for ISO date format (YYYY-MM-DD for date inputs)
+    formatDateISO: function(date) {
+      if (!date) return '';
+      try {
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      } catch (e) {
+        return '';
+      }
+    },
+    
+    // Helper to check if a value exists and is not empty
+    hasValue: function(value, options) {
+      if (value && value !== '' && value !== null && value !== undefined) {
+        return options.fn(this);
+      }
+      return options.inverse(this);
+    },
+    
+    // Helper to get array element by index (for fixing .0 error)
+    getIndex: function(array, index) {
+      if (!array || !Array.isArray(array)) return '';
+      return array[index] || '';
+    },
+    
+    // Helper to safely access nested properties
+    get: function(obj, key) {
+      return obj ? obj[key] : '';
+    },
+    // ✅ FIX duplicated values like "298571,298571"
+splitFirst: function (value) {
+  if (!value) return '';
+  return value.toString().split(',')[0];
+},
+
     
   },
 }));
@@ -108,6 +171,11 @@ db.connect((err) => {
 app.use('/admin', adminRouter);
 app.use('/user', userRouter);
 app.use('/student', studentRouter); // Student router must come AFTER body parser & session
+app.use('/backup', backupRouter);
+app.use('/', googleAuthRouter);
+
+
+
 
 
 // Static files (after session & body parser to avoid route conflicts)

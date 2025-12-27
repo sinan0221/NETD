@@ -11,6 +11,9 @@ const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const jpegRotate = require('jpeg-autorotate');
 const path = require('path');
 const fontkit = require('fontkit');
+const mammoth = require("mammoth")
+const multer = require('multer');
+
 
 const templatePath = path.join(__dirname, '../public/pdf-templates/hall_ticket_template.pdf');
 
@@ -139,21 +142,118 @@ router.get('/logout', (req, res) => {
 
 
 
+// router.get('/', verifyUserLogin, async (req, res) => {
+//   try {
+//     let user = req.session.user;
+//     let centreId = req.session.centreId; // ✅ Saved during login
+
+//     // 1️⃣ Get all batches belonging to this center
+//     const batches = await batchHelpers.getBatchesByCentre(centreId);
+
+//     // 2️⃣ Get all centers (with grade + stars automatically added by helper)
+//     const centers = await centerHelpers.getAllCenters();
+
+//     // 3️⃣ Find the logged-in user's center
+//     const center = centers.find(c => c._id.toString() === centreId.toString());
+
+//     // 4️⃣ Render the page with grade and stars
+//     res.render('user/view-batch', {
+//       batches,
+//       user,
+//       grade: center?.grade || '',
+//       stars: center?.stars || '',
+//       center
+//     });
+
+//   } catch (err) {
+//     console.error("❌ Error loading batches:", err);
+//     res.status(500).send("Error loading batches");
+//   }
+// });
+
+
 router.get('/', verifyUserLogin, async (req, res) => {
   try {
     let user = req.session.user;
-    let centreId = req.session.centreId; // ✅ Saved during login
+    let centreId = req.session.centreId;
 
-    // 1️⃣ Get all batches belonging to this center
-    const batches = await batchHelpers.getBatchesByCentre(centreId);
-
-    // 2️⃣ Get all centers (with grade + stars automatically added by helper)
     const centers = await centerHelpers.getAllCenters();
-
-    // 3️⃣ Find the logged-in user's center
     const center = centers.find(c => c._id.toString() === centreId.toString());
 
-    // 4️⃣ Render the page with grade and stars
+    // Get stats (already includes pendingStudents)
+    const stats = await batchHelpers.getDashboardStatsByCentre(centreId);
+
+    res.render('user/dashboard', {
+      user,
+      center,
+      grade: center?.grade || '',
+      stars: center?.stars || '',
+      stats,          // includes totalStudents, pendingStudents, activeBatches, inactiveBatches
+      hideNavbar: true
+    });
+
+  } catch (err) {
+    console.error("❌ Error loading dashboard:", err);
+    res.status(500).send("Error loading dashboard");
+  }
+});
+
+
+// router.get('/view-batch', verifyUserLogin, async (req, res) => {
+//   try {
+//     let user = req.session.user;
+//     let centreId = req.session.centreId;
+
+//     const batches = await batchHelpers.getBatchesByCentre(centreId);
+//     const centers = await centerHelpers.getAllCenters();
+
+//     const center = centers.find(c => c._id.toString() === centreId.toString());
+
+//     res.render('user/view-batch', {
+//       batches,
+//       user,
+//       grade: center?.grade || '',
+//       stars: center?.stars || '',
+//       center
+//     });
+
+//   } catch (err) {
+//     console.error("❌ Error loading batches:", err);
+//     res.status(500).send("Error loading batches");
+//   }
+// });
+
+
+router.get('/view-batch', verifyUserLogin, async (req, res) => {
+  try {
+    let user = req.session.user;
+    let centreId = req.session.centreId;
+
+    let batches = await batchHelpers.getBatchesByCentre(centreId);
+    const centers = await centerHelpers.getAllCenters();
+    const center = centers.find(c => c._id.toString() === centreId.toString());
+
+    batches = await Promise.all(
+      batches.map(async (batch) => {
+
+        const appliedCount = await db.get()
+          .collection(collection.STUDENT_COLLECTION)
+          .countDocuments({
+            batchId: new ObjectId(batch._id), // ✅ FIX
+            appliedForHallTicket: true
+          });
+
+        console.log(
+          `👤 USER VIEW → Batch ${batch._id} | appliedCount = ${appliedCount}`
+        );
+
+        return {
+          ...batch,
+          appliedForHallTicket: appliedCount > 0
+        };
+      })
+    );
+
     res.render('user/view-batch', {
       batches,
       user,
@@ -190,28 +290,53 @@ router.post('/add-batch', verifyUserLogin, (req, res) => {
     res.redirect('/user');  // redirect back to batch list page
   });
 });
+// View INACTIVE Batches
+// View INACTIVE Batches (User)
+router.get('/inactive-batches', verifyUserLogin, async (req, res) => {
+  try {
+    let user = req.session.user;
+    let centreId = req.session.centreId;
+
+    // Get inactive batches for this centre
+    const batches = await batchHelpers.getBatchesByStatusAndCentre(false, centreId);
+    
+    res.render('user/inactive-batches', {
+      batches,
+      user,
+      pageTitle: 'Inactive Batches',
+      hideNavbar:true
+    });
+
+  } catch (err) {
+    console.error("❌ Error loading inactive batches:", err);
+    res.status(500).send("Error loading inactive batches");
+  }
+});
 
 //edit batch:
+// edit batch (GET)
 router.get('/edit-batch/:id', verifyUserLogin, async (req, res) => {
   try {
-    let batchId = req.params.id;
-    let batch = await batchHelpers.getBatchDetails(batchId);
-    
+    const batchId = req.params.id;
+
+    const batch = await batchHelpers.getBatchById(batchId);
 
     if (!batch) {
-      return res.status(404).send("batch not found");
+      return res.status(404).send("Batch not found");
     }
 
-    res.render('user/edit-batch', { 
-      user: true, 
+    res.render('user/edit-batch', {
+      user: true,
       hideNavbar: true,
-      batch // 👈 pass center to hbs
+      batch
     });
+
   } catch (err) {
     console.error("❌ Error fetching batch:", err);
     res.status(500).send("Error loading batch details");
   }
 });
+
 //post route:
 router.post('/edit-batch/:id', verifyUserLogin, async (req, res) => {
   try {
@@ -286,74 +411,1805 @@ router.get('/view-student', verifyUserLogin, async (req, res) => {
 //   res.render('user/add-student', { user: req.session.user, hideNavbar: true,centreId: req.session.centreId });
 // });
 router.get('/add-student', verifyUserLogin, async (req, res) => {
-  const centre = await centerHelpers.getCenterDetails(req.session.centreId);
-  let batches = await batchHelpers.getAllBatchesWithCentre();
-  console.log(centre.department)
-  
-  res.render('user/add-student', { 
-    user: req.session.user, 
-    hideNavbar: true,
-    centreId: centre.centreId,       // 👈 human-friendly ID
-    centreName: centre.centreName,
-    batches
-        // 👈 optional
-  });
+  try {
+    // 🟢 Get centreId from SESSION (Mongo _id)
+    const centreId = req.session.centreId;
+
+    console.log("🟢 Session centreId:", centreId);
+
+    if (!centreId) {
+      return res.redirect('/user/login');
+    }
+
+    // 🟢 Use helper that expects Mongo _id
+    const center = await centerHelpers.getCenterDetails(centreId);
+
+    if (!center) {
+      return res.status(404).send("Center not found");
+    }
+
+    // 🟢 Fetch batches using same centre _id
+    const batches = await batchHelpers.getBatchesByCentre(centreId);
+
+    res.render('user/add-student', {
+      user: req.session.user,
+      hideNavbar: true,
+
+      // for form
+      centreId: center.centreId,     // CTR001 (display)
+      centreName: center.centreName,
+      centre: center,
+      department: center.department,
+      courseNames: center.courseName,
+      batches
+    });
+
+  } catch (err) {
+    console.error("❌ Error loading add-student page:", err);
+    res.status(500).send("Error loading add-student page");
+  }
 });
 
-// Handle Add Student Form Submission
+
+
 router.post('/add-student', verifyUserLogin, (req, res) => {
-  // 🟢 Raw form data
-  console.log("📥 Raw Form Data:", req.body);
+  try {
+    // 🟢 Raw form data
+    console.log("📥 Raw Form Data:", req.body);
 
-  // 🟢 Prepare qualification objects
-  let qualifications = [];
+    // 🟢 Prepare qualification objects
+    let qualifications = [];
 
-  let eduArr = Array.isArray(req.body['education[]']) ? req.body['education[]'] : [req.body['education[]']];
-  let maxArr = Array.isArray(req.body['maxMarks[]']) ? req.body['maxMarks[]'] : [req.body['maxMarks[]']];
-  let minArr = Array.isArray(req.body['minMarks[]']) ? req.body['minMarks[]'] : [req.body['minMarks[]']];
-  let obtArr = Array.isArray(req.body['obtainedMarks[]']) ? req.body['obtainedMarks[]'] : [req.body['obtainedMarks[]']];
-  let gradeArr = Array.isArray(req.body['grade[]']) ? req.body['grade[]'] : [req.body['grade[]']];
-  let yearArr = Array.isArray(req.body['year[]']) ? req.body['year[]'] : [req.body['year[]']];
-  let boardArr = Array.isArray(req.body['board[]']) ? req.body['board[]'] : [req.body['board[]']];
+    // Check if data is coming as arrays or single values
+    let eduArr = req.body['education[]'];
+    let maxArr = req.body['maxMarks[]'];
+    let minArr = req.body['minMarks[]'];
+    let obtArr = req.body['obtainedMarks[]'];
+    let gradeArr = req.body['grade[]'];
+    let yearArr = req.body['year[]'];
+    let boardArr = req.body['board[]'];
 
-  eduArr.forEach((edu, i) => {
-    if (edu && maxArr[i] && yearArr[i]) {   // filter out empty rows
-      qualifications.push({
-        education: edu,
-        maxMarks: maxArr[i],
-        minMarks: minArr[i],
-        obtainedMarks: obtArr[i],
-        grade: gradeArr[i],
-        year: yearArr[i],
-        board: boardArr[i]
+    // Convert to arrays if they're not already
+    if (!Array.isArray(eduArr) && eduArr) {
+      eduArr = [eduArr];
+      maxArr = [maxArr];
+      minArr = [minArr];
+      obtArr = [obtArr];
+      gradeArr = [gradeArr];
+      yearArr = [yearArr];
+      boardArr = [boardArr];
+    }
+
+    // Process qualifications
+    if (eduArr && Array.isArray(eduArr)) {
+      eduArr.forEach((edu, i) => {
+        if (edu && edu.trim() !== '' && maxArr[i] && maxArr[i].toString().trim() !== '') {
+          qualifications.push({
+            education: edu,
+            maxMarks: maxArr[i],
+            minMarks: minArr[i],
+            obtainedMarks: obtArr[i],
+            grade: gradeArr[i],
+            year: yearArr[i],
+            board: boardArr[i]
+          });
+        }
       });
     }
-  });
 
-  console.log("🎓 Qualifications Parsed:", qualifications);
+    console.log("🎓 Qualifications Parsed:", qualifications);
+    console.log("🔢 Qualification count:", qualifications.length);
 
-  // Merge qualifications into req.body
-  let studentData = {
-    ...req.body,
-    qualifications
-  };
-  studentData.activated = false;
+    // Merge qualifications into req.body
+    let studentData = {
+      ...req.body,
+      qualifications
+    };
+    
+    // Remove the array fields since we're passing them as structured objects
+    delete studentData['education[]'];
+    delete studentData['maxMarks[]'];
+    delete studentData['minMarks[]'];
+    delete studentData['obtainedMarks[]'];
+    delete studentData['grade[]'];
+    delete studentData['year[]'];
+    delete studentData['board[]'];
 
+    // Add additional fields
+    studentData.activated = false;
+    studentData.createdAt = new Date();
+    
+    // 🟢 IMPORTANT: Use the same field names expected by studentHelpers
+    // The helper expects: education, maxMarks, minMarks, obtainedMarks, grade, year, board
+    // But we're passing them as qualifications array
+    
+    console.log("📤 Student Data ready for insertion:", JSON.stringify(studentData, null, 2));
 
-  studentHelpers.addStudent(studentData, (id) => {
+    // Call the helper with the data
+    studentHelpers.addStudent(studentData, (insertedId) => {
+      if (!insertedId) {
+        console.error("❌ No ID returned from addStudent");
+        return res.status(500).send("Error adding student");
+      }
+      
+      console.log("✅ Student added with ID:", insertedId);
+      
+      // Save student image if uploaded
+      if (req.files && req.files.image) {
+        let imageFile = req.files.image;
+        let uploadPath = path.join(__dirname, '../public/studentImages/', insertedId + '.jpg');
+
+        imageFile.mv(uploadPath, (err) => {
+          if (err) {
+            console.error("❌ Error saving image:", err);
+          } else {
+            console.log("✅ Student image saved:", uploadPath);
+          }
+        });
+      }
+      
+      // Redirect to registration form preview
+      console.log("🔄 Redirecting to preview:", `/user/preview-registration/${insertedId}`);
+      res.redirect(`/user/preview-registration/${insertedId}`);
+    });
+
+  } catch (err) {
+    console.error("❌ Error in POST /add-student route:", err);
+    res.status(500).send("Server error: " + err.message);
+  }
+});
+// EDIT STUDENT ROUTE
+router.get('/edit-student/:id', verifyUserLogin, async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    const centreId = req.session.centreId;
+    
+    console.log("🟢 Edit Student - Student ID:", studentId);
+    console.log("🟢 Edit Student - Centre ID:", centreId);
+    
+    if (!centreId) {
+      return res.redirect('/user/login');
+    }
+    
+    // Fetch student details
+    const student = await studentHelpers.getStudentById(studentId);
+    
+    if (!student) {
+      console.log("❌ Student not found:", studentId);
+      return res.status(404).send("Student not found");
+    }
+    
+    console.log("🟢 Student data for edit:", {
+      id: student._id,
+      centreId: student.centreId,
+      courseName: student.courseName,
+      department: student.department,
+      dob: student.dob,
+      batchId: student.batchId
+    });
+    
+    // Fetch centre details
+    const centre = await centerHelpers.getCenterDetails(centreId);
+    console.log("🟢 Center found:", { 
+      centreId: centre.centreId, 
+      department: centre.department,
+      courseName: centre.courseName 
+    });
+    
+    // Fetch batches for this centre
+    const batches = await batchHelpers.getBatchesByCentre(centreId);
+    
+    // Get qualifications
+    const qualifications = student.qualifications || [];
+    
+    res.render('user/edit-student', {
+      user: req.session.user,
+      hideNavbar: true,
+      student: {
+        id: student._id,
+        admissionYear: student.admissionYear,
+        mode: student.mode,
+        centreId: student.centreId || [centreId],
+        courseName: student.courseName,
+        courseCode: student.courseCode,
+        shortName: student.shortName,
+        courseDuration: student.courseDuration,
+        medium: student.medium,
+        department: student.department,
+        batchId: student.batchId,
+        regNo: student.regNo,
+        fullName: student.fullName,
+        motherName: student.motherName,
+        fatherName: student.fatherName,
+        fatherOcc: student.fatherOcc,
+        candOcc: student.candOcc,
+        gender: student.gender,
+        dob: student.dob,
+        number: student.number,
+        emerNum: student.emerNum,
+        email: student.email,
+        bpl: student.bpl,
+        ph: student.ph,
+        caste: student.caste,
+        adharNo: student.adharNo,
+        address: student.address,
+        pinCode: student.pinCode,
+        city: student.city,
+        district: student.district,
+        state: student.state,
+        nationality: student.nationality,
+        qualifications: qualifications,
+        hasImage: student.hasImage || false
+      },
+      centre: centre,
+      courseNames: centre.courseName || [],
+      batches: batches || []
+    });
+    
+  } catch (err) {
+    console.error("❌ Error loading edit-student page:", err);
+    res.status(500).send("Error loading edit-student page: " + err.message);
+  }
+});
+
+// UPDATE STUDENT ROUTE
+router.post('/update-student/:id', verifyUserLogin, async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    
+    console.log("📥 Updating student:", studentId);
+    console.log("📥 Update Data:", req.body);
+    
+    // Parse qualifications
+    let qualifications = [];
+    let eduArr = req.body['education[]'];
+    let maxArr = req.body['maxMarks[]'];
+    let minArr = req.body['minMarks[]'];
+    let obtArr = req.body['obtainedMarks[]'];
+    let gradeArr = req.body['grade[]'];
+    let yearArr = req.body['year[]'];
+    let boardArr = req.body['board[]'];
+    
+    // Convert to arrays if needed
+    if (!Array.isArray(eduArr) && eduArr) {
+      eduArr = [eduArr];
+      maxArr = [maxArr];
+      minArr = [minArr];
+      obtArr = [obtArr];
+      gradeArr = [gradeArr];
+      yearArr = [yearArr];
+      boardArr = [boardArr];
+    }
+    
+    // Process qualifications
+    if (eduArr && Array.isArray(eduArr)) {
+      eduArr.forEach((edu, i) => {
+        if (edu && edu.trim() !== '' && maxArr[i] && maxArr[i].toString().trim() !== '') {
+          qualifications.push({
+            education: edu,
+            maxMarks: maxArr[i],
+            minMarks: minArr[i],
+            obtainedMarks: obtArr[i],
+            grade: gradeArr[i],
+            year: yearArr[i],
+            board: boardArr[i]
+          });
+        }
+      });
+    }
+    
+    // Prepare update data
+    const updateData = {
+      ...req.body,
+      qualifications: qualifications
+    };
+    
+    // Remove array fields
+    delete updateData['education[]'];
+    delete updateData['maxMarks[]'];
+    delete updateData['minMarks[]'];
+    delete updateData['obtainedMarks[]'];
+    delete updateData['grade[]'];
+    delete updateData['year[]'];
+    delete updateData['board[]'];
+    
+    // Handle image upload
     if (req.files && req.files.image) {
       let imageFile = req.files.image;
-      let uploadPath = path.join(__dirname, '../public/studentImages/', id + '.jpg');
-
-      imageFile.mv(uploadPath, (err) => {
-        if (err) console.error("❌ Error saving image:", err);
-      });
+      let uploadPath = path.join(__dirname, '../public/studentImages/', studentId + '.jpg');
+      
+      await imageFile.mv(uploadPath);
+      console.log("✅ Student image updated:", uploadPath);
     }
-    res.redirect('/user/view-student');
+    
+    // Update student in database
+    const result = await studentHelpers.updateStudent(studentId, updateData);
+    
+    if (result) {
+      console.log("✅ Student updated successfully:", studentId);
+      res.redirect('/user/view-students');
+    } else {
+      console.error("❌ Failed to update student");
+      res.status(500).send("Failed to update student");
+    }
+    
+  } catch (err) {
+    console.error("❌ Error updating student:", err);
+    res.status(500).send("Error updating student: " + err.message);
+  }
+});
+
+// ===========================
+// REGISTRATION FORM PREVIEW (COMPLETE FIXED VERSION)
+// ===========================
+router.get("/preview-registration/:id", verifyUserLogin, async (req, res) => {
+  try {
+    const studentId = req.params.id;
+
+    // 1️⃣ Fetch student data
+    const student = await db.get()
+      .collection(collection.STUDENT_COLLECTION)
+      .findOne({ _id: new ObjectId(studentId) });
+
+    if (!student) {
+      return res.status(404).send("Student not found");
+    }
+
+    console.log("📋 Generating PDF for student:", student.fullName);
+
+    // 2️⃣ Load background image - check if it exists
+    const bgPath = path.join(__dirname, "../public/images/registration-bg.jpg");
+    let bgBytes = null;
+    
+    if (fs.existsSync(bgPath)) {
+      bgBytes = fs.readFileSync(bgPath);
+    } else {
+      console.log("ℹ️ No background image found, creating plain PDF");
+    }
+
+    // 3️⃣ Create PDF document
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.registerFontkit(fontkit);
+
+    // 4️⃣ Load fonts
+    const arialPath = path.join(__dirname, "../public/fonts/arial.ttf");
+    const arialBytes = fs.readFileSync(arialPath);
+    const arial = await pdfDoc.embedFont(arialBytes);
+
+    const arialBoldPath = path.join(__dirname, "../public/fonts/arialbd.ttf");
+    let arialBold = arial;
+    if (fs.existsSync(arialBoldPath)) {
+      const arialBoldBytes = fs.readFileSync(arialBoldPath);
+      arialBold = await pdfDoc.embedFont(arialBoldBytes);
+    }
+
+    // 5️⃣ Page size (A4)
+    const pageWidth = 8.27 * 72;  // A4 width in points
+    const pageHeight = 11.69 * 72; // A4 height in points
+
+    // ===========================
+    // PAGE 1: MAIN REGISTRATION FORM
+    // ===========================
+    const page1 = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    // Background (if exists)
+    if (bgBytes) {
+      try {
+        const bgImage = await pdfDoc.embedJpg(bgBytes);
+        page1.drawImage(bgImage, { 
+          x: 0, 
+          y: 0, 
+          width: pageWidth, 
+          height: pageHeight 
+        });
+      } catch (err) {
+        console.warn("⚠️ Background image error:", err.message);
+      }
+    }
+
+    const { rgb } = require("pdf-lib");
+
+    // ===========================
+    // SAFE VALUE HELPER FUNCTION
+    // ===========================
+    const safeValue = (value) => {
+      if (value === undefined || value === null) {
+        return "N/A";
+      }
+      
+      if (typeof value === 'number') {
+        return isNaN(value) || value === 0 ? "N/A" : value.toString();
+      }
+      
+      if (typeof value === 'boolean') {
+        return value ? "Yes" : "No";
+      }
+      
+      if (value instanceof Date) {
+        return value.toLocaleDateString();
+      }
+      
+      const strValue = String(value).trim();
+      return strValue === "" ? "N/A" : strValue;
+    };
+    const currentDate = new Date();
+    const issueDate = currentDate.toLocaleDateString('en-GB'); // Format: DD/MM/YYYY
+  // ✅ Student Photo - WITH SIMPLE rotation check
+const imageDir = path.join(__dirname, "../public/studentImages/");
+const possibleExtensions = [".jpg", ".jpeg", ".png"];
+let photoFound = false;
+
+for (const ext of possibleExtensions) {
+  const photoPath = path.join(imageDir, `${student._id}${ext}`);
+  if (fs.existsSync(photoPath)) {
+    try {
+      console.log(`✅ Found student photo at: ${photoPath}`);
+      let photoBytes = fs.readFileSync(photoPath);
+      let photo;
+
+      if (ext === ".png") {
+        photo = await pdfDoc.embedPng(photoBytes);
+      } else {
+        // Try-catch for JPG embedding
+        try {
+          photo = await pdfDoc.embedJpg(photoBytes);
+        } catch (jpgErr) {
+          console.log("⚠️ Could not embed as JPG, trying different approach");
+          // Alternative: create a placeholder or skip
+          continue;
+        }
+      }
+
+      // Student photo position - TRY DIFFERENT VALUES IF NOT VISIBLE
+      page1.drawImage(photo, {
+        x: 485.5,    // Try 50 if not visible
+        y: 584.3,    // Try 50 if not visible  
+        width: 71.8,
+        height: 91.3,
+      });
+
+      photoFound = true;
+      console.log(`✅ Photo drawn successfully`);
+      break;
+      
+    } catch (photoError) {
+      console.log("❌ Error in photo processing:", photoError.message);
+      continue;
+    }
+  }
+}
+function drawTextCenteredAtX(page, text, centerX, y, font, size) {
+  if (!text) return;
+
+  const textWidth = font.widthOfTextAtSize(text, size);
+  const x = centerX - textWidth / 2;
+
+  page.drawText(text, {
+    x,
+    y,
+    size,
+    font,
+    color: rgb(0, 0, 0)
   });
+}
+
+
+    // ===========================
+    // DRAW FIELD FUNCTION
+    // ===========================
+    const drawField = (label, value, x, y) => {
+      const displayValue = safeValue(value);
+      
+      page1.drawText(`${label}`, {
+        x: x,
+        y: y,
+        size: 9,
+        font: arialBold,
+        color: rgb(0, 0, 0)
+      });
+      
+      page1.drawText(displayValue, {
+        x: x + 100,
+        y: y,
+        size: 9,
+        font: arial,
+        color: rgb(0.3, 0.3, 0.3) // softer black
+      });
+      
+    };
+
+    // ===========================
+    // PAGE 1 CONTENT
+    // ===========================
+    
+    // Registration Number (top right)
+    drawField("", student.regNo, 405, 817.3);  
+    
+    // ACADEMIC DETAILS
+    const [startYear, endYear] = (student.admissionYear || "").split("-");
+
+    drawField("", startYear, 85, 669);
+
+    drawField("", endYear, 160, 669);
+    
+    
+
+    drawField("", student.mode, 267, 669);
+    // drawField("", student.centreId, 76, 649.5);
+    const centreId = Array.isArray(student.centreId)
+    ? student.centreId[0]
+    : student.centreId;
+    const centre = await db.get()
+    .collection(collection.CENTER_COLLECTION)
+    .findOne({ centreId: centreId });
+    const centreName = centre?.centreName || "N/A";
+    drawField("", `${centreName} / ${centreId}`, 76, 649.5);
+
+
+    drawField("", student.courseName, 76, 629.5);
+    drawField("", student.courseCode, 76, 608.5);
+    drawField("", student.courseDuration, 76, 590);
+    drawField("", student.shortName, 297, 609);
+    drawField("", student.medium, 285, 590);
+    drawField("", student.department, 76, 550.2);
+    const batchId = student.batchId;
+    const batch = await batchHelpers.getBatchById(batchId);
+
+    const batchName = batch?.batchName || "N/A";
+    
+    drawField("", batchName, 76, 570);
+
+  
+
+    // PERSONAL DETAILS
+    drawField("", student.fullName, 33, 519);
+    drawField("", student.fatherName, 33, 501);
+    drawField("", student.motherName, 33, 484);
+    const gender = (student.gender || "").trim().toLowerCase();
+    const yGender = 449;
+
+    const MALE_X   = 296;
+    const FEMALE_X = 210;
+    const OTHER_X  = 280;
+    if (gender === "male") {
+      drawField("", "X", MALE_X, yGender);
+    } else if (gender === "female") {
+      drawField("", "X", FEMALE_X, yGender);
+    } else if (gender === "other") {
+      drawField("", "X", OTHER_X, yGender);
+    }
+        
+    
+    // drawField("", student.dob, 48, 465);
+    const dobStr = student.dob;
+
+    if (dobStr) {
+      const dob = new Date(dobStr);
+      const today = new Date();
+    
+      // DOB → DD-MM-YYYY
+      const day = String(dob.getDate()).padStart(2, "0");
+      const month = String(dob.getMonth() + 1).padStart(2, "0");
+      const year = dob.getFullYear();
+      const formattedDOB = `${day}-${month}-${year}`;
+    
+      // Age calculation
+      let years = today.getFullYear() - year;
+      let months = today.getMonth() - dob.getMonth();
+    
+      if (today.getDate() < dob.getDate()) {
+        months--;
+      }
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+    
+      const yPos = 466.2;
+    
+      // ✅ Draw each value in its own column
+      drawField("", formattedDOB, 33, yPos);   // DOB column
+      drawField("", years.toString(), 163.5, yPos);  // Years column
+      drawField("", months.toString(), 230, yPos); // Months column
+    }
+    
+
+    drawField("", student.number, 33, 449);
+    drawField("", student.emerNum, 33, 431);
+    drawField("", student.candOcc, 33, 414);
+    drawField("", student.fatherOcc, 33, 398);
+    drawField("", student.adharNo, 33, 362.5);
+    drawField("", student.address, 33, 347.5);
+    drawField("", `${student.district}, ${student.city}`, 33, 330);
+
+    
+    const bpl = (student.bpl || "").trim().toLowerCase();
+
+    const yBPL = 413;
+
+    const YES_X = 350;
+    const NO_X  = 296;
+    if (bpl === "yes") {
+      drawField("", "X", YES_X, yBPL);
+    } else if (bpl === "no") {
+      drawField("", "X", NO_X, yBPL);
+    }
+        
+   
+    const ph = (student.ph || "").trim().toLowerCase();
+    const yPH = 397;
+
+    if (student.ph === "Yes") {
+      drawField("", "X", 350, 397);
+    } else if (student.ph === "No") {
+      drawField("", "X", 296, 397);
+    }
+    
+
+    
+    const caste = (student.caste || "").trim().toLowerCase();
+const yCaste = 379;
+
+if (caste === "gen") {
+  drawField("", "X", 47, yCaste);
+} else if (caste === "obc") {
+  drawField("", "X", 88.5, yCaste);
+} else if (caste === "sc") {
+  drawField("", "X", 130, yCaste);
+} else if (caste === "st") {
+  drawField("", "X", 162, yCaste);
+} else if (caste === "other") {
+  drawField("", "X", 213, yCaste);
+}
+
+    drawField("", student.pinCode, 300.5, 362);
+    drawField("", student.state, 300.5, 330.5);
+    drawField("", student.nationality, 300.5, 378.7);
+    drawField("", student.regNo, 110, 26);
+
+    drawField("", student.email, 300.5, 431);
+   //declaration
+ 
+  drawTextCenteredAtX(
+    page1,
+    safeValue(student.fullName),
+    100,     // 👈 center point for student name
+    156,
+    arial,
+    9
+  );
+  
+  drawTextCenteredAtX(
+    page1,
+    safeValue(student.fatherName),
+    280,     // 👈 center point for father name
+    156,
+    arial,
+    9
+  );
+  
+   drawField("", issueDate, -44, 93);
+   drawField("", student.city, -44, 80);
+   let activatedDateText = "";
+
+   if (student.activatedDate) {
+     const d = new Date(student.activatedDate);
+   
+     const day = String(d.getDate()).padStart(2, "0");
+     const month = String(d.getMonth() + 1).padStart(2, "0");
+     const year = d.getFullYear();
+   
+     activatedDateText = `${day}-${month}-${year}`;
+   }
+   
+   // Draw the field with activated date
+   drawField("apd", activatedDateText, -54, 26);
+   // ===========================
+// QUALIFICATIONS → PDF (VALUES ONLY)
+// ===========================
+
+let y = 280;        // start Y
+const gap = 15.3;
+
+(student.qualifications || []).forEach((q) => {
+
+  
+
+  page1.drawText(q.maxMarks?.toString() || '', {
+    x: 135,
+    y,
+    size: 9,
+    font: arial
+  });
+
+  page1.drawText(q.minMarks?.toString() || '', {
+    x: 190,
+    y,
+    size: 9,
+    font: arial
+  });
+
+  page1.drawText(q.obtainedMarks?.toString() || '', {
+    x: 245,
+    y,
+    size: 9,
+    font: arial
+  });
+
+  page1.drawText(q.grade || '', {
+    x: 290,
+    y,
+    size: 9,
+    font: arial
+  });
+
+  page1.drawText(q.year || '', {
+    x: 343,
+    y,
+    size: 9,
+    font: arial
+  });
+
+  page1.drawText(q.board || '', {
+    x: 400,
+    y,
+    size: 9,
+    font: arial,
+    maxWidth: 140
+  });
+
+  y -= gap;
 });
 
 
+   
+    // ===========================
+    // PAGE 2: SDECLARE.JPG (Student Declaration)
+    // ===========================
+    const page2 = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    try {
+      const sdeclarePath = path.join(__dirname, "../public/images/sdeclare.jpg");
+      if (fs.existsSync(sdeclarePath)) {
+        const sdeclareBytes = fs.readFileSync(sdeclarePath);
+        const sdeclareImage = await pdfDoc.embedJpg(sdeclareBytes);
+        page2.drawImage(sdeclareImage, { 
+          x: 0, 
+          y: 0, 
+          width: pageWidth, 
+          height: pageHeight 
+        });
+
+        // Declaration page – centered fields
+drawTextCenteredAtX(
+  page2,
+  safeValue(student.fullName),
+  165,                 // 👈 center position
+  pageHeight - 94,
+  arial,
+  9
+);
+
+drawTextCenteredAtX(
+  page2,
+  safeValue(student.fatherName),
+  420,                 // 👈 center position
+  pageHeight - 94,
+  arial,
+  9
+);
+
+drawTextCenteredAtX(
+  page2,
+  safeValue(student.courseName),
+  115,
+  pageHeight - 115,
+  arial,
+  9
+);
+
+drawTextCenteredAtX(
+  page2,
+  safeValue(student.courseDuration),
+  285,
+  pageHeight - 115,
+  arial,
+  9
+);
+
+drawTextCenteredAtX(
+  page2,
+  safeValue(student.department),
+  465,
+  pageHeight - 115,
+  arial,
+  9
+);
+
+       
+const fontSize = 9;
+const maxWidth = 200; // 🔴 adjust this value to fit your layout
+const address = safeValue(student.address);
+function splitTextByWidth(text, font, fontSize, maxWidth) {
+  const words = text.split(' ');
+  let line1 = '';
+  let line2 = '';
+
+  for (let i = 0; i < words.length; i++) {
+    const testLine = line1 ? line1 + ' ' + words[i] : words[i];
+    const testWidth = font.widthOfTextAtSize(testLine, fontSize);
+
+    if (testWidth <= maxWidth) {
+      line1 = testLine;
+    } else {
+      line2 = words.slice(i).join(' ');
+      break;
+    }
+  }
+
+  return { line1, line2 };
+}
+const { line1, line2 } = splitTextByWidth(
+  address,
+  arial,
+  fontSize,
+  145 // same maxWidth
+);
+
+page2.drawText(line1, {
+  x: 435,
+  y: pageHeight - 137,
+  size: fontSize,
+  font: arial,
+  color: rgb(0, 0, 0)
+});
+
+page2.drawText(line2, {
+  x: 36,
+  y: pageHeight - 160,
+  size: fontSize,
+  font: arial,
+  color: rgb(0, 0, 0)
+});
+
+        page2.drawText(` ${safeValue(student.pinCode)}`, {
+          x: 321,
+          y: pageHeight - 160,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+        page2.drawText(` ${safeValue(student.number)}`, {
+          x: 450,
+          y: pageHeight - 160,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+      } else {
+        console.log("ℹ️ sdeclare.jpg not found, creating text declaration");
+        page2.drawText("STUDENT DECLARATION", {
+          x: pageWidth / 2 - 80,
+          y: pageHeight - 100,
+          size: 18,
+          font: arialBold,
+          color: rgb(0, 0, 0)
+        });
+
+        const declarationText = `I, ${safeValue(student.fullName)}, son/daughter of ${safeValue(student.fatherName)}, hereby declare that all information provided in this registration form is true and correct to the best of my knowledge.`;
+        
+        page2.drawText(declarationText, {
+          x: 45,
+          y: pageHeight - 150,
+          size: 12,
+          font: arial,
+          color: rgb(0, 0, 0),
+          maxWidth: pageWidth - 90
+        });
+      }
+    } catch (err) {
+      console.warn("⚠️ Error loading sdeclare.jpg:", err.message);
+    }
+
+    // ===========================
+    // PAGE 3: PDECLARE.JPG (Parent/Guardian Declaration)
+    // ===========================
+    const page3 = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    try {
+      const pdeclarePath = path.join(__dirname, "../public/images/pdeclare.jpg");
+      if (fs.existsSync(pdeclarePath)) {
+        const pdeclareBytes = fs.readFileSync(pdeclarePath);
+        const pdeclareImage = await pdfDoc.embedJpg(pdeclareBytes);
+        page3.drawImage(pdeclareImage, { 
+          x: 0, 
+          y: 0, 
+          width: pageWidth, 
+          height: pageHeight 
+        });
+
+        // Add student details on the parent declaration page
+        page3.drawText(` ${safeValue(issueDate)}`, {
+          x: 65,
+          y: pageHeight - 421.8,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+        page3.drawText(` ${safeValue(student.city)}`, {
+          x: 65,
+          y: pageHeight - 450.8,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+
+        page3.drawText(` ${safeValue(student.fatherName)}`, {
+          x: 70,
+          y: pageHeight - 598,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+        
+        page3.drawText(` ${safeValue(issueDate)}`, {
+          x: 65,
+          y: pageHeight - 706.5,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+        page3.drawText(` ${safeValue(student.city)}`, {
+          x: 65,
+          y: pageHeight - 733.5,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+
+      
+      } else {
+        console.log("ℹ️ pdeclare.jpg not found, creating text declaration");
+        page3.drawText("PARENT/GUARDIAN DECLARATION", {
+          x: pageWidth / 2 - 120,
+          y: pageHeight - 100,
+          size: 18,
+          font: arialBold,
+          color: rgb(0, 0, 0)
+        });
+
+        const parentDeclaration = `I, ${safeValue(student.fatherName)}/${safeValue(student.motherName)}, parent/guardian of ${safeValue(student.fullName)}, hereby declare that I have read and understood all the terms and conditions and give my consent for the admission.`;
+        
+        page3.drawText(parentDeclaration, {
+          x: 45,
+          y: pageHeight - 150,
+          size: 12,
+          font: arial,
+          color: rgb(0, 0, 0),
+          maxWidth: pageWidth - 90
+        });
+      }
+    } catch (err) {
+      console.warn("⚠️ Error loading pdeclare.jpg:", err.message);
+    }
+
+    // ===========================
+    // OUTPUT PDF AS PREVIEW
+    // ===========================
+    const pdfBytes = await pdfDoc.save();
+    const base64 = Buffer.from(pdfBytes).toString("base64");
+
+    res.send(`
+      <html>
+        <head>
+          <title>Registration Form Preview</title>
+          <style>
+            body { 
+              margin: 0;
+              padding: 0;
+              font-family: Arial, sans-serif;
+              background: #f5f5f5;
+              overflow: hidden;
+            }
+
+            .header {
+              width: 100%;
+              background: #2a3d66;
+              color: white;
+              padding: 12px;
+              text-align: center;
+              font-size: 20px;
+              font-weight: bold;
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              z-index: 1000;
+              box-shadow: 0px 2px 6px rgba(0,0,0,0.3);
+            }
+
+            iframe {
+              position: fixed;
+              top: 60px;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              width: 100%;
+              height: calc(100vh - 60px);
+              border: none;
+            }
+
+            .download-btn {
+              position: fixed;
+              top: 70px;
+              right: 20px;
+              background: #2a3d66;
+              color: white;
+              padding: 12px 24px;
+              border-radius: 6px;
+              text-decoration: none;
+              font-weight: bold;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+              transition: 0.3s;
+              z-index: 1001;
+            }
+
+            .download-btn:hover {
+              background: #1d2a47;
+              transform: translateY(-2px);
+            }
+
+            .back-btn {
+              position: fixed;
+              top: 70px;
+              left: 20px;
+              background: #6c757d;
+              color: white;
+              padding: 12px 24px;
+              border-radius: 6px;
+              text-decoration: none;
+              font-weight: bold;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+              transition: 0.3s;
+              z-index: 1001;
+            }
+
+            .back-btn:hover {
+              background: #545b62;
+              transform: translateY(-2px);
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">Registration Form Preview - ${safeValue(student.fullName)}</div>
+          <a href="/user/view-student" class="back-btn">← Back to Students</a>
+          <a href="/user/download-registration/${studentId}" class="download-btn">
+            📥 Download PDF
+          </a>
+          <iframe src="data:application/pdf;base64,${base64}"></iframe>
+        </body>
+      </html>
+    `);
+
+  } catch (err) {
+    console.error("❌ Error generating registration form preview:", err);
+    res.status(500).send(`
+      <html>
+        <head>
+          <title>Error</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; text-align: center; }
+            .error { background: #ffe6e6; border: 1px solid #ff9999; padding: 20px; border-radius: 5px; }
+            .back-btn { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #2a3d66; color: white; text-decoration: none; border-radius: 5px; }
+          </style>
+        </head>
+        <body>
+          <div class="error">
+            <h2>Error Generating PDF Preview</h2>
+            <p>${err.message}</p>
+            <a href="/user/all-students" class="back-btn">← Back to Students</a>
+          </div>
+        </body>
+      </html>
+    `);
+  }
+});
+// ===========================
+// DOWNLOAD REGISTRATION FORM (PDF) - WITH UPDATED COORDINATES
+// ===========================
+router.get("/download-registration/:id", verifyUserLogin, async (req, res) => {
+  try {
+    const studentId = req.params.id;
+
+    // 1️⃣ Fetch student data
+    const student = await db.get()
+      .collection(collection.STUDENT_COLLECTION)
+      .findOne({ _id: new ObjectId(studentId) });
+
+    if (!student) {
+      return res.status(404).send("Student not found");
+    }
+
+    console.log("📥 Downloading PDF for student:", student.fullName);
+
+    // 2️⃣ Load background image - check if it exists
+    const bgPath = path.join(__dirname, "../public/images/registration-bg.jpg");
+    let bgBytes = null;
+    
+    if (fs.existsSync(bgPath)) {
+      bgBytes = fs.readFileSync(bgPath);
+    } else {
+      console.log("ℹ️ No background image found, creating plain PDF");
+    }
+
+    // 3️⃣ Create PDF document
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.registerFontkit(fontkit);
+
+    // 4️⃣ Load fonts
+    const arialPath = path.join(__dirname, "../public/fonts/arial.ttf");
+    const arialBytes = fs.readFileSync(arialPath);
+    const arial = await pdfDoc.embedFont(arialBytes);
+
+    const arialBoldPath = path.join(__dirname, "../public/fonts/arialbd.ttf");
+    let arialBold = arial;
+    if (fs.existsSync(arialBoldPath)) {
+      const arialBoldBytes = fs.readFileSync(arialBoldPath);
+      arialBold = await pdfDoc.embedFont(arialBoldBytes);
+    }
+
+    // 5️⃣ Page size (A4)
+    const pageWidth = 8.27 * 72;  // A4 width in points
+    const pageHeight = 11.69 * 72; // A4 height in points
+
+    // ===========================
+    // PAGE 1: MAIN REGISTRATION FORM
+    // ===========================
+    const page1 = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    // Background (if exists)
+    if (bgBytes) {
+      try {
+        const bgImage = await pdfDoc.embedJpg(bgBytes);
+        page1.drawImage(bgImage, { 
+          x: 0, 
+          y: 0, 
+          width: pageWidth, 
+          height: pageHeight 
+        });
+      } catch (err) {
+        console.warn("⚠️ Background image error:", err.message);
+      }
+    }
+
+    const { rgb } = require("pdf-lib");
+
+    // ===========================
+    // SAFE VALUE HELPER FUNCTION
+    // ===========================
+    const safeValue = (value) => {
+      if (value === undefined || value === null) {
+        return "N/A";
+      }
+      
+      if (typeof value === 'number') {
+        return isNaN(value) || value === 0 ? "N/A" : value.toString();
+      }
+      
+      if (typeof value === 'boolean') {
+        return value ? "Yes" : "No";
+      }
+      
+      if (value instanceof Date) {
+        return value.toLocaleDateString();
+      }
+      
+      const strValue = String(value).trim();
+      return strValue === "" ? "N/A" : strValue;
+    };
+    const currentDate = new Date();
+    const issueDate = currentDate.toLocaleDateString('en-GB'); // Format: DD/MM/YYYY
+    
+    // ✅ Student Photo - WITH SIMPLE rotation check
+    const imageDir = path.join(__dirname, "../public/studentImages/");
+    const possibleExtensions = [".jpg", ".jpeg", ".png"];
+    let photoFound = false;
+
+    for (const ext of possibleExtensions) {
+      const photoPath = path.join(imageDir, `${student._id}${ext}`);
+      if (fs.existsSync(photoPath)) {
+        try {
+          console.log(`✅ Found student photo at: ${photoPath}`);
+          let photoBytes = fs.readFileSync(photoPath);
+          let photo;
+
+          if (ext === ".png") {
+            photo = await pdfDoc.embedPng(photoBytes);
+          } else {
+            // Try-catch for JPG embedding
+            try {
+              photo = await pdfDoc.embedJpg(photoBytes);
+            } catch (jpgErr) {
+              console.log("⚠️ Could not embed as JPG, trying different approach");
+              continue;
+            }
+          }
+
+          // Student photo position
+          page1.drawImage(photo, {
+            x: 485.5,
+            y: 584.3,
+            width: 71.8,
+            height: 91.3,
+          });
+
+          photoFound = true;
+          console.log(`✅ Photo drawn successfully`);
+          break;
+          
+        } catch (photoError) {
+          console.log("❌ Error in photo processing:", photoError.message);
+          continue;
+        }
+      }
+    }
+
+    function drawTextCenteredAtX(page, text, centerX, y, font, size) {
+      if (!text) return;
+
+      const textWidth = font.widthOfTextAtSize(text, size);
+      const x = centerX - textWidth / 2;
+
+      page.drawText(text, {
+        x,
+        y,
+        size,
+        font,
+        color: rgb(0, 0, 0)
+      });
+    }
+
+    // ===========================
+    // DRAW FIELD FUNCTION
+    // ===========================
+    const drawField = (label, value, x, y) => {
+      const displayValue = safeValue(value);
+      
+      page1.drawText(`${label}`, {
+        x: x,
+        y: y,
+        size: 9,
+        font: arialBold,
+        color: rgb(0, 0, 0)
+      });
+      
+      page1.drawText(displayValue, {
+        x: x + 100,
+        y: y,
+        size: 9,
+        font: arial,
+        color: rgb(0.3, 0.3, 0.3) // softer black
+      });
+      
+    };
+
+    // ===========================
+    // PAGE 1 CONTENT
+    // ===========================
+    
+    // Registration Number (top right)
+    drawField("", student.regNo, 405, 817.3);  
+    
+    // ACADEMIC DETAILS
+    const [startYear, endYear] = (student.admissionYear || "").split("-");
+
+    drawField("", startYear, 85, 669);
+    drawField("", endYear, 160, 669);
+    drawField("", student.mode, 267, 669);
+    
+    const centreId = Array.isArray(student.centreId)
+      ? student.centreId[0]
+      : student.centreId;
+    const centre = await db.get()
+      .collection(collection.CENTER_COLLECTION)
+      .findOne({ centreId: centreId });
+    const centreName = centre?.centreName || "N/A";
+    drawField("", `${centreName} / ${centreId}`, 76, 649.5);
+
+    drawField("", student.courseName, 76, 629.5);
+    drawField("", student.courseCode, 76, 608.5);
+    drawField("", student.courseDuration, 76, 590);
+    drawField("", student.shortName, 297, 609);
+    drawField("", student.medium, 285, 590);
+    drawField("", student.department, 76, 550.2);
+    
+    const batchId = student.batchId;
+    const batch = await batchHelpers.getBatchById(batchId);
+    const batchName = batch?.batchName || "N/A";
+    drawField("", batchName, 76, 570);
+
+    // PERSONAL DETAILS
+    drawField("", student.fullName, 33, 519);
+    drawField("", student.fatherName, 33, 501);
+    drawField("", student.motherName, 33, 484);
+    
+    const gender = (student.gender || "").trim().toLowerCase();
+    const yGender = 449;
+    const MALE_X = 296;
+    const FEMALE_X = 210;
+    const OTHER_X = 280;
+    if (gender === "male") {
+      drawField("", "X", MALE_X, yGender);
+    } else if (gender === "female") {
+      drawField("", "X", FEMALE_X, yGender);
+    } else if (gender === "other") {
+      drawField("", "X", OTHER_X, yGender);
+    }
+    
+    const dobStr = student.dob;
+    if (dobStr) {
+      const dob = new Date(dobStr);
+      const today = new Date();
+      
+      // DOB → DD-MM-YYYY
+      const day = String(dob.getDate()).padStart(2, "0");
+      const month = String(dob.getMonth() + 1).padStart(2, "0");
+      const year = dob.getFullYear();
+      const formattedDOB = `${day}-${month}-${year}`;
+      
+      // Age calculation
+      let years = today.getFullYear() - year;
+      let months = today.getMonth() - dob.getMonth();
+      
+      if (today.getDate() < dob.getDate()) {
+        months--;
+      }
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+      
+      const yPos = 466.2;
+      
+      // ✅ Draw each value in its own column
+      drawField("", formattedDOB, 33, yPos);   // DOB column
+      drawField("", years.toString(), 163.5, yPos);  // Years column
+      drawField("", months.toString(), 230, yPos); // Months column
+    }
+
+    drawField("", student.number, 33, 449);
+    drawField("", student.emerNum, 33, 431);
+    drawField("", student.candOcc, 33, 414);
+    drawField("", student.fatherOcc, 33, 398);
+    drawField("", student.adharNo, 33, 362.5);
+    drawField("", student.address, 33, 347.5);
+    drawField("", `${student.district}, ${student.city}`, 33, 330);
+
+    const bpl = (student.bpl || "").trim().toLowerCase();
+    const yBPL = 413;
+    const YES_X = 350;
+    const NO_X = 296;
+    if (bpl === "yes") {
+      drawField("", "X", YES_X, yBPL);
+    } else if (bpl === "no") {
+      drawField("", "X", NO_X, yBPL);
+    }
+
+    const ph = (student.ph || "").trim().toLowerCase();
+    const yPH = 397;
+    if (student.ph === "Yes") {
+      drawField("", "X", 350, 397);
+    } else if (student.ph === "No") {
+      drawField("", "X", 296, 397);
+    }
+
+    const caste = (student.caste || "").trim().toLowerCase();
+    const yCaste = 379;
+    if (caste === "gen") {
+      drawField("", "X", 47, yCaste);
+    } else if (caste === "obc") {
+      drawField("", "X", 88.5, yCaste);
+    } else if (caste === "sc") {
+      drawField("", "X", 130, yCaste);
+    } else if (caste === "st") {
+      drawField("", "X", 162, yCaste);
+    } else if (caste === "other") {
+      drawField("", "X", 213, yCaste);
+    }
+
+    drawField("", student.pinCode, 300.5, 362);
+    drawField("", student.state, 300.5, 330.5);
+    drawField("", student.nationality, 300.5, 378.7);
+    drawField("", student.regNo, 110, 26);
+    drawField("", student.email, 300.5, 431);
+    
+    // Declaration
+    drawTextCenteredAtX(
+      page1,
+      safeValue(student.fullName),
+      100,
+      156,
+      arial,
+      9
+    );
+    
+    drawTextCenteredAtX(
+      page1,
+      safeValue(student.fatherName),
+      280,
+      156,
+      arial,
+      9
+    );
+    
+    drawField("", issueDate, -44, 93);
+    drawField("", student.city, -44, 80);
+    
+    let activatedDateText = "";
+    if (student.activatedDate) {
+      const d = new Date(student.activatedDate);
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      activatedDateText = `${day}-${month}-${year}`;
+    }
+    
+    drawField("apd", activatedDateText, -54, 26);
+    
+    // ===========================
+    // QUALIFICATIONS → PDF (VALUES ONLY)
+    // ===========================
+    let y = 280; // start Y
+    const gap = 15.3;
+
+    (student.qualifications || []).forEach((q) => {
+      page1.drawText(q.maxMarks?.toString() || '', {
+        x: 135,
+        y,
+        size: 9,
+        font: arial
+      });
+
+      page1.drawText(q.minMarks?.toString() || '', {
+        x: 190,
+        y,
+        size: 9,
+        font: arial
+      });
+
+      page1.drawText(q.obtainedMarks?.toString() || '', {
+        x: 245,
+        y,
+        size: 9,
+        font: arial
+      });
+
+      page1.drawText(q.grade || '', {
+        x: 290,
+        y,
+        size: 9,
+        font: arial
+      });
+
+      page1.drawText(q.year || '', {
+        x: 343,
+        y,
+        size: 9,
+        font: arial
+      });
+
+      page1.drawText(q.board || '', {
+        x: 400,
+        y,
+        size: 9,
+        font: arial,
+        maxWidth: 140
+      });
+
+      y -= gap;
+    });
+
+    // ===========================
+    // PAGE 2: SDECLARE.JPG (Student Declaration)
+    // ===========================
+    const page2 = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    try {
+      const sdeclarePath = path.join(__dirname, "../public/images/sdeclare.jpg");
+      if (fs.existsSync(sdeclarePath)) {
+        const sdeclareBytes = fs.readFileSync(sdeclarePath);
+        const sdeclareImage = await pdfDoc.embedJpg(sdeclareBytes);
+        page2.drawImage(sdeclareImage, { 
+          x: 0, 
+          y: 0, 
+          width: pageWidth, 
+          height: pageHeight 
+        });
+
+        // Declaration page – centered fields
+        drawTextCenteredAtX(
+          page2,
+          safeValue(student.fullName),
+          165,
+          pageHeight - 94,
+          arial,
+          9
+        );
+
+        drawTextCenteredAtX(
+          page2,
+          safeValue(student.fatherName),
+          420,
+          pageHeight - 94,
+          arial,
+          9
+        );
+
+        drawTextCenteredAtX(
+          page2,
+          safeValue(student.courseName),
+          115,
+          pageHeight - 115,
+          arial,
+          9
+        );
+
+        drawTextCenteredAtX(
+          page2,
+          safeValue(student.courseDuration),
+          285,
+          pageHeight - 115,
+          arial,
+          9
+        );
+
+        drawTextCenteredAtX(
+          page2,
+          safeValue(student.department),
+          465,
+          pageHeight - 115,
+          arial,
+          9
+        );
+
+        const fontSize = 9;
+        const maxWidth = 200;
+        const address = safeValue(student.address);
+        
+        function splitTextByWidth(text, font, fontSize, maxWidth) {
+          const words = text.split(' ');
+          let line1 = '';
+          let line2 = '';
+
+          for (let i = 0; i < words.length; i++) {
+            const testLine = line1 ? line1 + ' ' + words[i] : words[i];
+            const testWidth = font.widthOfTextAtSize(testLine, fontSize);
+
+            if (testWidth <= maxWidth) {
+              line1 = testLine;
+            } else {
+              line2 = words.slice(i).join(' ');
+              break;
+            }
+          }
+
+          return { line1, line2 };
+        }
+        
+        const { line1, line2 } = splitTextByWidth(
+          address,
+          arial,
+          fontSize,
+          145
+        );
+
+        page2.drawText(line1, {
+          x: 435,
+          y: pageHeight - 137,
+          size: fontSize,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+
+        page2.drawText(line2, {
+          x: 36,
+          y: pageHeight - 160,
+          size: fontSize,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+
+        page2.drawText(` ${safeValue(student.pinCode)}`, {
+          x: 321,
+          y: pageHeight - 160,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+        
+        page2.drawText(` ${safeValue(student.number)}`, {
+          x: 450,
+          y: pageHeight - 160,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+      } else {
+        console.log("ℹ️ sdeclare.jpg not found, creating text declaration");
+        page2.drawText("STUDENT DECLARATION", {
+          x: pageWidth / 2 - 80,
+          y: pageHeight - 100,
+          size: 18,
+          font: arialBold,
+          color: rgb(0, 0, 0)
+        });
+
+        const declarationText = `I, ${safeValue(student.fullName)}, son/daughter of ${safeValue(student.fatherName)}, hereby declare that all information provided in this registration form is true and correct to the best of my knowledge.`;
+        
+        page2.drawText(declarationText, {
+          x: 45,
+          y: pageHeight - 150,
+          size: 12,
+          font: arial,
+          color: rgb(0, 0, 0),
+          maxWidth: pageWidth - 90
+        });
+      }
+    } catch (err) {
+      console.warn("⚠️ Error loading sdeclare.jpg:", err.message);
+    }
+
+    // ===========================
+    // PAGE 3: PDECLARE.JPG (Parent/Guardian Declaration) - WITH UPDATED COORDINATES
+    // ===========================
+    const page3 = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    try {
+      const pdeclarePath = path.join(__dirname, "../public/images/pdeclare.jpg");
+      if (fs.existsSync(pdeclarePath)) {
+        const pdeclareBytes = fs.readFileSync(pdeclarePath);
+        const pdeclareImage = await pdfDoc.embedJpg(pdeclareBytes);
+        page3.drawImage(pdeclareImage, { 
+          x: 0, 
+          y: 0, 
+          width: pageWidth, 
+          height: pageHeight 
+        });
+
+        // Add student details on the parent declaration page - USING YOUR UPDATED COORDINATES
+        page3.drawText(` ${safeValue(issueDate)}`, {
+          x: 65,
+          y: pageHeight - 421.8,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+        
+        page3.drawText(` ${safeValue(student.city)}`, {
+          x: 65,
+          y: pageHeight - 450.8,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+
+        page3.drawText(` ${safeValue(student.fatherName)}`, {
+          x: 70,
+          y: pageHeight - 598,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+        
+        page3.drawText(` ${safeValue(issueDate)}`, {
+          x: 65,
+          y: pageHeight - 706.5,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+        
+        page3.drawText(` ${safeValue(student.city)}`, {
+          x: 65,
+          y: pageHeight - 733.5,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+
+      } else {
+        console.log("ℹ️ pdeclare.jpg not found, creating text declaration");
+        page3.drawText("PARENT/GUARDIAN DECLARATION", {
+          x: pageWidth / 2 - 120,
+          y: pageHeight - 100,
+          size: 18,
+          font: arialBold,
+          color: rgb(0, 0, 0)
+        });
+
+        const parentDeclaration = `I, ${safeValue(student.fatherName)}/${safeValue(student.motherName)}, parent/guardian of ${safeValue(student.fullName)}, hereby declare that I have read and understood all the terms and conditions and give my consent for the admission.`;
+        
+        page3.drawText(parentDeclaration, {
+          x: 45,
+          y: pageHeight - 150,
+          size: 12,
+          font: arial,
+          color: rgb(0, 0, 0),
+          maxWidth: pageWidth - 90
+        });
+      }
+    } catch (err) {
+      console.warn("⚠️ Error loading pdeclare.jpg:", err.message);
+    }
+
+    // ===========================
+    // OUTPUT PDF FOR DOWNLOAD
+    // ===========================
+    const pdfBytes = await pdfDoc.save();
+    
+    // Set headers for download
+    const fileName = `Registration_Form_${student.regNo || student._id}.pdf`;
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Length', pdfBytes.length);
+    
+    // Send the PDF as a download
+    res.send(Buffer.from(pdfBytes));
+
+  } catch (err) {
+    console.error("❌ Error downloading registration form:", err);
+    
+    // Send error response
+    res.status(500).send(`
+      <html>
+        <head>
+          <title>Download Error</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              padding: 40px; 
+              text-align: center; 
+              background: #f5f5f5;
+            }
+            .error { 
+              background: #ffe6e6; 
+              border: 1px solid #ff9999; 
+              padding: 30px; 
+              border-radius: 10px;
+              max-width: 600px;
+              margin: 0 auto;
+              box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+            h2 { color: #d32f2f; margin-top: 0; }
+            .back-btn { 
+              display: inline-block; 
+              margin-top: 20px; 
+              padding: 12px 24px; 
+              background: #2a3d66; 
+              color: white; 
+              text-decoration: none; 
+              border-radius: 5px;
+              font-weight: bold;
+              transition: background 0.3s;
+            }
+            .back-btn:hover {
+              background: #1d2a47;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="error">
+            <h2>Error Downloading PDF</h2>
+            <p><strong>Message:</strong> ${err.message}</p>
+            <p>Please try again or contact support if the issue persists.</p>
+            <a href="/user/all-students" class="back-btn">← Back to Students</a>
+          </div>
+        </body>
+      </html>
+    `);
+  }
+});
 /* Delete Student (User) */
 router.get('/delete-student/:id', verifyUserLogin, async (req, res) => {
   try {
@@ -382,11 +2238,15 @@ router.get('/view-bstudent/:batchId', verifyUserLogin, async (req, res) => {
     const batchId = req.params.batchId;
     console.log("🔄 Loading students for batch:", batchId);
     
+    // Get students
     const students = await db.get()
       .collection(collection.STUDENT_COLLECTION)
       .find({ batchId: new ObjectId(batchId), activated: true })
       .toArray();
 
+    // Get batch details (including links)
+    const batch = await batchHelpers.getBatchById(batchId);
+    
     const processedStudents = students.map(student => {
       let hasFailed = false;
 
@@ -397,7 +2257,9 @@ router.get('/view-bstudent/:batchId', verifyUserLogin, async (req, res) => {
       return {
         ...student,
         hasFailed,
-        hasSupply: student.hasSupply || false
+        hasSupply: student.hasSupply || false,
+        batchCourseLink: batch?.courseLink || null,  
+        
       };
     });
 
@@ -406,7 +2268,9 @@ router.get('/view-bstudent/:batchId', verifyUserLogin, async (req, res) => {
     res.render('user/view-bstudent', { 
       user: true, 
       students: processedStudents, 
-      batchId 
+      batchId,
+      batch,
+      hideNavbar:true // Pass the batch object with links
     });
     
   } catch (error) {
@@ -446,11 +2310,12 @@ router.get('/pending-students', verifyUserLogin, async (req, res) => {
         centreId: userCentreId  // filter by centre
       })
       .toArray();
-
+      const pendingCount = pendingStudents.length; // ✅ get count
     res.render('user/pending-students', { 
       user: true, 
       pendingStudents,
-      pageTitle: 'Pending Students'
+      pageTitle: 'Pending Students',
+      hideNavbar:true
     });
   } catch (err) {
     console.error("❌ Error loading pending students:", err);
@@ -1633,6 +3498,1049 @@ router.get("/batch-idcards-download/:batchId", verifyUserLogin, async (req, res)
 //     res.status(500).send("Error loading application form");
 //   }
 // });
+//time tableeeee
+
+router.get('/add-timetable', verifyUserLogin, async (req, res) => {
+  try {
+    const centreId = req.session.centreId;   // ✅ Correct centre ID from session
+
+    if (!centreId) {
+      console.error("❌ No centreId found in session");
+      return res.render('user/add-timetable', {
+        hideNavbar: true,
+        batches: []
+      });
+    }
+
+    // ✅ Get batches for this centre ONLY
+    const batches = await batchHelpers.getBatchesByCentre(centreId);
+
+    res.render('user/add-timetable', {
+      hideNavbar: true,
+      batches   // ✅ This will now show in the dropdown
+    });
+
+  } catch (err) {
+    console.error("❌ Error in /add-timetable route:", err);
+    res.render('user/add-timetable', {
+      hideNavbar: true,
+      batches: []
+    });
+  }
+});
+//post of time table
+// POST /save-timetable - FIXED VERSION
+router.post('/save-timetable', verifyUserLogin, async (req, res) => {
+  try {
+    const centreId = req.session.centreId;
+    if (!centreId) return res.status(400).send("Centre ID missing in session");
+
+    console.log("📦 Form data received:", req.body);
+
+    // Prepare schedule array from dynamic rows
+    const schedule = [];
+
+    // Multi-row case
+    if (Array.isArray(req.body['srNo[]']) || Array.isArray(req.body['date[]'])) {
+      const rowCount = Array.isArray(req.body['srNo[]']) ? req.body['srNo[]'].length : 1;
+      for (let i = 0; i < rowCount; i++) {
+        schedule.push({
+          srNo: parseInt(req.body['srNo[]']?.[i]) || i + 1,
+          date: req.body['date[]']?.[i] || "",
+          time: req.body['time[]']?.[i] || "",
+          course: req.body['course[]']?.[i] || "",
+          year: parseInt(req.body['year[]']?.[i]) || 0,
+          sem: req.body['sem[]']?.[i] || "",
+          paperName: req.body['paperName[]']?.[i] || ""
+        });
+      }
+    } else {
+      // Single-row case
+      schedule.push({
+        srNo: parseInt(req.body.srNo) || 1,
+        date: req.body.date || "",
+        time: req.body.time || "",
+        course: req.body.course || "",
+        year: parseInt(req.body.year) || 0,
+        sem: req.body.sem || "",
+        paperName: req.body.paperName || ""
+      });
+    }
+
+    // Prepare final timetable object
+    const timetableData = {
+      centreId,
+      batchId: new ObjectId(req.body.batchId),  // Convert to ObjectId
+      firstTitle: req.body.firstTitle || "",
+      secondTitle: req.body.secondTitle || "",
+      examMonthYear: req.body.examMonthYear || "",
+      notes: req.body.notes || "",
+      subjects: schedule,                        // Use 'subjects' for PDF compatibility
+      createdAt: new Date(),
+      status: 'active'
+    };
+
+    console.log("💾 Prepared timetable data:", timetableData);
+
+    // Save using helper
+    const timetableId = await batchHelpers.addTimetable(timetableData);
+
+    console.log("✅ Timetable saved with ID:", timetableId);
+
+    res.redirect('/user/view-tbatch');
+
+  } catch (err) {
+    console.error("❌ Error saving timetable:", err);
+    res.status(500).send("Server Error While Saving Timetable: " + err.message);
+  }
+});
+
+
+// router.get('/view-tbatch', verifyUserLogin, async (req, res) => {
+//   try {
+//     const centreId = req.session.centreId;
+
+//     if (!centreId) {
+//       return res.render('user/view-tbatch', { batches: [] });
+//     }
+
+//     console.log("📌 VIEW-TBATCH ROUTE HIT");
+//     console.log("👉 centreId:", centreId);
+
+//     // 1️⃣ Load all batches of this centre
+//     const batches = await batchHelpers.getBatchesByCentre(centreId);
+//     console.log(`📌 BATCHES LOADED (${batches.length})`);
+
+//     // 2️⃣ Load ALL timetables for this centre
+//     const timetables = await batchHelpers.getTimetablesByCentre(centreId);
+//     console.log(`📌 TIMETABLES LOADED (${timetables.length})`);
+
+//     // 3️⃣ Attach LAST timetable of each batch
+//     const batchData = batches.map(b => {
+//       const batchIdStr = b._id.toString();
+
+//       // find latest timetable
+//       const filtered = timetables
+//         .filter(t => t.batchId.toString() === batchIdStr)
+//         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // newest first
+
+//       // attach last timetable
+//       return {
+//         ...b,
+//         timetable: filtered.length > 0 ? filtered[0] : null
+//       };
+//     });
+
+//     console.log("📌 FINAL BATCH DATA SENT TO VIEW:");
+//     batchData.forEach(b => {
+//       console.log(`   • ${b.batchName} → timetable: ${b.timetable ? "YES" : "NO"}`);
+//     });
+
+//     // 4️⃣ Render page
+//     res.render('user/view-tbatch', {
+//       hideNavbar: true,
+//       batches: batchData
+//     });
+
+//   } catch (err) {
+//     console.error("❌ ERROR in /view-tbatch:", err);
+//     res.render('user/view-tbatch', { batches: [] });
+//   }
+// });
+
+
+router.get('/view-tbatch', verifyUserLogin, async (req, res) => {
+  try {
+    const centreId = req.session.centreId;
+
+    if (!centreId) {
+      return res.render('user/view-tbatch', { batches: [] });
+    }
+
+    console.log("📌 VIEW-TBATCH ROUTE HIT");
+    console.log("👉 centreId:", centreId);
+
+    // 1️⃣ Load batches
+    const batches = await batchHelpers.getBatchesByCentre(centreId);
+
+    // 2️⃣ Load timetables
+    const timetables = await batchHelpers.getTimetablesByCentre(centreId);
+
+    // 3️⃣ Attach timetable + hall ticket status
+    const batchData = await Promise.all(
+      batches.map(async (b) => {
+        const batchId = new ObjectId(b._id);
+
+        // latest timetable
+        const filtered = timetables
+          .filter(t => t.batchId.toString() === b._id.toString())
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        // 🔥 CHECK IF HALL TICKET APPLIED
+        const appliedCount = await db.get()
+          .collection(collection.STUDENT_COLLECTION)
+          .countDocuments({
+            batchId: batchId,
+            appliedForHallTicket: true
+          });
+
+        console.log(
+          `👤 VIEW-TBATCH → ${b.batchName} | appliedCount = ${appliedCount}`
+        );
+
+        return {
+          ...b,
+          timetable: filtered.length ? filtered[0] : null,
+          appliedForHallTicket: appliedCount > 0 // ✅ KEY LINE
+        };
+      })
+    );
+
+    res.render('user/view-tbatch', {
+      hideNavbar: true,
+      batches: batchData
+    });
+
+  } catch (err) {
+    console.error("❌ ERROR in /view-tbatch:", err);
+    res.render('user/view-tbatch', { batches: [] });
+  }
+});
+
+router.get('/preview-timetable/:batchId', verifyUserLogin, async (req, res) => {
+  try {
+    const { batchId } = req.params;
+    console.log('✅ PREVIEW TIMETABLE PDF HIT:', batchId);
+
+    const batch = await batchHelpers.getBatchById(batchId);
+    const timetable = await batchHelpers.getTimetableByBatch(batchId);
+
+    const pdfDoc = await PDFDocument.create();
+
+    // A4 Landscape
+    let page = pdfDoc.addPage([842, 595]);
+    const { width, height } = page.getSize();
+
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    const margin = 30;
+
+    // =========================
+    // BACKGROUND IMAGE
+    // =========================
+    const bgPath = path.join(__dirname, '../public/images/time-table.jpg');
+    let bgImage = null;
+    if (fs.existsSync(bgPath)) {
+      bgImage = await pdfDoc.embedJpg(fs.readFileSync(bgPath));
+      page.drawImage(bgImage, { x: 0, y: 0, width, height });
+    }
+
+    // =========================
+    // FUNCTION TO DRAW HEADER AND TABLE ON A PAGE
+    // =========================
+    const drawPageHeaderAndTable = (currentPage) => {
+      // Draw background if exists
+      if (bgImage) {
+        currentPage.drawImage(bgImage, { x: 0, y: 0, width, height });
+      }
+      
+      const offset = 5;
+
+      currentPage.drawRectangle({
+        x: margin - offset,
+        y: margin - offset,
+        width: width - margin * 2 + offset * 2,
+        height: height - margin * 2 + offset * 2,
+        borderWidth: 1.5,
+        borderColor: rgb(0, 0, 0),
+      });
+
+      // Titles and separator lines
+      const line1Y = height - margin - 85;
+      const firstTitleY = line1Y - 20;
+      const line2Y = firstTitleY - 10;
+      const secondTitleY = line2Y - 20;
+      const line3Y = secondTitleY - 10;
+
+      const lineStartX = margin - offset;
+      const lineEndX = width - margin + offset;
+
+      // Line 1
+      currentPage.drawLine({
+        start: { x: lineStartX, y: line1Y },
+        end: { x: lineEndX, y: line1Y },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      // First title
+      if (timetable?.firstTitle) {
+        const t1 = String(timetable.firstTitle);
+        const t1Width = fontBold.widthOfTextAtSize(t1, 14);
+        currentPage.drawText(t1, {
+          x: (width - t1Width) / 2,
+          y: firstTitleY,
+          size: 14,
+          font: fontBold,
+        });
+      }
+
+      // Line 2
+      currentPage.drawLine({
+        start: { x: lineStartX, y: line2Y },
+        end: { x: lineEndX, y: line2Y },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      // Second title
+      if (timetable?.secondTitle) {
+        const t2 = String(timetable.secondTitle);
+        const t2Width = fontBold.widthOfTextAtSize(t2, 14);
+        currentPage.drawText(t2, {
+          x: (width - t2Width) / 2,
+          y: secondTitleY,
+          size: 14,
+          font: fontBold,
+        });
+      }
+
+      // Line 3
+      currentPage.drawLine({
+        start: { x: lineStartX, y: line3Y },
+        end: { x: lineEndX, y: line3Y },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      return line3Y - 10; // Return starting Y position for table
+    };
+
+    // Draw header on first page
+    let y = drawPageHeaderAndTable(page);
+
+    // =========================
+    // TABLE HEADER
+    // =========================
+    const tableX = margin + 10;
+    const tableWidth = width - (margin * 2) - 20;
+    const rowHeight = 22;
+
+    const columns = [
+      { title: 'Sr. No', key: 'no', width: 50 },
+      { title: 'Date', key: 'date', width: 90 },
+      { title: 'Time', key: 'time', width: 120 },
+      { title: 'Course', key: 'course', width: 130 },
+      { title: 'Year', key: 'year', width: 60 },
+      { title: 'Sem', key: 'sem', width: 60 },
+      { title: 'Paper Name', key: 'paperName', width: tableWidth - 510 },
+    ];
+
+    // Helper function to format date from YYYY-MM-DD to DD-MM-YYYY
+    const formatDate = (dateStr) => {
+      if (!dateStr || dateStr.trim() === '') return '';
+      
+      // Try to parse different date formats
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        // If it's not a valid date, return as is (might be a range or other format)
+        return dateStr.trim();
+      }
+      
+      // Format as DD-MM-YYYY
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      
+      return `${day}-${month}-${year}`;
+    };
+
+    // Helper function to draw perfectly centered text in a cell
+    const drawCenteredTextInCell = (page, text, cellX, cellY, cellWidth, cellHeight, fontSize, fontObj) => {
+      const textStr = String(text);
+      const textWidth = fontObj.widthOfTextAtSize(textStr, fontSize);
+      
+      // Calculate perfect center
+      const xCenter = cellX + (cellWidth / 2) - (textWidth / 2);
+      const yCenter = cellY - (cellHeight / 2) - (fontSize / 2) + 3; // +4 for better visual centering
+      
+      page.drawText(textStr, {
+        x: xCenter,
+        y: yCenter,
+        size: fontSize,
+        font: fontObj,
+      });
+    };
+
+    // Draw table header with centered text
+    page.drawRectangle({
+      x: tableX,
+      y: y - rowHeight,
+      width: tableWidth,
+      height: rowHeight,
+      color: rgb(0.75, 0.85, 0.95),
+      borderWidth: 1,
+      borderColor: rgb(0, 0, 0),
+    });
+
+    // Draw column headers (centered horizontally and vertically)
+    let xPos = tableX;
+    columns.forEach(col => {
+      // Draw vertical line
+      page.drawLine({
+        start: { x: xPos, y },
+        end: { x: xPos, y: y - rowHeight },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      // Draw centered header text
+      drawCenteredTextInCell(page, col.title, xPos, y, col.width, rowHeight, 9, fontBold);
+
+      xPos += col.width;
+    });
+
+    // Draw right border
+    page.drawLine({
+      start: { x: tableX + tableWidth, y },
+      end: { x: tableX + tableWidth, y: y - rowHeight },
+      thickness: 1,
+    });
+
+    y -= rowHeight;
+
+    // =========================
+    // TABLE ROWS - FIXED: Split ALL comma-separated fields
+    // =========================
+    const subjects = timetable?.subjects || [];
+    
+    // Track row number
+    let rowNumber = 1;
+    
+    console.log(`📊 Processing ${subjects.length} subjects`);
+    
+    // Helper function to split comma-separated values
+    const splitCommaValues = (value) => {
+      if (!value && value !== 0) return [''];
+      const strValue = String(value).trim();
+      if (!strValue) return [''];
+      return strValue.split(',').map(v => v.trim()).filter(v => v !== '');
+    };
+    
+    // Process each subject
+    for (let i = 0; i < subjects.length; i++) {
+      const s = subjects[i];
+      
+      // Log the raw data for debugging
+      console.log(`📝 Subject ${i + 1} raw data:`, {
+        date: s.date,
+        time: s.time,
+        course: s.course,
+        year: s.year,
+        sem: s.sem,
+        paperName: s.paperName
+      });
+      
+      // Split ALL fields by commas
+      const dates = splitCommaValues(s.date);
+      const times = splitCommaValues(s.time);
+      const courses = splitCommaValues(s.course);
+      const years = splitCommaValues(s.year);
+      const sems = splitCommaValues(s.sem);
+      const paperNames = splitCommaValues(s.paperName);
+      
+      // Find maximum number of entries across all fields
+      const maxEntries = Math.max(
+        dates.length,
+        times.length,
+        courses.length,
+        years.length,
+        sems.length,
+        paperNames.length
+      );
+      
+      console.log(`📅 Subject ${i + 1} has ${maxEntries} entries to process`);
+      
+      // If no entries at all, skip
+      if (maxEntries === 0) continue;
+      
+      // Create rows for each entry
+      for (let entryIndex = 0; entryIndex < maxEntries; entryIndex++) {
+        // Check if we need new page
+        if (y < margin + rowHeight * 3) {
+          page = pdfDoc.addPage([842, 595]);
+          y = drawPageHeaderAndTable(page);
+          // Don't draw table header on new pages
+        }
+        
+        // Prepare row data - use entryIndex for each array, fallback to first item
+        // Format the date from YYYY-MM-DD to DD-MM-YYYY
+        const rawDate = dates[entryIndex] || dates[0] || '';
+        const formattedDate = formatDate(rawDate);
+        
+        const rowData = {
+          no: rowNumber,
+          date: formattedDate,
+          time: times[entryIndex] || times[0] || '',
+          course: courses[entryIndex] || courses[0] || '',
+          year: years[entryIndex] || years[0] || '',
+          sem: sems[entryIndex] || sems[0] || '',
+          paperName: paperNames[entryIndex] || paperNames[0] || '',
+        };
+        
+        // Log the row data for debugging
+        console.log(`   Row ${rowNumber}:`, {
+          ...rowData,
+          originalDate: rawDate,
+          formattedDate: formattedDate
+        });
+        
+        // Draw row border
+        page.drawRectangle({
+          x: tableX,
+          y: y - rowHeight,
+          width: tableWidth,
+          height: rowHeight,
+          borderWidth: 1,
+          borderColor: rgb(0, 0, 0),
+        });
+
+        // Draw row content (centered both horizontally and vertically)
+        let rowX = tableX;
+        columns.forEach(col => {
+          // Draw vertical line
+          page.drawLine({
+            start: { x: rowX, y },
+            end: { x: rowX, y: y - rowHeight },
+            thickness: 1,
+          });
+
+          // Draw centered cell text (both horizontally and vertically)
+          drawCenteredTextInCell(page, rowData[col.key], rowX, y, col.width, rowHeight, 9, font);
+
+          rowX += col.width;
+        });
+
+        // Draw right border for the row
+        page.drawLine({
+          start: { x: rowX, y },
+          end: { x: rowX, y: y - rowHeight },
+          thickness: 1,
+        });
+
+        y -= rowHeight;
+        rowNumber++;
+      }
+    }
+
+    // Draw bottom border for the last row
+    page.drawLine({
+      start: { x: tableX, y: y },
+      end: { x: tableX + tableWidth, y: y },
+      thickness: 1,
+    });
+
+    // =========================
+    // NOTES (only on last page)
+    // =========================
+    y -= 20;
+    const noteX = tableX;
+
+    page.drawText('NOTE :', {
+      x: noteX,
+      y,
+      size: 9,
+      font: fontBold,
+    });
+
+    y -= 14;
+
+    const notes = (timetable?.notes || '')
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+
+    notes.forEach(line => {
+      page.drawText(line, {
+        x: noteX + 10,
+        y,
+        size: 9,
+        font,
+      });
+      y -= 12;
+    });
+
+    // =========================
+    // FOOTER (on last page only)
+    // =========================
+    const footerText = `Generated on: ${new Date().toLocaleDateString()}`;
+    const footerWidth = font.widthOfTextAtSize(footerText, 8);
+
+    page.drawText(footerText, {
+      x: (width - footerWidth) / 2,
+      y: margin - 15,
+      size: 8,
+      font,
+    });
+
+    const pdfBytes = await pdfDoc.save();
+    
+    // ✅ CONVERT TO BASE64 (Like your marklist)
+    const base64 = Buffer.from(pdfBytes).toString("base64");
+
+    // ✅ SEND HTML WITH DOWNLOAD BUTTON (Exactly like your marklist)
+    res.send(`
+      <html>
+        <head>
+          <title>Timetable Preview</title>
+          <style>
+            body { 
+              margin: 0;
+              padding: 0;
+              font-family: Arial, sans-serif;
+              background: #f5f5f5;
+              overflow: hidden;
+            }
+
+            .header {
+              width: 100%;
+              background: #2a3d66;
+              color: white;
+              padding: 12px;
+              text-align: center;
+              font-size: 20px;
+              font-weight: bold;
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              z-index: 1000;
+              box-shadow: 0px 2px 6px rgba(0,0,0,0.3);
+            }
+
+            iframe {
+              position: fixed;
+              top: 60px;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              width: 100%;
+              height: calc(100vh - 60px);
+              border: none;
+            }
+
+            .download-btn {
+              position: fixed;
+              top: 70px;
+              right: 20px;
+              background: #2a3d66;
+              color: white;
+              padding: 12px 24px;
+              border-radius: 6px;
+              text-decoration: none;
+              font-weight: bold;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+              transition: 0.3s;
+              z-index: 1001;
+            }
+
+            .download-btn:hover {
+              background: #1d2a47;
+              transform: translateY(-2px);
+            }
+
+            /* Optional: Add print button */
+            .print-btn {
+              position: fixed;
+              top: 70px;
+              right: 180px;
+              background: #3498db;
+              color: white;
+              padding: 12px 24px;
+              border-radius: 6px;
+              text-decoration: none;
+              font-weight: bold;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+              transition: 0.3s;
+              z-index: 1001;
+              border: none;
+              cursor: pointer;
+            }
+
+            .print-btn:hover {
+              background: #2980b9;
+              transform: translateY(-2px);
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">Timetable Preview - ${batch?.batchName || "Batch"} (${timetable?.firstTitle || ""})</div>
+          
+          <button class="print-btn" onclick="window.print()">
+            🖨️ Print
+          </button>
+          
+          <a href="/user/download-timetable/${batchId}" class="download-btn">
+            📥 Download Timetable
+          </a>
+          
+          <iframe src="data:application/pdf;base64,${base64}#toolbar=0"></iframe>
+          
+          <script>
+            // Auto-focus on PDF
+            window.onload = function() {
+              document.querySelector('iframe').focus();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    
+  } catch (err) {
+    console.error('❌ PDF ERROR:', err);
+    res.status(500).send('PDF generation failed');
+  }
+});
+// =========================
+// DOWNLOAD TIMETABLE ROUTE (Updated)
+// =========================
+router.get('/download-timetable/:batchId', verifyUserLogin, async (req, res) => {
+  try {
+    const { batchId } = req.params;
+    console.log('📥 DOWNLOAD TIMETABLE PDF FOR BATCH:', batchId);
+
+    const batch = await batchHelpers.getBatchById(batchId);
+    const timetable = await batchHelpers.getTimetableByBatch(batchId);
+
+    if (!timetable) {
+      return res.status(404).send('Timetable not found for this batch');
+    }
+
+    const pdfDoc = await PDFDocument.create();
+
+    // A4 Landscape
+    let page = pdfDoc.addPage([842, 595]);
+    const { width, height } = page.getSize();
+
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    const margin = 30;
+
+    // =========================
+    // BACKGROUND IMAGE
+    // =========================
+    const bgPath = path.join(__dirname, '../public/images/time-table.jpg');
+    let bgImage = null;
+    if (fs.existsSync(bgPath)) {
+      bgImage = await pdfDoc.embedJpg(fs.readFileSync(bgPath));
+      page.drawImage(bgImage, { x: 0, y: 0, width, height });
+    }
+
+    // =========================
+    // FUNCTION TO DRAW HEADER AND TABLE ON A PAGE
+    // =========================
+    const drawPageHeaderAndTable = (currentPage) => {
+      // Draw background if exists
+      if (bgImage) {
+        currentPage.drawImage(bgImage, { x: 0, y: 0, width, height });
+      }
+      
+      // Outer border
+      currentPage.drawRectangle({
+        x: margin,
+        y: margin,
+        width: width - margin * 2,
+        height: height - margin * 2,
+        borderWidth: 1.5,
+        borderColor: rgb(0, 0, 0),
+      });
+
+      // Titles and separator lines
+      const line1Y = height - margin - 85;
+      const firstTitleY = line1Y - 20;
+      const line2Y = firstTitleY - 10;
+      const secondTitleY = line2Y - 20;
+      const line3Y = secondTitleY - 10;
+
+      // Line 1
+      currentPage.drawLine({
+        start: { x: margin, y: line1Y },
+        end: { x: width - margin, y: line1Y },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      // First title
+      if (timetable?.firstTitle) {
+        const t1 = String(timetable.firstTitle);
+        const t1Width = fontBold.widthOfTextAtSize(t1, 14);
+        currentPage.drawText(t1, {
+          x: (width - t1Width) / 2,
+          y: firstTitleY,
+          size: 14,
+          font: fontBold,
+        });
+      }
+
+      // Line 2
+      currentPage.drawLine({
+        start: { x: margin, y: line2Y },
+        end: { x: width - margin, y: line2Y },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      // Second title
+      if (timetable?.secondTitle) {
+        const t2 = String(timetable.secondTitle);
+        const t2Width = fontBold.widthOfTextAtSize(t2, 14);
+        currentPage.drawText(t2, {
+          x: (width - t2Width) / 2,
+          y: secondTitleY,
+          size: 14,
+          font: fontBold,
+        });
+      }
+
+      // Line 3
+      currentPage.drawLine({
+        start: { x: margin, y: line3Y },
+        end: { x: width - margin, y: line3Y },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      return line3Y - 10; // Return starting Y position for table
+    };
+
+    // Draw header on first page
+    let y = drawPageHeaderAndTable(page);
+
+    // =========================
+    // TABLE HEADER
+    // =========================
+    const tableX = margin + 10;
+    const tableWidth = width - (margin * 2) - 20;
+    const rowHeight = 22;
+
+    const columns = [
+      { title: 'Sr. No', key: 'no', width: 50 },
+      { title: 'Date', key: 'date', width: 90 },
+      { title: 'Time', key: 'time', width: 120 },
+      { title: 'Course', key: 'course', width: 130 },
+      { title: 'Year', key: 'year', width: 60 },
+      { title: 'Sem', key: 'sem', width: 60 },
+      { title: 'Paper Name', key: 'paperName', width: tableWidth - 510 },
+    ];
+
+    // Draw table header
+    page.drawRectangle({
+      x: tableX,
+      y: y - rowHeight,
+      width: tableWidth,
+      height: rowHeight,
+      color: rgb(0.75, 0.85, 0.95),
+      borderWidth: 1,
+      borderColor: rgb(0, 0, 0),
+    });
+
+    let xPos = tableX;
+    columns.forEach(col => {
+      page.drawLine({
+        start: { x: xPos, y },
+        end: { x: xPos, y: y - rowHeight },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      page.drawText(col.title, {
+        x: xPos + 5,
+        y: y - 15,
+        size: 9,
+        font: fontBold,
+      });
+
+      xPos += col.width;
+    });
+
+    page.drawLine({
+      start: { x: tableX + tableWidth, y },
+      end: { x: tableX + tableWidth, y: y - rowHeight },
+      thickness: 1,
+    });
+
+    y -= rowHeight;
+
+    // =========================
+    // TABLE ROWS - FIXED: Split ALL comma-separated fields
+    // =========================
+    const subjects = timetable?.subjects || [];
+    
+    // Track row number
+    let rowNumber = 1;
+    
+    console.log(`📊 Processing ${subjects.length} subjects for download`);
+    
+    // Helper function to split comma-separated values
+    const splitCommaValues = (value) => {
+      if (!value && value !== 0) return [''];
+      const strValue = String(value).trim();
+      if (!strValue) return [''];
+      return strValue.split(',').map(v => v.trim()).filter(v => v !== '');
+    };
+    
+    // Process each subject
+    for (let i = 0; i < subjects.length; i++) {
+      const s = subjects[i];
+      
+      // Split ALL fields by commas
+      const dates = splitCommaValues(s.date);
+      const times = splitCommaValues(s.time);
+      const courses = splitCommaValues(s.course);
+      const years = splitCommaValues(s.year);
+      const sems = splitCommaValues(s.sem);
+      const paperNames = splitCommaValues(s.paperName);
+      
+      // Find maximum number of entries across all fields
+      const maxEntries = Math.max(
+        dates.length,
+        times.length,
+        courses.length,
+        years.length,
+        sems.length,
+        paperNames.length
+      );
+      
+      // If no entries at all, skip
+      if (maxEntries === 0) continue;
+      
+      // Create rows for each entry
+      for (let entryIndex = 0; entryIndex < maxEntries; entryIndex++) {
+        // Check if we need new page
+        if (y < margin + rowHeight * 3) {
+          page = pdfDoc.addPage([842, 595]);
+          y = drawPageHeaderAndTable(page);
+          // Don't draw table header on new pages
+        }
+        
+        // Prepare row data - use entryIndex for each array, fallback to first item
+        const rowData = {
+          no: rowNumber,
+          date: dates[entryIndex] || dates[0] || '',
+          time: times[entryIndex] || times[0] || '',
+          course: courses[entryIndex] || courses[0] || '',
+          year: years[entryIndex] || years[0] || '',
+          sem: sems[entryIndex] || sems[0] || '',
+          paperName: paperNames[entryIndex] || paperNames[0] || '',
+        };
+        
+        // Draw row border
+        page.drawRectangle({
+          x: tableX,
+          y: y - rowHeight,
+          width: tableWidth,
+          height: rowHeight,
+          borderWidth: 1,
+          borderColor: rgb(0, 0, 0),
+        });
+
+        // Draw row content
+        let rowX = tableX;
+        columns.forEach(col => {
+          // Draw vertical line
+          page.drawLine({
+            start: { x: rowX, y },
+            end: { x: rowX, y: y - rowHeight },
+            thickness: 1,
+          });
+
+          // Draw cell text
+          page.drawText(String(rowData[col.key]), {
+            x: rowX + 5,
+            y: y - 15,
+            size: 9,
+            font,
+          });
+
+          rowX += col.width;
+        });
+
+        y -= rowHeight;
+        rowNumber++;
+      }
+    }
+
+    // =========================
+    // NOTES (only on last page)
+    // =========================
+    y -= 20;
+    const noteX = tableX;
+
+    page.drawText('NOTE :', {
+      x: noteX,
+      y,
+      size: 9,
+      font: fontBold,
+    });
+
+    y -= 14;
+
+    const notes = (timetable?.notes || '')
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+
+    notes.forEach(line => {
+      page.drawText(line, {
+        x: noteX + 10,
+        y,
+        size: 9,
+        font,
+      });
+      y -= 12;
+    });
+
+    // =========================
+    // FOOTER (on last page only)
+    // =========================
+    const footerText = `Generated on: ${new Date().toLocaleDateString()}`;
+    const footerWidth = font.widthOfTextAtSize(footerText, 8);
+
+    page.drawText(footerText, {
+      x: (width - footerWidth) / 2,
+      y: margin - 15,
+      size: 8,
+      font,
+    });
+
+    const pdfBytes = await pdfDoc.save();
+    
+    console.log("✅ Timetable PDF generated for download, size:", pdfBytes.length, "bytes");
+
+    // ✅ USE THE EXACT SAME PATTERN AS YOUR MARKLIST DOWNLOAD
+    const fileName = `timetable_${batch?.batchName || batchId}_${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    // ✅ Set headers exactly like marklist download route
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Length', pdfBytes.length);
+    
+    // ✅ Send exactly like marklist download route
+    res.send(Buffer.from(pdfBytes));
+
+  } catch (err) {
+    console.error("❌ Error downloading timetable PDF:", err);
+    console.error("🔍 Stack trace:", err.stack);
+    
+    res.status(500).json({
+      error: "Error generating timetable PDF for download",
+      message: err.message,
+      stack: err.stack
+    });
+  }
+});
 router.get('/app-form/:id', verifyUserLogin, async (req, res) => {
   try {
     const studentId = req.params.id;
@@ -1758,28 +4666,31 @@ const today = `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth
     res.status(500).send("Error submitting application form");
   }
 });
+router.post(
+  "/apply-hallticket-batch",
+  verifyUserLogin,
+  async (req, res) => {
+    try {
+      const { batchId, examDate, examTime } = req.body;
+
+      console.log("📝 Batch Hall Ticket Apply:");
+      console.log("Batch:", batchId);
+      console.log("Date:", examDate);
+      console.log("Time:", examTime);
+
+      await studentHelpers.applyHallticketByBatch(batchId, examDate, examTime);
+
+      res.redirect("/user/view-batch?success=HallTicketApplied");
+
+    } catch (err) {
+      console.error("❌ Batch hallticket apply error:", err);
+      res.status(500).send("Failed to apply hall ticket");
+    }
+  }
+);
 
 
 
-//view hall-ticket
-// router.get('/hall-ticket/:id', verifyUserLogin, async (req, res) => {
-//   try {
-//     const studentId = new ObjectId(req.params.id);
-//     const student = await db.get().collection(collection.STUDENT_COLLECTION).findOne({ _id: studentId });
-
-//     if (!student || !student.applicationForm) {
-//       return res.status(404).send("Hall Ticket not available");
-//     }
-
-//     res.render('user/hall-ticket', {
-//       hideNavbar: true,
-//       student
-//     });
-//   } catch (err) {
-//     console.error("❌ Error loading hall ticket:", err);
-//     res.status(500).send("Error loading hall ticket");
-//   }
-// });
 
 
 // ===========================
@@ -2420,8 +5331,1642 @@ router.get("/batch-halltickets-download/:batchId", verifyUserLogin, async (req, 
     res.status(500).send("Error generating batch hall tickets");
   }
 });
+//add question paper
+router.get('/add-question-paper/:batchId', verifyUserLogin, async (req, res) => {
+  try {
+    const batchId = req.params.batchId;
 
-//add-mark
+    const batch = await db.get()
+      .collection(collection.BATCH_COLLECTION)
+      .findOne({ _id: new ObjectId(batchId) });
+
+    if (!batch) return res.status(404).send("Batch not found");
+
+    const centre = await db.get()
+      .collection(collection.CENTER_COLLECTION)
+      .findOne({ _id: new ObjectId(batch.centreId) });
+
+    if (!centre) return res.status(404).send("Centre not found");
+
+    // ✅ CORRECT COURSE SOURCE
+    const courseNames = Array.isArray(centre.courseName)
+      ? centre.courseName
+      : centre.courseName
+        ? [centre.courseName]
+        : [];
+
+    res.render('user/add-question-paper', {
+      batch,
+      centre,
+      courseNames,
+      user: req.session.user,
+      hideNavbar: true
+    });
+
+  } catch (err) {
+    console.error("❌ Error loading add question paper:", err);
+    res.status(500).send("Error loading page");
+  }
+});
+
+
+
+router.post("/add-question-paper/:batchId", async (req, res) => {
+  console.log("========== ADD QUESTION PAPER ==========");
+  console.log("REQUEST BODY:", req.body);
+  console.log("INPUT METHOD:", req.body.inputMethod);
+  console.log("SECTIONS JSON RAW:", req.body.sectionsJson);
+  console.log("QUESTIONS JSON RAW:", req.body.questionsJson);
+  console.log("TOTAL MARKS:", req.body.totalMarks);
+
+  try {
+    const { batchId } = req.params;
+    const {
+      courseName,          // CHANGED: Was courseCode
+      subject,
+      examType,
+      inputMethod,
+      sectionsJson,        // NEW FIELD
+      questionsJson,
+      totalMarks,
+      duration,
+      instructions,
+      department ,
+      qtitle1,   // <-- ADD THIS
+      qtitle2,
+      qpCode
+                // NEW FIELD
+    } = req.body;
+
+    let pdfPath = "";
+    let savedSectionsJson = "";
+    let savedQuestionsJson = "";
+
+    // ==========================
+    // 🟢 MANUAL MODE
+    // ==========================
+    if (inputMethod === "manual") {
+      // Try new sections format first
+      if (sectionsJson && sectionsJson.trim() !== '') {
+        try {
+          const sections = JSON.parse(sectionsJson);
+          if (!sections.length) {
+            return res.status(400).send("No sections provided");
+          }
+          savedSectionsJson = sectionsJson;
+          console.log(`✅ Parsed ${sections.length} sections`);
+        } catch (parseError) {
+          console.error("❌ Error parsing sections JSON:", parseError);
+          return res.status(400).send("Invalid sections format");
+        }
+      }
+      // Fallback to old questions format
+      else if (questionsJson && questionsJson.trim() !== '') {
+        try {
+          const questions = JSON.parse(questionsJson);
+          if (!questions.length) {
+            return res.status(400).send("Questions empty");
+          }
+          savedQuestionsJson = questionsJson;
+          console.log(`✅ Parsed ${questions.length} questions (legacy format)`);
+          
+          // Convert old format to new sections format
+          const convertedSection = {
+            sectionNumber: 1,
+            sectionName: "SECTION A",
+            totalQuestions: questions.length,
+            marksPerQuestion: Math.round(totalMarks / questions.length),
+            attemptType: "ALL",
+            instructions: "",
+            questions: questions.map((q, index) => ({
+              questionNumber: index + 1,
+              text: q.text || "",
+              marks: parseInt(q.marks) || 0,
+              type: q.type || "SHORT_ANSWER",
+              options: q.options || []
+            }))
+          };
+          savedSectionsJson = JSON.stringify([convertedSection]);
+        } catch (parseError) {
+          console.error("❌ Error parsing questions JSON:", parseError);
+          return res.status(400).send("Invalid questions format");
+        }
+      }
+      else {
+        return res.status(400).send("No questions or sections provided");
+      }
+
+      // 📄 GENERATE PDF (Improved version that matches preview)
+      const pdfDoc = await PDFDocument.create();
+      let page = pdfDoc.addPage([595, 842]);
+      const { width, height } = page.getSize();
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+      // Background
+      const bgBytes = fs.readFileSync(
+        path.join(__dirname, "../public/images/question-bg.jpg")
+      );
+      const bg = await pdfDoc.embedJpg(bgBytes);
+
+      const drawBg = (pg) => {
+        pg.drawImage(bg, {
+          x: 0,
+          y: 0,
+          width: pg.getWidth(),
+          height: pg.getHeight()
+        });
+      };
+
+      drawBg(page);
+
+      // 🎯 START POSITION (Matching preview format)
+      let y = height - 120;
+      const leftMargin = 60;
+      const rightMargin = width - 60;
+      const contentWidth = rightMargin - leftMargin;
+
+      // ==========================
+      // 📋 HEADER (Matching preview)
+      // ==========================
+     
+
+     // Draw QTitle1
+if (qtitle1) {
+  const title1Width = fontBold.widthOfTextAtSize(qtitle1, 16); // smaller than main title
+  page.drawText(qtitle1, {
+    x: (width - title1Width) / 2,
+    y: y + 95,
+    size: 16,
+    font: fontBold,
+    color: rgb(0, 0, 0)
+  });
+}
+
+// Draw QTitle2 below QTitle1
+if (qtitle2) {
+  const title2Width = fontBold.widthOfTextAtSize(qtitle2, 14); // slightly smaller
+  page.drawText(qtitle2, {
+    x: (width - title2Width) / 2,
+    y: y + 75,  // adjust spacing as needed
+    size: 14,
+    font: fontBold,
+    color: rgb(0, 0, 0)
+  });
+}
+
+y += 5; // continue with the rest of PDF content
+
+
+      // Department
+      if (department) {
+        page.drawText(`Department: ${department}`, {
+          x: leftMargin + 10,
+          y: y + 55,
+          size: 13,
+          font: fontBold,
+          color: rgb(0, 0, 0)
+        });
+      }
+
+      // Subject
+      if (subject) {
+        const subjectText = `Subject: ${subject}`;
+        const subjectWidth = fontBold.widthOfTextAtSize(subjectText, 16);
+        page.drawText(subjectText, {
+          x: (width - subjectWidth) / 2,
+          y: y + 55,
+          size: 16,
+          font: fontBold,
+          color: rgb(0, 0, 0)
+        });
+      }
+
+     
+
+      y -= 80;
+
+      // Function to add new page
+      const checkAndAddPage = () => {
+        if (y < 100) {
+          page = pdfDoc.addPage([595, 842]);
+          drawBg(page);
+          y = height - 100;
+          return true;
+        }
+        return false;
+      };
+
+      // ==========================
+      // 📝 SECTIONS & QUESTIONS
+      // ==========================
+      let sectionsData = [];
+      if (savedSectionsJson) {
+        sectionsData = JSON.parse(savedSectionsJson);
+      } else if (savedQuestionsJson) {
+        sectionsData = [{
+          sectionNumber: 1,
+          sectionName: "SECTION A",
+          totalQuestions: 0,
+          marksPerQuestion: 0,
+          attemptType: "ALL",
+          instructions: "",
+          questions: JSON.parse(savedQuestionsJson)
+        }];
+      }
+
+      if (sectionsData.length > 0) {
+        sectionsData.forEach((section, sectionIndex) => {
+          checkAndAddPage();
+          
+          // SECTION HEADER
+          page.drawText(`${section.sectionName || `SECTION ${String.fromCharCode(65 + sectionIndex)}`}`, {
+            x: leftMargin,
+            y,
+            size: 16,
+            font: fontBold,
+            color: rgb(0, 0, 0)
+          });
+          y -= 25;
+
+          // QUESTIONS IN SECTION
+          if (section.questions && section.questions.length > 0) {
+            section.questions.forEach((question, qIndex) => {
+              checkAndAddPage();
+              
+              const questionNumber = question.questionNumber || qIndex + 1;
+              const questionText = `${questionNumber}. ${question.text}`;
+              
+              // Simple question display (you can enhance this later)
+              page.drawText(questionText, {
+                x: leftMargin,
+                y,
+                size: 12,
+                font: font,
+                maxWidth: contentWidth - 80,
+                lineHeight: 15
+              });
+
+              // Marks
+              if (question.marks) {
+                const marksText = `[${question.marks} Marks]`;
+                page.drawText(marksText, {
+                  x: rightMargin - font.widthOfTextAtSize(marksText, 10) - 10,
+                  y,
+                  size: 10,
+                  font: fontBold,
+                  color: rgb(0.3, 0.3, 0.3)
+                });
+              }
+
+              y -= 35;
+            });
+          }
+        });
+      }
+
+      const pdfBytes = await pdfDoc.save();
+      const pdfName = Date.now() + "-question-paper.pdf";
+      const savePath = path.join(
+        __dirname,
+        "../public/uploads/question-papers",
+        pdfName
+      );
+
+      // Ensure directory exists
+      const uploadDir = path.join(__dirname, "../public/uploads/question-papers");
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      fs.writeFileSync(savePath, pdfBytes);
+      pdfPath = "/uploads/question-papers/" + pdfName;
+    }
+
+    // ==========================
+    // 🔵 FILE MODE (DISABLED)
+    // ==========================
+    else {
+      return res.status(400).send("File upload feature is currently disabled. Please use manual input.");
+    }
+
+    // ==========================
+    // 💾 SAVE TO DB (UPDATED FIELDS)
+    // ==========================
+    await batchHelpers.addQuestionPaper(batchId, {
+      qtitle1,   // <-- ADD THIS
+  qtitle2,
+  qpCode,
+      courseName,          // CHANGED: courseCode → courseName
+      subject,
+      examType,
+      totalMarks,
+      duration,
+      instructions,
+      department,          // NEW FIELD
+      pdfPath,
+      inputMethod,
+      sectionsJson: savedSectionsJson,  // NEW FIELD
+      questionsJson: savedQuestionsJson // For backward compatibility
+    });
+
+    console.log("✅ Question paper saved successfully!");
+    res.redirect("/user/view-question-papers/" + batchId + "?success=Question%20paper%20created%20successfully");
+
+  } catch (err) {
+    console.error("❌ Question paper error:", err);
+    console.error("Stack trace:", err.stack);
+    res.status(500).send("Server error: " + err.message);
+  }
+});
+
+
+// ===========================
+// GET: View Question Papers
+// ===========================
+router.get('/view-question-papers/:batchId', verifyUserLogin, async (req, res) => {
+  try {
+    const batchId = req.params.batchId;
+
+    const batch = await batchHelpers.getBatchById(batchId);
+    if (!batch || !batch.questionPapers) {
+      return res.render('user/view-question-papers', {
+        batch,
+        papers: []
+      });
+    }
+
+    res.render('user/view-question-papers', {
+      batch,
+      papers: batch.questionPapers,
+      hideNavbar: true
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error loading question papers");
+  }
+});
+// DELETE question paper route
+router.delete('/delete-question-paper/:batchId/:paperId', verifyUserLogin, async (req, res) => {
+  try {
+    const { batchId, paperId } = req.params;
+    
+    // Remove the question paper from the batch
+    const result = await db.get()
+      .collection(collection.BATCH_COLLECTION)
+      .updateOne(
+        { _id: new ObjectId(batchId) },
+        {
+          $pull: {
+            questionPapers: {
+              _id: new ObjectId(paperId)
+            }
+          }
+        }
+      );
+    
+    if (result.modifiedCount === 1) {
+      res.json({ success: true, message: 'Question paper deleted successfully' });
+    } else {
+      res.status(404).json({ success: false, message: 'Question paper not found' });
+    }
+    
+  } catch (err) {
+    console.error('❌ Error deleting question paper:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+//preview
+router.get('/preview-question-paper/:batchId/:paperId', verifyUserLogin, async (req, res) => {
+  try {
+    const { batchId, paperId } = req.params;
+
+    const batch = await batchHelpers.getBatchById(batchId);
+    if (!batch) return res.status(404).send("Batch not found");
+
+    const paper = batch.questionPapers.find(
+      p => p._id.toString() === paperId
+    );
+    if (!paper) return res.status(404).send("Question paper not found");
+   
+
+    // Register fontkit instance
+    
+    
+    // 📄 Create PDF
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.registerFontkit(fontkit);
+    // 🖼️ Background image - Load FIRST before any functions
+    let bgImage = null;
+    try {
+      const bgPath = path.join(__dirname, '../public/images/question-bg.jpg');
+      const bgBytes = fs.readFileSync(bgPath);
+      bgImage = await pdfDoc.embedJpg(bgBytes);
+    } catch (bgError) {
+      console.warn("⚠️ Background image not found, using plain background");
+    }
+    
+    // Function to add new page
+    let pageNumber = 0;
+    const addNewPage = () => {
+      const newPage = pdfDoc.addPage([595, 842]); // A4 size
+      pageNumber++;
+      
+      // Add background only to first page
+      if (pageNumber === 1 && bgImage) {
+        newPage.drawImage(bgImage, {
+          x: 0,
+          y: 0,
+          width: newPage.getWidth(),
+          height: newPage.getHeight()
+        });
+      }
+      
+      return newPage;
+    };
+
+    let page = addNewPage();
+    const { width, height } = page.getSize();
+// Load Calibri Regular
+const calibriPath = path.join(__dirname, '../public/fonts/Arial.ttf');
+const calibriBytes = fs.readFileSync(calibriPath);
+const calibriFont = await pdfDoc.embedFont(calibriBytes);
+
+// Load Calibri Bold
+const calibriBoldPath = path.join(__dirname, '../public/fonts/Arial Bold.ttf');
+const calibriBoldBytes = fs.readFileSync(calibriBoldPath);
+const calibriBoldFont = await pdfDoc.embedFont(calibriBoldBytes);
+
+    // 🔤 Fonts
+    const font = calibriFont;       // Regular text
+const fontBold = calibriBoldFont; // Bold headers
+
+
+    // 🎯 START POSITION - Start from top of page
+    let y = height - 100; // Start from top with some margin
+    const leftMargin = 50;
+    const rightMargin = width - 50;
+    const contentWidth = rightMargin - leftMargin;
+
+    // =====================================================
+    // 📋 HEADER SECTION - ALL ELEMENTS CENTERED
+    // =====================================================
+
+    // 1. DEPARTMENT (first, centered)
+    if (paper.department) {
+      const deptWidth = fontBold.widthOfTextAtSize(paper.department, 12);
+      page.drawText(paper.department, {
+        x: (width - deptWidth) / 2+40,
+        y: y,
+        size: 10,
+        font: fontBold,
+        color: rgb(0, 0, 0)
+      });
+      y -= 25;
+    }
+
+    // 2. QTITLE1 (centered)
+    if (paper.qtitle1) {
+      const title1Width = fontBold.widthOfTextAtSize(paper.qtitle1, 11);
+      page.drawText(paper.qtitle1, {
+        x: (width - title1Width) / 2,
+        y: y,
+        size: 11,
+        font: fontBold,
+        color: rgb(0, 0, 0)
+      });
+      y -= 25;
+    }
+
+    // 3. QTITLE2 (centered)
+    if (paper.qtitle2) {
+      const title2Width = fontBold.widthOfTextAtSize(paper.qtitle2, 10);
+      page.drawText(paper.qtitle2, {
+        x: (width - title2Width) / 2,
+        y: y+10,
+        size: 10,
+        font: font,
+        color: rgb(0, 0, 0)
+      });
+      y -= 25;
+    }
+
+    // 4. SUBJECT (centered, larger)
+    if (paper.subject) {
+      const subjectText = paper.subject;
+      const subjectWidth = fontBold.widthOfTextAtSize(subjectText, 18);
+      page.drawText(subjectText, {
+        x: (width - subjectWidth) / 2,
+        y: y+20,
+        size: 12,
+        font: fontBold,
+        color: rgb(0, 0, 0)
+      });
+      y -= 30;
+    }
+
+    // 5. QUESTION PAPER CODE (centered)
+    if (paper.qpCode) {
+      const codeText = `Question Paper Code: ${paper.qpCode}`;
+      const codeWidth = font.widthOfTextAtSize(codeText, 12);
+      page.drawText(codeText, {
+        x: (width - codeWidth) / 2-15,
+        y: y+30,
+        size: 12,
+        font: font,
+        color: rgb(0.3, 0.3, 0.3)
+      });
+      y -= -15;
+    }
+
+    // 6. COURSE NAME (centered)
+    // if (paper.courseName) {
+    //   const courseText = `Course: ${paper.courseName}`;
+    //   const courseWidth = fontBold.widthOfTextAtSize(courseText, 12);
+    //   page.drawText(courseText, {
+    //     x: (width - courseWidth) / 2,
+    //     y: y,
+    //     size: 12,
+    //     font: fontBold,
+    //     color: rgb(0, 0, 0)
+    //   });
+    //   y -= 25;
+    // }
+
+    // 7. EXAM DETAILS - Two columns but still centered (ABOVE THE SEPARATOR LINE)
+    y -= 5; // Little space before details
+    
+    // Calculate positions for two centered columns
+    const totalDetailsWidth = 600; // Total width for both columns
+    const detailCol1X = (width / 2) - 240; // Left column
+    const detailCol2X = (width / 2) + 120; // Right column
+
+    // Column 1 - Total Marks
+    if (paper.totalMarks) {
+      const marksText = `Total Marks: ${paper.totalMarks}`;
+      page.drawText(marksText, {
+        x: detailCol1X,
+        y: y,
+        size: 11,
+        font: font,
+        color: rgb(0.2, 0.2, 0.2)
+      });
+    }
+
+    // Column 2 - Duration
+    if (paper.duration) {
+      const durationText = `Duration: ${paper.duration} minutes`;
+      page.drawText(durationText, {
+        x: detailCol2X,
+        y: y,
+        size: 11,
+        font: font,
+        color: rgb(0.2, 0.2, 0.2)
+      });
+    }
+
+    y -= 10; // Space before separator line
+
+    // 8. SEPARATOR LINE (centered, 90% of page width)
+    const linePercentage = 0.9; // 90%
+    const lineLength = width * linePercentage;
+    const lineX = (width - lineLength) / 2;
+    page.drawLine({
+      start: { x: lineX, y: y },
+      end: { x: lineX + lineLength, y: y },
+      thickness: 1,
+      color: rgb(0, 0, 0)
+    });
+    y -= 25;
+
+    // Function to check and add new page
+    const checkAndAddPage = () => {
+      if (y < 100) {
+        page = addNewPage();
+        y = height - 50;
+        return true;
+      }
+      return false;
+    };
+
+    // Helper function to wrap text
+    const wrapText = (text, font, fontSize, maxWidth) => {
+      const words = text.split(' ');
+      const lines = [];
+      let currentLine = '';
+
+      words.forEach(word => {
+        const testLine = currentLine ? currentLine + ' ' + word : word;
+        const testWidth = font.widthOfTextAtSize(testLine, fontSize);
+        
+        if (testWidth > maxWidth) {
+          if (currentLine) {
+            lines.push(currentLine);
+          }
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      });
+
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+
+      return lines;
+    };
+
+    // =====================================================
+    // 📝 INSTRUCTIONS SECTION
+    // =====================================================
+    if (paper.instructions) {
+      checkAndAddPage();
+      
+      // Instructions title (centered)
+      const instrTitle = 'INSTRUCTIONS:';
+      const instrWidth = fontBold.widthOfTextAtSize(instrTitle, 12);
+      page.drawText(instrTitle, {
+        x: (width - instrWidth) / 2,
+        y,
+        size: 12,
+        font: fontBold,
+        color: rgb(0, 0, 0)
+      });
+      y -= 20;
+
+      // Process instructions
+      const instructions = paper.instructions.split('\n').filter(line => line.trim());
+      instructions.forEach(instruction => {
+        checkAndAddPage();
+        
+        const wrappedLines = wrapText(`• ${instruction.trim()}`, font, 10, contentWidth);
+        wrappedLines.forEach(line => {
+          page.drawText(line, {
+            x: leftMargin, // Left aligned for instructions content
+            y,
+            size: 10,
+            font: font,
+            color: rgb(0, 0, 0)
+          });
+          y -= 14;
+        });
+        y -= 3;
+      });
+      
+      y -= 10;
+    }
+
+    // =====================================================
+    // ✅ SECTIONS & QUESTIONS
+    // =====================================================
+    let hasQuestions = false;
+    
+    // 1. New format (sectionsJson)
+    if (paper.sectionsJson) {
+      try {
+        const sections = JSON.parse(paper.sectionsJson);
+        
+        if (sections && sections.length > 0) {
+          hasQuestions = true;
+          
+          sections.forEach((section, sectionIndex) => {
+            checkAndAddPage();
+            
+            // SECTION HEADER (centered)
+            const sectionName = section.sectionName || `SECTION ${String.fromCharCode(65 + sectionIndex)}`;
+            const sectionNameWidth = fontBold.widthOfTextAtSize(sectionName, 16);
+            page.drawText(sectionName, {
+              x: (width - sectionNameWidth) / 2-120,
+              y,
+              size: 12,
+              font: fontBold,
+              color: rgb(0, 0, 0)
+            });
+            y -= 16;
+
+            // Section details in one line (centered)
+            let sectionDetails = [];
+            if (section.totalQuestions) {
+              sectionDetails.push(`Total Questions: ${section.totalQuestions}`);
+            }
+            if (section.marksPerQuestion) {
+              sectionDetails.push(`Marks per Question: ${section.marksPerQuestion}`);
+            }
+            if (section.attemptType) {
+              const attemptText = section.attemptType === 'ALL' ? 'Answer All' : 
+                                section.attemptType === 'ANY' ? 'Attempt Any' : 
+                                `Attempt: ${section.attemptType}`;
+              sectionDetails.push(attemptText);
+            }
+            
+            if (sectionDetails.length > 0) {
+              const detailsText = sectionDetails.join(' | ');
+              const detailsWidth = font.widthOfTextAtSize(detailsText, 11);
+              page.drawText(detailsText, {
+                x: (width - detailsWidth) / 2-120,
+                y,
+                size: 11,
+                font: font,
+                color: rgb(0.3, 0.3, 0.3)
+              });
+              y -= 20;
+            }
+
+            // Section instructions
+            if (section.instructions) {
+              const noteText = `Note: ${section.instructions}`;
+              const noteWidth = font.widthOfTextAtSize(noteText, 10);
+              page.drawText(noteText, {
+                x: (width - noteWidth) / 2,
+                y,
+                size: 10,
+                font: font,
+                color: rgb(0.4, 0.4, 0.4)
+              });
+              y -= 15;
+            }
+
+            // Questions in section
+            if (section.questions && section.questions.length > 0) {
+              section.questions.forEach((question, qIndex) => {
+                checkAndAddPage();
+                
+                const questionNumber = question.questionNumber || qIndex + 1;
+                const questionText = `${questionNumber}. ${question.text}`;
+                const wrappedLines = wrapText(questionText, font, 10, contentWidth);
+                
+                // Draw question (left aligned)
+                wrappedLines.forEach((line, lineIndex) => {
+                  page.drawText(line, {
+                    x: leftMargin+24,
+                    y,
+                    size: 10,
+                    font: font,
+                    color: rgb(0, 0, 0)
+                  });
+                  y -= 1;
+                });
+
+                // Marks (right-aligned)
+                if (question.marks) {
+                  const marksText = `[${question.marks} Marks]`;
+                  page.drawText(marksText, {
+                    x: rightMargin - font.widthOfTextAtSize(marksText, 10) - 10,
+                    y: y + (wrappedLines.length * 15) - 15,
+                    size: 10,
+                    font: fontBold,
+                    color: rgb(0.3, 0.3, 0.3)
+                  });
+                }
+
+                y -= 15; // Space after question
+
+                // MCQ options
+                if (question.type === 'MCQ' && question.options && question.options.length > 0) {
+                  question.options.forEach((option, optIndex) => {
+                    checkAndAddPage();
+                    
+                    const optionLetter = option.letter || String.fromCharCode(97 + optIndex);
+                    const optionText = `   ${optionLetter}) ${option.text}`;
+                    const optionLines = wrapText(optionText, font, 10, contentWidth - 40);
+                    
+                    optionLines.forEach(line => {
+                      page.drawText(line, {
+                        x: leftMargin + 20,
+                        y,
+                        size: 10,
+                        font: font,
+                        color: rgb(0.2, 0.2, 0.2)
+                      });
+                      y -= 13;
+                    });
+                  });
+                  y -= 5;
+                }
+              });
+            }
+            
+            y -= 16; // Space between sections
+          });
+        }
+      } catch (jsonError) {
+        console.error("Error parsing sections JSON:", jsonError);
+      }
+    }
+    // 2. Legacy format (questionsJson)
+    else if (paper.questionsJson) {
+      try {
+        const questions = JSON.parse(paper.questionsJson);
+        
+        if (questions && questions.length > 0) {
+          hasQuestions = true;
+          
+          checkAndAddPage();
+          const sectionTitle = 'SECTION A: ANSWER ALL QUESTIONS';
+          const sectionTitleWidth = fontBold.widthOfTextAtSize(sectionTitle, 16);
+          page.drawText(sectionTitle, {
+            x: (width - sectionTitleWidth) / 2,
+            y,
+            size: 16,
+            font: fontBold,
+            color: rgb(0, 0, 0)
+          });
+          y -= 25;
+
+          questions.forEach((q, index) => {
+            checkAndAddPage();
+            
+            const questionNumber = q.questionNumber || index + 1;
+            const questionText = `${questionNumber}. ${q.text}`;
+            const wrappedLines = wrapText(questionText, font, 12, contentWidth);
+            
+            wrappedLines.forEach(line => {
+              page.drawText(line, {
+                x: leftMargin,
+                y,
+                size: 12,
+                font: font,
+                color: rgb(0, 0, 0)
+              });
+              y -= 15;
+            });
+
+            if (q.marks) {
+              const marksText = `[${q.marks} Marks]`;
+              page.drawText(marksText, {
+                x: rightMargin - font.widthOfTextAtSize(marksText, 10) - 10,
+                y: y + (wrappedLines.length * 15) - 15,
+                size: 10,
+                font: fontBold,
+                color: rgb(0.3, 0.3, 0.3)
+              });
+            }
+
+            y -= 20;
+          });
+        }
+      } catch (jsonError) {
+        console.error("Error parsing legacy questions JSON:", jsonError);
+      }
+    }
+
+    // =====================================================
+    // 📝 FOOTER
+    // =====================================================
+    checkAndAddPage();
+    
+    // Footer separator (centered, 90% width)
+    const footerLinePercentage = 0.9;
+    const footerLineLength = width * footerLinePercentage;
+    const footerLineX = (width - footerLineLength) / 2;
+    page.drawLine({
+      start: { x: footerLineX, y: y + 20 },
+      end: { x: footerLineX + footerLineLength, y: y + 20 },
+      thickness: 0.5,
+      color: rgb(0.3, 0.3, 0.3)
+    });
+    y -= 15;
+
+    // Generated timestamp (centered)
+    const timestamp = new Date().toLocaleString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    const timestampText = `Generated on: ${timestamp}`;
+    const timestampWidth = font.widthOfTextAtSize(timestampText, 9);
+    page.drawText(timestampText, {
+      x: (width - timestampWidth) / 2,
+      y: 40,
+      size: 9,
+      font: font,
+      color: rgb(0.3, 0.3, 0.3)
+    });
+
+    // Page numbers (centered on each page)
+    const totalPages = pdfDoc.getPageCount();
+    for (let i = 0; i < totalPages; i++) {
+      const currentPage = pdfDoc.getPage(i);
+      const pageText = `Page ${i + 1} of ${totalPages}`;
+      const pageTextWidth = font.widthOfTextAtSize(pageText, 8);
+      currentPage.drawText(pageText, {
+        x: (width - pageTextWidth) / 2,
+        y: 25,
+        size: 8,
+        font: font,
+        color: rgb(0.4, 0.4, 0.4)
+      });
+    }
+
+    const pdfBytes = await pdfDoc.save();
+    const base64 = Buffer.from(pdfBytes).toString("base64");
+
+    // =====================================================
+    // 📄 HTML PREVIEW PAGE
+    // =====================================================
+    res.send(`
+      <html>
+        <head>
+          <title>Question Paper Preview - ${paper.subject || 'Question Paper'}</title>
+          <style>
+            body { 
+              margin: 0;
+              padding: 0;
+              font-family: Arial, sans-serif;
+              background: #f5f5f5;
+              overflow: hidden;
+            }
+
+            .header {
+              width: 100%;
+              background: linear-gradient(135deg, #004e89, #0066cc);
+              color: white;
+              padding: 15px;
+              text-align: center;
+              font-size: 22px;
+              font-weight: bold;
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              z-index: 1000;
+              box-shadow: 0px 3px 10px rgba(0,0,0,0.2);
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+
+            .header-content {
+              flex: 1;
+              text-align: center;
+            }
+
+            .controls {
+              display: flex;
+              gap: 12px;
+              margin-right: 20px;
+            }
+
+            .btn {
+              padding: 12px 24px;
+              border-radius: 6px;
+              text-decoration: none;
+              font-weight: bold;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+              transition: all 0.3s ease;
+              border: none;
+              cursor: pointer;
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+              font-size: 14px;
+              color: white;
+              min-width: 160px;
+              justify-content: center;
+            }
+
+            .download-btn {
+              background: linear-gradient(135deg, #28a745, #20c997);
+            }
+
+            .download-btn:hover {
+              background: linear-gradient(135deg, #20c997, #28a745);
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            }
+
+            .back-btn {
+              background: linear-gradient(135deg, #6c757d, #495057);
+            }
+
+            .back-btn:hover {
+              background: linear-gradient(135deg, #495057, #6c757d);
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+            }
+
+            iframe {
+              position: fixed;
+              top: 70px;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              width: 100%;
+              height: calc(100vh - 70px);
+              border: none;
+            }
+
+            .paper-info {
+              position: fixed;
+              bottom: 20px;
+              left: 20px;
+              background: rgba(255, 255, 255, 0.9);
+              padding: 10px 15px;
+              border-radius: 8px;
+              font-size: 12px;
+              color: #333;
+              box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+              max-width: 300px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div></div> <!-- Empty div for spacing -->
+            <div class="header-content">
+              📄 Question Paper Preview - ${paper.subject || 'Paper'}
+            </div>
+            <div class="controls">
+              <a href="/user/view-question-papers/${batchId}" class="btn back-btn">
+                ← Back to List
+              </a>
+              <a href="/user/download-question-paper/${batchId}/${paperId}" class="btn download-btn">
+                📥 Download PDF
+              </a>
+            </div>
+          </div>
+          
+          <iframe src="data:application/pdf;base64,${base64}#toolbar=0&navpanes=0&scrollbar=1"></iframe>
+          
+          <div class="paper-info">
+            <strong>Paper Details:</strong><br>
+            ${paper.subject ? `Subject: ${paper.subject}<br>` : ''}
+            ${paper.courseName ? `Course: ${paper.courseName}<br>` : ''}
+            ${paper.totalMarks ? `Marks: ${paper.totalMarks}<br>` : ''}
+            ${paper.duration ? `Duration: ${paper.duration} mins` : ''}
+          </div>
+          
+          <script>
+            window.onload = function() {
+              document.querySelector('iframe').focus();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+
+  } catch (err) {
+    console.error("❌ PDF preview error:", err);
+    console.error("Error stack:", err.stack);
+    res.status(500).send("Error generating PDF preview: " + err.message);
+  }
+});
+// ===========================
+// DOWNLOAD QUESTION PAPER PDF
+// ===========================
+router.get('/download-question-paper/:batchId/:paperId', verifyUserLogin, async (req, res) => {
+  try {
+    const { batchId, paperId } = req.params;
+
+    const batch = await batchHelpers.getBatchById(batchId);
+    if (!batch) return res.status(404).send("Batch not found");
+
+    const paper = batch.questionPapers.find(
+      p => p._id.toString() === paperId
+    );
+    if (!paper) return res.status(404).send("Question paper not found");
+    
+    // Register fontkit instance
+    const { PDFDocument, rgb } = require('pdf-lib');
+    const fontkit = require('@pdf-lib/fontkit');
+    
+    // 📄 Create PDF
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.registerFontkit(fontkit);
+    
+    // 🖼️ Background image - Load FIRST before any functions
+    let bgImage = null;
+    try {
+      const bgPath = path.join(__dirname, '../public/images/question-bg.jpg');
+      const bgBytes = fs.readFileSync(bgPath);
+      bgImage = await pdfDoc.embedJpg(bgBytes);
+    } catch (bgError) {
+      console.warn("⚠️ Background image not found, using plain background");
+    }
+    
+    // Function to add new page
+    let pageNumber = 0;
+    const addNewPage = () => {
+      const newPage = pdfDoc.addPage([595, 842]); // A4 size
+      pageNumber++;
+      
+      // Add background only to first page
+      if (pageNumber === 1 && bgImage) {
+        newPage.drawImage(bgImage, {
+          x: 0,
+          y: 0,
+          width: newPage.getWidth(),
+          height: newPage.getHeight()
+        });
+      }
+      
+      return newPage;
+    };
+
+    let page = addNewPage();
+    const { width, height } = page.getSize();
+    
+    // Load Calibri Regular
+    const calibriPath = path.join(__dirname, '../public/fonts/Arial.ttf');
+    const calibriBytes = fs.readFileSync(calibriPath);
+    const calibriFont = await pdfDoc.embedFont(calibriBytes);
+
+    // Load Calibri Bold
+    const calibriBoldPath = path.join(__dirname, '../public/fonts/Arial Bold.ttf');
+    const calibriBoldBytes = fs.readFileSync(calibriBoldPath);
+    const calibriBoldFont = await pdfDoc.embedFont(calibriBoldBytes);
+
+    // 🔤 Fonts
+    const font = calibriFont;       // Regular text
+    const fontBold = calibriBoldFont; // Bold headers
+
+    // 🎯 START POSITION - Start from top of page
+    let y = height - 100; // Start from top with some margin
+    const leftMargin = 50;
+    const rightMargin = width - 50;
+    const contentWidth = rightMargin - leftMargin;
+
+    // =====================================================
+    // 📋 HEADER SECTION - ALL ELEMENTS CENTERED
+    // =====================================================
+
+    // 1. DEPARTMENT (first, centered)
+    if (paper.department) {
+      const deptWidth = fontBold.widthOfTextAtSize(paper.department, 12);
+      page.drawText(paper.department, {
+        x: (width - deptWidth) / 2+40,
+        y: y,
+        size: 10,
+        font: fontBold,
+        color: rgb(0, 0, 0)
+      });
+      y -= 25;
+    }
+
+    // 2. QTITLE1 (centered)
+    if (paper.qtitle1) {
+      const title1Width = fontBold.widthOfTextAtSize(paper.qtitle1, 11);
+      page.drawText(paper.qtitle1, {
+        x: (width - title1Width) / 2,
+        y: y,
+        size: 11,
+        font: fontBold,
+        color: rgb(0, 0, 0)
+      });
+      y -= 25;
+    }
+
+    // 3. QTITLE2 (centered)
+    if (paper.qtitle2) {
+      const title2Width = fontBold.widthOfTextAtSize(paper.qtitle2, 10);
+      page.drawText(paper.qtitle2, {
+        x: (width - title2Width) / 2,
+        y: y+10,
+        size: 10,
+        font: font,
+        color: rgb(0, 0, 0)
+      });
+      y -= 25;
+    }
+
+    // 4. SUBJECT (centered, larger)
+    if (paper.subject) {
+      const subjectText = paper.subject;
+      const subjectWidth = fontBold.widthOfTextAtSize(subjectText, 18);
+      page.drawText(subjectText, {
+        x: (width - subjectWidth) / 2,
+        y: y+20,
+        size: 12,
+        font: fontBold,
+        color: rgb(0, 0, 0)
+      });
+      y -= 30;
+    }
+
+    // 5. QUESTION PAPER CODE (centered)
+    if (paper.qpCode) {
+      const codeText = `Question Paper Code: ${paper.qpCode}`;
+      const codeWidth = font.widthOfTextAtSize(codeText, 12);
+      page.drawText(codeText, {
+        x: (width - codeWidth) / 2-15,
+        y: y+30,
+        size: 12,
+        font: font,
+        color: rgb(0.3, 0.3, 0.3)
+      });
+      y -= -15;
+    }
+
+    // 6. COURSE NAME (centered)
+    // if (paper.courseName) {
+    //   const courseText = `Course: ${paper.courseName}`;
+    //   const courseWidth = fontBold.widthOfTextAtSize(courseText, 12);
+    //   page.drawText(courseText, {
+    //     x: (width - courseWidth) / 2,
+    //     y: y,
+    //     size: 12,
+    //     font: fontBold,
+    //     color: rgb(0, 0, 0)
+    //   });
+    //   y -= 25;
+    // }
+
+    // 7. EXAM DETAILS - Two columns but still centered (ABOVE THE SEPARATOR LINE)
+    y -= 5; // Little space before details
+    
+    // Calculate positions for two centered columns
+    const totalDetailsWidth = 600; // Total width for both columns
+    const detailCol1X = (width / 2) - 240; // Left column
+    const detailCol2X = (width / 2) + 120; // Right column
+
+    // Column 1 - Total Marks
+    if (paper.totalMarks) {
+      const marksText = `Total Marks: ${paper.totalMarks}`;
+      page.drawText(marksText, {
+        x: detailCol1X,
+        y: y,
+        size: 11,
+        font: font,
+        color: rgb(0.2, 0.2, 0.2)
+      });
+    }
+
+    // Column 2 - Duration
+    if (paper.duration) {
+      const durationText = `Duration: ${paper.duration} minutes`;
+      page.drawText(durationText, {
+        x: detailCol2X,
+        y: y,
+        size: 11,
+        font: font,
+        color: rgb(0.2, 0.2, 0.2)
+      });
+    }
+
+    y -= 10; // Space before separator line
+
+    // 8. SEPARATOR LINE (centered, 90% of page width)
+    const linePercentage = 0.9; // 90%
+    const lineLength = width * linePercentage;
+    const lineX = (width - lineLength) / 2;
+    page.drawLine({
+      start: { x: lineX, y: y },
+      end: { x: lineX + lineLength, y: y },
+      thickness: 1,
+      color: rgb(0, 0, 0)
+    });
+    y -= 25;
+
+    // Function to check and add new page
+    const checkAndAddPage = () => {
+      if (y < 100) {
+        page = addNewPage();
+        y = height - 50;
+        return true;
+      }
+      return false;
+    };
+
+    // Helper function to wrap text
+    const wrapText = (text, font, fontSize, maxWidth) => {
+      const words = text.split(' ');
+      const lines = [];
+      let currentLine = '';
+
+      words.forEach(word => {
+        const testLine = currentLine ? currentLine + ' ' + word : word;
+        const testWidth = font.widthOfTextAtSize(testLine, fontSize);
+        
+        if (testWidth > maxWidth) {
+          if (currentLine) {
+            lines.push(currentLine);
+          }
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      });
+
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+
+      return lines;
+    };
+
+    // =====================================================
+    // 📝 INSTRUCTIONS SECTION
+    // =====================================================
+    if (paper.instructions) {
+      checkAndAddPage();
+      
+      // Instructions title (centered)
+      const instrTitle = 'INSTRUCTIONS:';
+      const instrWidth = fontBold.widthOfTextAtSize(instrTitle, 12);
+      page.drawText(instrTitle, {
+        x: (width - instrWidth) / 2,
+        y,
+        size: 12,
+        font: fontBold,
+        color: rgb(0, 0, 0)
+      });
+      y -= 20;
+
+      // Process instructions
+      const instructions = paper.instructions.split('\n').filter(line => line.trim());
+      instructions.forEach(instruction => {
+        checkAndAddPage();
+        
+        const wrappedLines = wrapText(`• ${instruction.trim()}`, font, 10, contentWidth);
+        wrappedLines.forEach(line => {
+          page.drawText(line, {
+            x: leftMargin, // Left aligned for instructions content
+            y,
+            size: 10,
+            font: font,
+            color: rgb(0, 0, 0)
+          });
+          y -= 14;
+        });
+        y -= 3;
+      });
+      
+      y -= 10;
+    }
+
+    // =====================================================
+    // ✅ SECTIONS & QUESTIONS
+    // =====================================================
+    let hasQuestions = false;
+    
+    // 1. New format (sectionsJson)
+    if (paper.sectionsJson) {
+      try {
+        const sections = JSON.parse(paper.sectionsJson);
+        
+        if (sections && sections.length > 0) {
+          hasQuestions = true;
+          
+          sections.forEach((section, sectionIndex) => {
+            checkAndAddPage();
+            
+            // SECTION HEADER (centered)
+            const sectionName = section.sectionName || `SECTION ${String.fromCharCode(65 + sectionIndex)}`;
+            const sectionNameWidth = fontBold.widthOfTextAtSize(sectionName, 16);
+            page.drawText(sectionName, {
+              x: (width - sectionNameWidth) / 2-120,
+              y,
+              size: 12,
+              font: fontBold,
+              color: rgb(0, 0, 0)
+            });
+            y -= 16;
+
+            // Section details in one line (centered)
+            let sectionDetails = [];
+            if (section.totalQuestions) {
+              sectionDetails.push(`Total Questions: ${section.totalQuestions}`);
+            }
+            if (section.marksPerQuestion) {
+              sectionDetails.push(`Marks per Question: ${section.marksPerQuestion}`);
+            }
+            if (section.attemptType) {
+              const attemptText = section.attemptType === 'ALL' ? 'Answer All' : 
+                                section.attemptType === 'ANY' ? 'Attempt Any' : 
+                                `Attempt: ${section.attemptType}`;
+              sectionDetails.push(attemptText);
+            }
+            
+            if (sectionDetails.length > 0) {
+              const detailsText = sectionDetails.join(' | ');
+              const detailsWidth = font.widthOfTextAtSize(detailsText, 11);
+              page.drawText(detailsText, {
+                x: (width - detailsWidth) / 2-120,
+                y,
+                size: 11,
+                font: font,
+                color: rgb(0.3, 0.3, 0.3)
+              });
+              y -= 20;
+            }
+
+            // Section instructions
+            if (section.instructions) {
+              const noteText = `Note: ${section.instructions}`;
+              const noteWidth = font.widthOfTextAtSize(noteText, 10);
+              page.drawText(noteText, {
+                x: (width - noteWidth) / 2,
+                y,
+                size: 10,
+                font: font,
+                color: rgb(0.4, 0.4, 0.4)
+              });
+              y -= 15;
+            }
+
+            // Questions in section
+            if (section.questions && section.questions.length > 0) {
+              section.questions.forEach((question, qIndex) => {
+                checkAndAddPage();
+                
+                const questionNumber = question.questionNumber || qIndex + 1;
+                const questionText = `${questionNumber}. ${question.text}`;
+                const wrappedLines = wrapText(questionText, font, 10, contentWidth);
+                
+                // Draw question (left aligned)
+                wrappedLines.forEach((line, lineIndex) => {
+                  page.drawText(line, {
+                    x: leftMargin+24,
+                    y,
+                    size: 10,
+                    font: font,
+                    color: rgb(0, 0, 0)
+                  });
+                  y -= 1;
+                });
+
+                // Marks (right-aligned)
+                if (question.marks) {
+                  const marksText = `[${question.marks} Marks]`;
+                  page.drawText(marksText, {
+                    x: rightMargin - font.widthOfTextAtSize(marksText, 10) - 10,
+                    y: y + (wrappedLines.length * 15) - 15,
+                    size: 10,
+                    font: fontBold,
+                    color: rgb(0.3, 0.3, 0.3)
+                  });
+                }
+
+                y -= 15; // Space after question
+
+                // MCQ options
+                if (question.type === 'MCQ' && question.options && question.options.length > 0) {
+                  question.options.forEach((option, optIndex) => {
+                    checkAndAddPage();
+                    
+                    const optionLetter = option.letter || String.fromCharCode(97 + optIndex);
+                    const optionText = `   ${optionLetter}) ${option.text}`;
+                    const optionLines = wrapText(optionText, font, 10, contentWidth - 40);
+                    
+                    optionLines.forEach(line => {
+                      page.drawText(line, {
+                        x: leftMargin + 20,
+                        y,
+                        size: 10,
+                        font: font,
+                        color: rgb(0.2, 0.2, 0.2)
+                      });
+                      y -= 13;
+                    });
+                  });
+                  y -= 5;
+                }
+              });
+            }
+            
+            y -= 16; // Space between sections
+          });
+        }
+      } catch (jsonError) {
+        console.error("Error parsing sections JSON:", jsonError);
+      }
+    }
+    // 2. Legacy format (questionsJson)
+    else if (paper.questionsJson) {
+      try {
+        const questions = JSON.parse(paper.questionsJson);
+        
+        if (questions && questions.length > 0) {
+          hasQuestions = true;
+          
+          checkAndAddPage();
+          const sectionTitle = 'SECTION A: ANSWER ALL QUESTIONS';
+          const sectionTitleWidth = fontBold.widthOfTextAtSize(sectionTitle, 16);
+          page.drawText(sectionTitle, {
+            x: (width - sectionTitleWidth) / 2,
+            y,
+            size: 16,
+            font: fontBold,
+            color: rgb(0, 0, 0)
+          });
+          y -= 25;
+
+          questions.forEach((q, index) => {
+            checkAndAddPage();
+            
+            const questionNumber = q.questionNumber || index + 1;
+            const questionText = `${questionNumber}. ${q.text}`;
+            const wrappedLines = wrapText(questionText, font, 12, contentWidth);
+            
+            wrappedLines.forEach(line => {
+              page.drawText(line, {
+                x: leftMargin,
+                y,
+                size: 12,
+                font: font,
+                color: rgb(0, 0, 0)
+              });
+              y -= 15;
+            });
+
+            if (q.marks) {
+              const marksText = `[${q.marks} Marks]`;
+              page.drawText(marksText, {
+                x: rightMargin - font.widthOfTextAtSize(marksText, 10) - 10,
+                y: y + (wrappedLines.length * 15) - 15,
+                size: 10,
+                font: fontBold,
+                color: rgb(0.3, 0.3, 0.3)
+              });
+            }
+
+            y -= 20;
+          });
+        }
+      } catch (jsonError) {
+        console.error("Error parsing legacy questions JSON:", jsonError);
+      }
+    }
+
+    // =====================================================
+    // 📝 FOOTER
+    // =====================================================
+    checkAndAddPage();
+    
+    // Footer separator (centered, 90% width)
+    const footerLinePercentage = 0.9;
+    const footerLineLength = width * footerLinePercentage;
+    const footerLineX = (width - footerLineLength) / 2;
+    page.drawLine({
+      start: { x: footerLineX, y: y + 20 },
+      end: { x: footerLineX + footerLineLength, y: y + 20 },
+      thickness: 0.5,
+      color: rgb(0.3, 0.3, 0.3)
+    });
+    y -= 15;
+
+    // Generated timestamp (centered)
+    const timestamp = new Date().toLocaleString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    const timestampText = `Generated on: ${timestamp}`;
+    const timestampWidth = font.widthOfTextAtSize(timestampText, 9);
+    page.drawText(timestampText, {
+      x: (width - timestampWidth) / 2,
+      y: 40,
+      size: 9,
+      font: font,
+      color: rgb(0.3, 0.3, 0.3)
+    });
+
+    // Page numbers (centered on each page)
+    const totalPages = pdfDoc.getPageCount();
+    for (let i = 0; i < totalPages; i++) {
+      const currentPage = pdfDoc.getPage(i);
+      const pageText = `Page ${i + 1} of ${totalPages}`;
+      const pageTextWidth = font.widthOfTextAtSize(pageText, 8);
+      currentPage.drawText(pageText, {
+        x: (width - pageTextWidth) / 2,
+        y: 25,
+        size: 8,
+        font: font,
+        color: rgb(0.4, 0.4, 0.4)
+      });
+    }
+
+    const pdfBytes = await pdfDoc.save();
+    
+    // =====================================================
+    // 📥 DOWNLOAD THE PDF (Only change from preview)
+    // =====================================================
+    const fileName = `${paper.subject || 'Question-Paper'}_${paper.qpCode || batch.batchId}.pdf`.replace(/[^a-zA-Z0-9.-]/g, '_');
+    
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${fileName}"`,
+      'Content-Length': pdfBytes.length
+    });
+    
+    res.send(pdfBytes);
+
+  } catch (err) {
+    console.error("❌ PDF download error:", err);
+    console.error("Error stack:", err.stack);
+    res.status(500).send("Error generating PDF download: " + err.message);
+  }
+});
+
+// ADD MARK PAGE
 router.get('/add-mark/:id', verifyUserLogin, async (req, res) => {
   try {
     const studentId = req.params.id;
@@ -2549,35 +7094,36 @@ router.post('/add-mark', verifyUserLogin, async (req, res) => {
 
     console.log("💾 Database update result:", result.modifiedCount ? "Success" : "No changes");
 
-    res.redirect('/user/mark-list/' + studentId);
+    res.redirect('/user/preview-marklist/' + studentId);
   } catch (err) {
     console.error("❌ Error saving marks:", err);
     res.status(500).send("Error submitting marks");
   }
 });
-// mark list
-router.get('/mark-list/:id', verifyUserLogin, async (req, res) => {
+// ===========================
+// MARKLIST PREVIEW (with Download Button) - FIXED CENTERING
+// ===========================
+router.get("/preview-marklist/:id", verifyUserLogin, async (req, res) => {
   try {
-    const studentId = new ObjectId(req.params.id);
+    const studentId = req.params.id;
 
-    // 1️⃣ Get student data
+    // 1️⃣ Fetch student data
     const student = await db.get()
       .collection(collection.STUDENT_COLLECTION)
-      .findOne({ _id: studentId });
+      .findOne({ _id: new ObjectId(studentId) });
 
-    if (!student) return res.status(404).send("Student not found");
-
+    if (!student || !student.marks) {
+      return res.status(404).send("Student or marks not found");
+    }
+    
+    // ✅ Fetch center and logo data
     const centreId = student.centreId;
-    const departmentName = student.department;
-
-    // 2️⃣ Fetch center data
     const centerData = await centerHelpers.getCenterById(centreId);
-
-    // 3️⃣ Extract logos
     const institutionLogo = centerData?.institutionLogo || null;
-
-    // ✅ Find department logo safely
+    
+    // ✅ Fetch and match Department Logo
     let departmentLogo = null;
+    const departmentName = student.department || student.courseDepartmentName;
 
     if (centerData?.departmentLogos && departmentName) {
       const deptKeys = Object.keys(centerData.departmentLogos);
@@ -2593,32 +7139,2963 @@ router.get('/mark-list/:id', verifyUserLogin, async (req, res) => {
       }
     }
 
-    // 🧾 Debug info
-    console.log("✅ Marklist Debug:", {
-      centreId,
-      departmentName,
-      institutionLogo,
-      departmentLogo
+    // 2️⃣ Load background image
+    const bgPath = path.join(__dirname, "../public/images/Marklist-bg.jpg");
+    const bgBytes = fs.readFileSync(bgPath);
+
+    // 3️⃣ Create PDF document
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.registerFontkit(fontkit);
+
+    // 4️⃣ Load Arial fonts
+    const arialPath = path.join(__dirname, "../public/fonts/arial.ttf");
+    const arialBytes = fs.readFileSync(arialPath);
+    const arial = await pdfDoc.embedFont(arialBytes);
+
+    const arialBoldPath = path.join(__dirname, "../public/fonts/arialbd.ttf");
+    let arialBold = arial;
+    if (fs.existsSync(arialBoldPath)) {
+      const arialBoldBytes = fs.readFileSync(arialBoldPath);
+      arialBold = await pdfDoc.embedFont(arialBoldBytes);
+    }
+    
+    // Load Square 721 BT
+    const squareFontPath = path.join(__dirname, "../public/fonts/SQR721N.TTF");
+    let squareFont = arial; // fallback
+    if (fs.existsSync(squareFontPath)) {
+      const squareBytes = fs.readFileSync(squareFontPath);
+      squareFont = await pdfDoc.embedFont(squareBytes);
+    }
+    
+    const calibriPath = path.join(__dirname, "../public/fonts/CALIBRI.TTF");
+    let calibri = arial; // fallback to Arial if Calibri not available
+    if (fs.existsSync(calibriPath)) {
+      const calibriBytes = fs.readFileSync(calibriPath);
+      calibri = await pdfDoc.embedFont(calibriBytes);
+    }
+
+    const calibriBoldPath = path.join(__dirname, "../public/fonts/CALIBRIB.TTF");
+    let calibriBold = calibri; // fallback to regular Calibri
+    if (fs.existsSync(calibriBoldPath)) {
+      const calibriBoldBytes = fs.readFileSync(calibriBoldPath);
+      calibriBold = await pdfDoc.embedFont(calibriBoldBytes);
+    }
+    
+    const zurichLightPath = path.join(__dirname, "../public/fonts/ZurichLightBT.ttf");
+    let zurichLight = arial; // fallback to Arial if not found
+    if (fs.existsSync(zurichLightPath)) {
+      try {
+        const zurichLightBytes = fs.readFileSync(zurichLightPath);
+        zurichLight = await pdfDoc.embedFont(zurichLightBytes);
+        console.log("✅ Zurich Light BT font loaded successfully");
+      } catch (err) {
+        console.error("❌ Failed to load Zurich Light BT font:", err);
+      }
+    } else {
+      console.log("⚠️ Zurich Light BT font file not found at:", zurichLightPath);
+    }
+
+    // 5️⃣ Page size
+    const pageWidth = 8.543 * 72;
+    const pageHeight = 11.367 * 72;
+    const page = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    // 6️⃣ Background
+    const bgImage = await pdfDoc.embedJpg(bgBytes);
+    page.drawImage(bgImage, { x: 0, y: 0, width: pageWidth, height: pageHeight });
+
+    const { rgb } = require("pdf-lib");
+
+    // ===========================
+    // LINE CONTROL CONFIG
+    // ===========================
+    const SHOW_TABLE_LINES = true;
+    const lineSettings = {
+      thickness: SHOW_TABLE_LINES ? 0.3 : 0,
+      color: SHOW_TABLE_LINES ? rgb(0, 0, 0) : rgb(1, 1, 1),
+    };
+
+    // ===========================
+    // DETAILS
+    // ===========================
+    let yPosition = pageHeight - 240;
+
+    const details = [
+      `Registration Number                            : ${student.marks.registrationNo || ""}`,
+      `This mark sheet is Award to                  : ${student.marks.candidateName || ""}`,
+      `On successful Completion of the Course : ${student.marks.course || ""}`,
+      `Of Duration                                          : ${student.marks.courseDuration || ""}`,
+      `From our Authorized Training centre      : ${student.marks.institute || ""}`
+    ];
+
+    details.forEach((text) => {
+      page.drawText(text, { x: 45, y: yPosition, size: 12, font: squareFont, color: rgb(0,0,0) });
+      yPosition -= 22;
     });
 
-    // 4️⃣ Render page
-    res.render('user/mark-list', {
-      hideNavbar: true,
-      studentId: req.params.id,
-      student,
-      logos: {
-        institution: institutionLogo,
-        department: departmentLogo
-      },
-      currentDate: new Date()
+    yPosition -= 5;
+
+    // ===========================
+    // TABLE HEADER - FIXED CENTERING
+    // ===========================
+    const xStart = 45;
+    const colWidths = [28, 180, 30, 30, 30, 30, 30, 30, 30, 30, 30, 48];
+    const rowHeight = 24;
+    const headerBg = rgb(0.83, 0.90, 0.98);
+    const tableTop = yPosition;
+
+    let xPos = xStart;
+
+    page.drawRectangle({
+      x: xPos,
+      y: tableTop - 32,
+      width: colWidths.reduce((a, b) => a + b, 0),
+      height: 32,
+      color: headerBg,
+      borderColor: lineSettings.color,
+      borderWidth: lineSettings.thickness,
     });
+
+    const mainHeaders = [
+      "S.No", "Name of Subject",
+      "Theory Marks", "", "",
+      "Practical Marks", "", "",
+      "Total Marks", "", "",
+      "Result"
+    ];
+
+    const subHeaders = [
+      "", "", "Max", "Min", "Obt",
+      "Max", "Min", "Obt",
+      "Max", "Min", "Obt", ""
+    ];
+
+    // FIXED: Draw main headers like combined marklist
+    xPos = xStart;
+    for (let i = 0; i < mainHeaders.length; i++) {
+      if (!mainHeaders[i]) {
+        // Skip empty header positions but still advance column width
+        xPos += colWidths[i];
+        continue;
+      }
+
+      let groupWidth = colWidths[i];
+      let columnsToSkip = 0;
+
+      // Check if this is a grouped header (spanning multiple columns)
+      if (mainHeaders[i] === "Theory Marks" || 
+          mainHeaders[i] === "Practical Marks" || 
+          mainHeaders[i] === "Total Marks") {
+        
+        // Span 3 columns
+        groupWidth = colWidths[i] + colWidths[i+1] + colWidths[i+2];
+        columnsToSkip = 2; // Skip the next 2 empty slots
+        
+        // Draw the header centered over the 3 columns
+        const textWidth = zurichLight.widthOfTextAtSize(mainHeaders[i], 11);
+        page.drawText(mainHeaders[i], {
+          x: xPos + (groupWidth - textWidth) / 2,
+          y: tableTop - 13, // Lower Y position
+          size: 11,
+          font: zurichLight,
+          color: rgb(0,0,0)
+        });
+
+        xPos += groupWidth;
+        
+        // Skip the columns we've already accounted for
+        i += columnsToSkip;
+      } else {
+        // Regular single column header (S.No, Name of Subject, Result)
+        const textWidth = zurichLight.widthOfTextAtSize(mainHeaders[i], 11);
+        
+        // Use same Y position as combined marklist
+        page.drawText(mainHeaders[i], {
+          x: xPos + (colWidths[i] - textWidth) / 2,
+          y: tableTop - 18, // Adjusted Y position to match combined
+          size: 11,
+          font: zurichLight,
+          color: rgb(0,0,0)
+        });
+
+        xPos += colWidths[i];
+      }
+    }
+
+    // Draw sub headers - FIXED CENTERING
+    xPos = xStart;
+    subHeaders.forEach((header, i) => {
+      if (header) {
+        const textWidth = calibriBold.widthOfTextAtSize(header, 10); // Use 10 size like combined
+        page.drawText(header, {
+          x: xPos + (colWidths[i] - textWidth) / 2,
+          y: tableTop - 28, // Adjusted Y position
+          size: 10, // Use 10 like combined
+          font: calibriBold,
+          color: rgb(0,0,0)
+        });
+      }
+      xPos += colWidths[i];
+    });
+
+    // Draw horizontal separator lines for grouped headers
+    if (SHOW_TABLE_LINES) {
+      const headerMid = tableTop - 16;
+
+      // THEORY MARKS separator
+      page.drawLine({
+        start: { x: xStart + colWidths[0] + colWidths[1], y: headerMid },
+        end: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4], y: headerMid },
+        thickness: lineSettings.thickness,
+        color: lineSettings.color
+      });
+
+      // PRACTICAL MARKS separator
+      page.drawLine({
+        start: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4], y: headerMid },
+        end: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + colWidths[6] + colWidths[7], y: headerMid },
+        thickness: lineSettings.thickness,
+        color: lineSettings.color
+      });
+
+      // TOTAL MARKS separator
+      page.drawLine({
+        start: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + colWidths[6] + colWidths[7], y: headerMid },
+        end: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + colWidths[6] + colWidths[7] + colWidths[8] + colWidths[9] + colWidths[10], y: headerMid },
+        thickness: lineSettings.thickness,
+        color: lineSettings.color
+      });
+    }
+
+    // Draw vertical lines
+    if (SHOW_TABLE_LINES) {
+      xPos = xStart;
+      const shortLines = [2, 3, 5, 6, 8, 9];  // Max/Min/Obt separators
+
+      colWidths.forEach((width, i) => {
+        if (i < colWidths.length - 1) {
+          const lineX = xPos + width;
+
+          if (shortLines.includes(i)) {
+            // Draw short line inside sub-header
+            page.drawLine({
+              start: { x: lineX, y: tableTop - 16 },
+              end: { x: lineX, y: tableTop - 32 },
+              thickness: lineSettings.thickness,
+              color: lineSettings.color,
+            });
+          } else {
+            // Draw full boundary line
+            page.drawLine({
+              start: { x: lineX, y: tableTop },
+              end: { x: lineX, y: tableTop - 32 },
+              thickness: lineSettings.thickness,
+              color: lineSettings.color,
+            });
+          }
+        }
+        xPos += width;
+      });
+    }
+
+    // ===========================
+    // ROWS - FIXED CENTERING LIKE COMBINED MARKLIST
+    // ===========================
+    yPosition = tableTop - 32;
+
+    student.marks.subjects.forEach((subject, index) => {
+      xPos = xStart;
+
+      // Prepare row data
+      const rowData = [
+        (index + 1).toString(),
+        subject.subject || "",
+        subject.theoryMax || "",
+        subject.theoryMin || "",
+        subject.theoryObt || "",
+        subject.practicalMax || "",
+        subject.practicalMin || "",
+        subject.practicalObt || "",
+        subject.totalMax || "",
+        subject.totalMin || "",
+        subject.totalObt || "",
+        subject.result || "",
+      ];
+
+      // Wrap subject name
+      const subjectText = rowData[1];
+      const maxSubjectWidth = colWidths[1] - 8;
+      const words = subjectText.split(" ");
+      let lines = [];
+      let line = "";
+
+      words.forEach(word => {
+        const testLine = line ? line + " " + word : word;
+        const testWidth = calibri.widthOfTextAtSize(testLine, 11);
+        if (testWidth > maxSubjectWidth) {
+          lines.push(line);
+          line = word;
+        } else {
+          line = testLine;
+        }
+      });
+      lines.push(line);
+
+      // Adjust rowHeight dynamically
+      const dynamicRowHeight = rowHeight + (lines.length - 1) * 10;
+
+      // Draw row rectangle
+      page.drawRectangle({
+        x: xPos,
+        y: yPosition - dynamicRowHeight,
+        width: colWidths.reduce((a, b) => a + b, 0),
+        height: dynamicRowHeight,
+        borderWidth: lineSettings.thickness,
+        borderColor: lineSettings.color,
+      });
+
+      // Draw each cell - FIXED LIKE COMBINED MARKLIST
+      rowData.forEach((data, i) => {
+        let textX;
+        
+        // EXACT SAME LOGIC AS COMBINED MARKLIST:
+        // Center align for numeric columns (S.No, all marks columns, Result)
+        if (i === 0 || [2,3,4,5,6,7,8,9,10,11].includes(i)) {
+          // Use calibri font for width calculation like combined marklist
+          textX = xPos + (colWidths[i] - calibri.widthOfTextAtSize(String(data), 11)) / 2;
+        } else {
+          textX = xPos + 4; // Left align for subject only
+        }
+
+        if (i === 1) {
+          // Draw wrapped subject text
+          const totalTextHeight = lines.length * 10;
+          const subjectStartY = yPosition - (dynamicRowHeight / 2) + (totalTextHeight / 2) - 9;
+        
+          lines.forEach((lineText, lineIndex) => {
+            page.drawText(lineText, {
+              x: textX,
+              y: subjectStartY - (lineIndex * 10),
+              size: 11,
+              font: calibri,
+              color: rgb(0,0,0),
+            });
+          });
+        } else if (i === 11) {
+          // Result cell - centered like combined marklist
+          const resultColor = data === 'PASSED' ? rgb(0, 0, 0) : rgb(0, 0, 0);
+          const centerY = yPosition - (dynamicRowHeight / 2) - 4;
+          
+          page.drawText(String(data), {
+            x: textX,
+            y: centerY,
+            size: 11,
+            font: calibriBold, // Use bold for result like combined
+            color: resultColor,
+          });
+        } else {
+          // Regular cells (S.No and marks) - centered
+          const centerY = yPosition - (dynamicRowHeight / 2) - 4;
+          page.drawText(String(data), {
+            x: textX,
+            y: centerY,
+            size: 11,
+            font: calibri,
+            color: rgb(0,0,0),
+          });
+        }
+
+        // Draw vertical lines
+        if (SHOW_TABLE_LINES && i < colWidths.length - 1) {
+          page.drawLine({
+            start: { x: xPos + colWidths[i], y: yPosition - dynamicRowHeight },
+            end: { x: xPos + colWidths[i], y: yPosition },
+            color: lineSettings.color,
+            thickness: lineSettings.thickness
+          });
+        }
+
+        xPos += colWidths[i];
+      });
+
+      yPosition -= dynamicRowHeight;
+    });
+
+    // ===========================
+    // TOTAL ROW - FIXED CENTERING
+    // ===========================
+    xPos = xStart;
+
+    page.drawRectangle({
+      x: xPos,
+      y: yPosition - rowHeight,
+      width: colWidths.reduce((a, b) => a + b, 0),
+      height: rowHeight,
+      color: rgb(0.85, 0.92, 0.98),
+      borderWidth: lineSettings.thickness,
+      borderColor: lineSettings.color,
+    });
+    
+    // Draw vertical lines
+    const verticalLineIndexes = [1, 7, 9, 10];
+    let lineXPos = xStart;
+    
+    colWidths.forEach((width, i) => {
+      if (verticalLineIndexes.includes(i)) {
+        page.drawLine({
+          start: { x: lineXPos + width, y: yPosition - rowHeight },
+          end: { x: lineXPos + width, y: yPosition },
+          thickness: lineSettings.thickness,
+          color: lineSettings.color,
+        });
+      }
+      lineXPos += width;
+    });
+    
+    // Total in words - left aligned
+    page.drawText("Total in words", {
+      x: xStart + 5,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: zurichLight,
+      color: rgb(0,0,0)
+    });
+
+    // Total words - centered like combined marklist
+    const totalWordsText = `${student.marks.totalWords || ""}`;
+    const totalWordsWidth = zurichLight.widthOfTextAtSize(totalWordsText, 10.5);
+    const totalWordsX = xStart + 205 + (colWidths[1] - totalWordsWidth) / 2;
+    
+    page.drawText(totalWordsText, {
+      x: totalWordsX,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: zurichLight,
+      color: rgb(0,0,0)
+    });
+
+    // Max Total - centered
+    const maxTotalText = `${student.marks.maxTotal || ""}`;
+    const maxTotalWidth = zurichLight.widthOfTextAtSize(maxTotalText, 10.5);
+    const maxTotalX = xStart + 410 + (colWidths[8] - maxTotalWidth) / 2;
+    
+    page.drawText(maxTotalText, {
+      x: maxTotalX,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: zurichLight,
+      color: rgb(0,0,0)
+    });
+
+    // Obtained Total - centered
+    const obtainedTotalText = `${student.marks.obtainedTotal || ""}`;
+    const obtainedTotalWidth = zurichLight.widthOfTextAtSize(obtainedTotalText, 10.5);
+    const obtainedTotalX = xStart + 450 + (colWidths[10] - obtainedTotalWidth) / 2;
+    
+    page.drawText(obtainedTotalText, {
+      x: obtainedTotalX,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: zurichLight,
+      color: rgb(0,0,0)
+    });
+
+    // Overall Result - centered
+    const overallResultText = student.marks.overallResult || "";
+    const overallResultWidth = zurichLight.widthOfTextAtSize(overallResultText, 10);
+    const overallResultX = xStart + 480 + (colWidths[11] - overallResultWidth) / 2;
+    
+    page.drawText(overallResultText, {
+      x: overallResultX,
+      y: yPosition - rowHeight + 8,
+      size: 10,
+      font: zurichLight,
+      color: student.marks.overallResult === 'PASSED' ? rgb(0, 0, 0) : rgb(0, 0, 0)
+    });
+
+    // ===========================
+    // FOOTER
+    // ===========================
+    yPosition -= 40;
+    page.drawText(`Place of Issue : NETD (HO)`, {
+      x: 45,
+      y: yPosition,
+      size: 10,
+      font: arial,
+      color: rgb(0,0,0)
+    });
+
+    const issueDate = student.marks.createdAt
+      ? new Date(student.marks.createdAt).toLocaleDateString()
+      : new Date().toLocaleDateString();
+
+    page.drawText(`Date of Issue : ${issueDate}`, {
+      x: 45,
+      y: yPosition - 15,
+      size: 10,
+      font: arial,
+      color: rgb(0,0,0)
+    });
+
+    // Grade - centered
+    const gradeText = ` ${student.marks.grade || ""} `;
+    const gradeWidth = arialBold.widthOfTextAtSize(gradeText, 10);
+    const gradeX = pageWidth - 123 + (45 - gradeWidth) / 2;
+    
+    page.drawText(gradeText, {
+      x: gradeX,
+      y: yPosition + 2,
+      size: 10,
+      font: arialBold,
+      color: rgb(0,0,0),
+    });
+
+    
+
+    // ===========================
+    // LOGOS
+    // ===========================
+    const embedLogo = async (logoUrl, x, y, maxWidth, maxHeight, allowWider = false) => {
+      if (!logoUrl) return;
+
+      const logoPath = path.join(__dirname, "../public", logoUrl);
+      if (!fs.existsSync(logoPath)) return;
+
+      const bytes = fs.readFileSync(logoPath);
+      const image = logoPath.endsWith(".png")
+        ? await pdfDoc.embedPng(bytes)
+        : await pdfDoc.embedJpg(bytes);
+
+      const { width, height } = image.scale(1);
+      const aspectRatio = width / height;
+
+      let widthLimit = maxWidth;
+      let heightLimit = maxHeight;
+      if (allowWider && aspectRatio > 1.4) {
+        widthLimit *= 1.3;
+      }
+
+      const widthRatio = widthLimit / width;
+      const heightRatio = heightLimit / height;
+      const scale = Math.min(widthRatio, heightRatio);
+
+      const displayWidth = width * scale;
+      const displayHeight = height * scale;
+
+      const offsetX = x + (maxWidth - displayWidth) / 2;
+      const offsetY = y + (maxHeight - displayHeight) / 2;
+
+      page.drawImage(image, {
+        x: offsetX,
+        y: offsetY,
+        width: displayWidth,
+        height: displayHeight,
+      });
+    };
+
+    await embedLogo(institutionLogo, 239, 125, 80, 80, true);
+    await embedLogo(departmentLogo, 140, 125, 85.7, 86.7);
+
+    // ===========================
+    // OUTPUT HTML
+    // ===========================
+    const pdfBytes = await pdfDoc.save();
+    const base64 = Buffer.from(pdfBytes).toString("base64");
+
+    res.send(`
+      <html>
+        <head>
+          <title>Marklist Preview</title>
+          <style>
+            body { 
+              margin: 0;
+              padding: 0;
+              font-family: Arial, sans-serif;
+              background: #f5f5f5;
+              overflow: hidden;
+            }
+
+            .header {
+              width: 100%;
+              background: #2a3d66;
+              color: white;
+              padding: 12px;
+              text-align: center;
+              font-size: 20px;
+              font-weight: bold;
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              z-index: 1000;
+              box-shadow: 0px 2px 6px rgba(0,0,0,0.3);
+            }
+
+            iframe {
+              position: fixed;
+              top: 60px;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              width: 100%;
+              height: calc(100vh - 60px);
+              border: none;
+            }
+
+            .download-btn {
+              position: fixed;
+              top: 70px;
+              right: 20px;
+              background: #2a3d66;
+              color: white;
+              padding: 12px 24px;
+              border-radius: 6px;
+              text-decoration: none;
+              font-weight: bold;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+              transition: 0.3s;
+              z-index: 1001;
+            }
+
+            .download-btn:hover {
+              background: #1d2a47;
+              transform: translateY(-2px);
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">Marklist Preview - ${student.marks.candidateName || "Student"}</div>
+          <iframe src="data:application/pdf;base64,${base64}"></iframe>
+          <a href="/user/download-marklist/${studentId}" class="download-btn">
+            📥 Download Marklist
+          </a>
+        </body>
+      </html>
+    `);
 
   } catch (err) {
-    console.error("❌ Error loading mark list:", err);
-    res.status(500).send("Error loading mark list");
+    console.error("❌ Error generating marklist preview:", err);
+    res.status(500).send("Error generating marklist preview");
+  }
+});
+// ===========================
+// DOWNLOAD MARKLIST (FIXED USING CERTIFICATE PATTERN)
+// ===========================
+router.get("/download-marklist/:id", verifyUserLogin, async (req, res) => {
+  try {
+    console.log("📥 Download marklist for student:", req.params.id);
+    
+    const studentId = req.params.id;
+
+    // 1️⃣ Fetch student data
+    const student = await db.get()
+      .collection(collection.STUDENT_COLLECTION)
+      .findOne({ _id: new ObjectId(studentId) });
+
+    if (!student || !student.marks) {
+      return res.status(404).send("Student or marks not found");
+    }
+    
+    // ✅ Fetch center and logo data
+    const centreId = student.centreId;
+    const centerData = await centerHelpers.getCenterById(centreId);
+    const institutionLogo = centerData?.institutionLogo || null;
+    
+    // ✅ Fetch and match Department Logo
+    let departmentLogo = null;
+    const departmentName = student.department || student.courseDepartmentName;
+
+    if (centerData?.departmentLogos && departmentName) {
+      const deptKeys = Object.keys(centerData.departmentLogos);
+      const matchedKey = deptKeys.find(
+        key => key.toLowerCase().trim() === departmentName.toLowerCase().trim()
+      );
+
+      if (matchedKey) {
+        departmentLogo = centerData.departmentLogos[matchedKey];
+      }
+    }
+
+    // 2️⃣ Load background image
+    const bgPath = path.join(__dirname, "../public/images/Marklist-bg.jpg");
+    const bgBytes = fs.readFileSync(bgPath);
+
+    // 3️⃣ Create PDF document
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.registerFontkit(fontkit);
+
+    // 4️⃣ Load fonts
+    const arialPath = path.join(__dirname, "../public/fonts/arial.ttf");
+    const arialBytes = fs.readFileSync(arialPath);
+    const arial = await pdfDoc.embedFont(arialBytes);
+
+    const arialBoldPath = path.join(__dirname, "../public/fonts/arialbd.ttf");
+    let arialBold = arial;
+    if (fs.existsSync(arialBoldPath)) {
+      const arialBoldBytes = fs.readFileSync(arialBoldPath);
+      arialBold = await pdfDoc.embedFont(arialBoldBytes);
+    }
+    
+    const squareFontPath = path.join(__dirname, "../public/fonts/SQR721N.TTF");
+    let squareFont = arial;
+    if (fs.existsSync(squareFontPath)) {
+      const squareBytes = fs.readFileSync(squareFontPath);
+      squareFont = await pdfDoc.embedFont(squareBytes);
+    }
+    
+    const calibriPath = path.join(__dirname, "../public/fonts/CALIBRI.TTF");
+    let calibri = arial;
+    if (fs.existsSync(calibriPath)) {
+      const calibriBytes = fs.readFileSync(calibriPath);
+      calibri = await pdfDoc.embedFont(calibriBytes);
+    }
+
+    const calibriBoldPath = path.join(__dirname, "../public/fonts/CALIBRIB.TTF");
+    let calibriBold = calibri;
+    if (fs.existsSync(calibriBoldPath)) {
+      const calibriBoldBytes = fs.readFileSync(calibriBoldPath);
+      calibriBold = await pdfDoc.embedFont(calibriBoldBytes);
+    }
+    
+    const zurichLightPath = path.join(__dirname, "../public/fonts/ZurichLightBT.ttf");
+    let zurichLight = arial;
+    if (fs.existsSync(zurichLightPath)) {
+      try {
+        const zurichLightBytes = fs.readFileSync(zurichLightPath);
+        zurichLight = await pdfDoc.embedFont(zurichLightBytes);
+      } catch (err) {
+        console.error("❌ Failed to load Zurich Light BT font:", err);
+      }
+    }
+
+    // 5️⃣ Page size
+    const pageWidth = 8.543 * 72;
+    const pageHeight = 11.367 * 72;
+    const page = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    // 6️⃣ Background
+    const bgImage = await pdfDoc.embedJpg(bgBytes);
+    page.drawImage(bgImage, { x: 0, y: 0, width: pageWidth, height: pageHeight });
+
+    const { rgb } = require("pdf-lib");
+
+    // ===========================
+    // LINE CONTROL CONFIG
+    // ===========================
+    const SHOW_TABLE_LINES = true;
+    const lineSettings = {
+      thickness: SHOW_TABLE_LINES ? 0.3 : 0,
+      color: SHOW_TABLE_LINES ? rgb(0, 0, 0) : rgb(1, 1, 1),
+    };
+
+    // ===========================
+    // DETAILS
+    // ===========================
+    let yPosition = pageHeight - 240;
+
+    const details = [
+      `Registration Number                            : ${student.marks.registrationNo || ""}`,
+      `This mark sheet is Award to                  : ${student.marks.candidateName || ""}`,
+      `On successful Completion of the Course : ${student.marks.course || ""}`,
+      `Of Duration                                          : ${student.marks.courseDuration || ""}`,
+      `From our Authorized Training centre      : ${student.marks.institute || ""}`
+    ];
+
+    details.forEach((text) => {
+      page.drawText(text, { x: 45, y: yPosition, size: 12, font: squareFont, color: rgb(0,0,0) });
+      yPosition -= 22;
+    });
+
+    yPosition -= 5;
+
+    // ===========================
+    // TABLE HEADER
+    // ===========================
+    const xStart = 45;
+    const colWidths = [28, 180, 30, 30, 30, 30, 30, 30, 30, 30, 30, 48];
+    const rowHeight = 24;
+    const headerBg = rgb(0.83, 0.90, 0.98);
+    const tableTop = yPosition;
+
+    let xPos = xStart;
+
+    page.drawRectangle({
+      x: xPos,
+      y: tableTop - 32,
+      width: colWidths.reduce((a, b) => a + b, 0),
+      height: 32,
+      color: headerBg,
+      borderColor: lineSettings.color,
+      borderWidth: lineSettings.thickness,
+    });
+
+    const mainHeaders = [
+      "S.No", "Name of Subject",
+      "Theory Marks", "", "",
+      "Practical Marks", "", "",
+      "Total Marks", "", "",
+      "Result"
+    ];
+
+    const subHeaders = [
+      "", "", "Max", "Min", "Obt",
+      "Max", "Min", "Obt",
+      "Max", "Min", "Obt", ""
+    ];
+
+    // Draw main headers
+    xPos = xStart;
+    for (let i = 0; i < mainHeaders.length; i++) {
+      if (!mainHeaders[i]) {
+        xPos += colWidths[i];
+        continue;
+      }
+
+      let groupWidth = colWidths[i];
+      let columnsToSkip = 0;
+
+      if (mainHeaders[i] === "Theory Marks" || 
+          mainHeaders[i] === "Practical Marks" || 
+          mainHeaders[i] === "Total Marks") {
+        
+        groupWidth = colWidths[i] + colWidths[i+1] + colWidths[i+2];
+        columnsToSkip = 2;
+        
+        const textWidth = zurichLight.widthOfTextAtSize(mainHeaders[i], 11);
+        page.drawText(mainHeaders[i], {
+          x: xPos + (groupWidth - textWidth) / 2,
+          y: tableTop - 13,
+          size: 11,
+          font: zurichLight,
+          color: rgb(0,0,0)
+        });
+
+        xPos += groupWidth;
+        i += columnsToSkip;
+      } else {
+        const textWidth = zurichLight.widthOfTextAtSize(mainHeaders[i], 11);
+        
+        page.drawText(mainHeaders[i], {
+          x: xPos + (colWidths[i] - textWidth) / 2,
+          y: tableTop - 18,
+          size: 11,
+          font: zurichLight,
+          color: rgb(0,0,0)
+        });
+
+        xPos += colWidths[i];
+      }
+    }
+
+    // Draw sub headers
+    xPos = xStart;
+    subHeaders.forEach((header, i) => {
+      if (header) {
+        const textWidth = calibriBold.widthOfTextAtSize(header, 10);
+        page.drawText(header, {
+          x: xPos + (colWidths[i] - textWidth) / 2,
+          y: tableTop - 28,
+          size: 10,
+          font: calibriBold,
+          color: rgb(0,0,0)
+        });
+      }
+      xPos += colWidths[i];
+    });
+
+    // Draw horizontal separator lines
+    if (SHOW_TABLE_LINES) {
+      const headerMid = tableTop - 16;
+
+      page.drawLine({
+        start: { x: xStart + colWidths[0] + colWidths[1], y: headerMid },
+        end: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4], y: headerMid },
+        thickness: lineSettings.thickness,
+        color: lineSettings.color
+      });
+
+      page.drawLine({
+        start: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4], y: headerMid },
+        end: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + colWidths[6] + colWidths[7], y: headerMid },
+        thickness: lineSettings.thickness,
+        color: lineSettings.color
+      });
+
+      page.drawLine({
+        start: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + colWidths[6] + colWidths[7], y: headerMid },
+        end: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + colWidths[6] + colWidths[7] + colWidths[8] + colWidths[9] + colWidths[10], y: headerMid },
+        thickness: lineSettings.thickness,
+        color: lineSettings.color
+      });
+    }
+
+    // Draw vertical lines
+    if (SHOW_TABLE_LINES) {
+      xPos = xStart;
+      const shortLines = [2, 3, 5, 6, 8, 9];
+
+      colWidths.forEach((width, i) => {
+        if (i < colWidths.length - 1) {
+          const lineX = xPos + width;
+
+          if (shortLines.includes(i)) {
+            page.drawLine({
+              start: { x: lineX, y: tableTop - 16 },
+              end: { x: lineX, y: tableTop - 32 },
+              thickness: lineSettings.thickness,
+              color: lineSettings.color,
+            });
+          } else {
+            page.drawLine({
+              start: { x: lineX, y: tableTop },
+              end: { x: lineX, y: tableTop - 32 },
+              thickness: lineSettings.thickness,
+              color: lineSettings.color,
+            });
+          }
+        }
+        xPos += width;
+      });
+    }
+
+    // ===========================
+    // ROWS
+    // ===========================
+    yPosition = tableTop - 32;
+
+    student.marks.subjects.forEach((subject, index) => {
+      xPos = xStart;
+
+      const rowData = [
+        (index + 1).toString(),
+        subject.subject || "",
+        subject.theoryMax || "",
+        subject.theoryMin || "",
+        subject.theoryObt || "",
+        subject.practicalMax || "",
+        subject.practicalMin || "",
+        subject.practicalObt || "",
+        subject.totalMax || "",
+        subject.totalMin || "",
+        subject.totalObt || "",
+        subject.result || "",
+      ];
+
+      // Wrap subject name
+      const subjectText = rowData[1];
+      const maxSubjectWidth = colWidths[1] - 8;
+      const words = subjectText.split(" ");
+      let lines = [];
+      let line = "";
+
+      words.forEach(word => {
+        const testLine = line ? line + " " + word : word;
+        const testWidth = calibri.widthOfTextAtSize(testLine, 11);
+        if (testWidth > maxSubjectWidth) {
+          lines.push(line);
+          line = word;
+        } else {
+          line = testLine;
+        }
+      });
+      lines.push(line);
+
+      const dynamicRowHeight = rowHeight + (lines.length - 1) * 10;
+
+      // Draw row rectangle
+      page.drawRectangle({
+        x: xPos,
+        y: yPosition - dynamicRowHeight,
+        width: colWidths.reduce((a, b) => a + b, 0),
+        height: dynamicRowHeight,
+        borderWidth: lineSettings.thickness,
+        borderColor: lineSettings.color,
+      });
+
+      // Draw each cell
+      rowData.forEach((data, i) => {
+        let textX;
+        
+        if (i === 0 || [2,3,4,5,6,7,8,9,10,11].includes(i)) {
+          textX = xPos + (colWidths[i] - calibri.widthOfTextAtSize(String(data), 11)) / 2;
+        } else {
+          textX = xPos + 4;
+        }
+
+        if (i === 1) {
+          const totalTextHeight = lines.length * 10;
+          const subjectStartY = yPosition - (dynamicRowHeight / 2) + (totalTextHeight / 2) - 9;
+        
+          lines.forEach((lineText, lineIndex) => {
+            page.drawText(lineText, {
+              x: textX,
+              y: subjectStartY - (lineIndex * 10),
+              size: 11,
+              font: calibri,
+              color: rgb(0,0,0),
+            });
+          });
+        } else if (i === 11) {
+          const resultColor = data === 'PASSED' ? rgb(0, 0, 0) : rgb(0, 0, 0);
+          const centerY = yPosition - (dynamicRowHeight / 2) - 4;
+          
+          page.drawText(String(data), {
+            x: textX,
+            y: centerY,
+            size: 11,
+            font: calibriBold,
+            color: resultColor,
+          });
+        } else {
+          const centerY = yPosition - (dynamicRowHeight / 2) - 4;
+          page.drawText(String(data), {
+            x: textX,
+            y: centerY,
+            size: 11,
+            font: calibri,
+            color: rgb(0,0,0),
+          });
+        }
+
+        if (SHOW_TABLE_LINES && i < colWidths.length - 1) {
+          page.drawLine({
+            start: { x: xPos + colWidths[i], y: yPosition - dynamicRowHeight },
+            end: { x: xPos + colWidths[i], y: yPosition },
+            color: lineSettings.color,
+            thickness: lineSettings.thickness
+          });
+        }
+
+        xPos += colWidths[i];
+      });
+
+      yPosition -= dynamicRowHeight;
+    });
+
+    // ===========================
+    // TOTAL ROW
+    // ===========================
+    xPos = xStart;
+
+    page.drawRectangle({
+      x: xPos,
+      y: yPosition - rowHeight,
+      width: colWidths.reduce((a, b) => a + b, 0),
+      height: rowHeight,
+      color: rgb(0.85, 0.92, 0.98),
+      borderWidth: lineSettings.thickness,
+      borderColor: lineSettings.color,
+    });
+    
+    // Draw vertical lines
+    const verticalLineIndexes = [1, 7, 9, 10];
+    let lineXPos = xStart;
+    
+    colWidths.forEach((width, i) => {
+      if (verticalLineIndexes.includes(i)) {
+        page.drawLine({
+          start: { x: lineXPos + width, y: yPosition - rowHeight },
+          end: { x: lineXPos + width, y: yPosition },
+          thickness: lineSettings.thickness,
+          color: lineSettings.color,
+        });
+      }
+      lineXPos += width;
+    });
+    
+    // Total in words
+    page.drawText("Total in words", {
+      x: xStart + 5,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: zurichLight,
+      color: rgb(0,0,0)
+    });
+
+    // Total words
+    const totalWordsText = `${student.marks.totalWords || ""}`;
+    const totalWordsWidth = zurichLight.widthOfTextAtSize(totalWordsText, 10.5);
+    const totalWordsX = xStart + 205 + (colWidths[1] - totalWordsWidth) / 2;
+    
+    page.drawText(totalWordsText, {
+      x: totalWordsX,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: zurichLight,
+      color: rgb(0,0,0)
+    });
+
+    // Max Total
+    const maxTotalText = `${student.marks.maxTotal || ""}`;
+    const maxTotalWidth = zurichLight.widthOfTextAtSize(maxTotalText, 10.5);
+    const maxTotalX = xStart + 410 + (colWidths[8] - maxTotalWidth) / 2;
+    
+    page.drawText(maxTotalText, {
+      x: maxTotalX,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: zurichLight,
+      color: rgb(0,0,0)
+    });
+
+    // Obtained Total
+    const obtainedTotalText = `${student.marks.obtainedTotal || ""}`;
+    const obtainedTotalWidth = zurichLight.widthOfTextAtSize(obtainedTotalText, 10.5);
+    const obtainedTotalX = xStart + 450 + (colWidths[10] - obtainedTotalWidth) / 2;
+    
+    page.drawText(obtainedTotalText, {
+      x: obtainedTotalX,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: zurichLight,
+      color: rgb(0,0,0)
+    });
+
+    // Overall Result
+    const overallResultText = student.marks.overallResult || "";
+    const overallResultWidth = zurichLight.widthOfTextAtSize(overallResultText, 10);
+    const overallResultX = xStart + 480 + (colWidths[11] - overallResultWidth) / 2;
+    
+    page.drawText(overallResultText, {
+      x: overallResultX,
+      y: yPosition - rowHeight + 8,
+      size: 10,
+      font: zurichLight,
+      color: student.marks.overallResult === 'PASSED' ? rgb(0, 0, 0) : rgb(0, 0, 0)
+    });
+
+    // ===========================
+    // FOOTER
+    // ===========================
+    yPosition -= 40;
+    page.drawText(`Place of Issue : NETD (HO)`, {
+      x: 45,
+      y: yPosition,
+      size: 10,
+      font: arial,
+      color: rgb(0,0,0)
+    });
+
+    const issueDate = student.marks.createdAt
+      ? new Date(student.marks.createdAt).toLocaleDateString()
+      : new Date().toLocaleDateString();
+
+    page.drawText(`Date of Issue : ${issueDate}`, {
+      x: 45,
+      y: yPosition - 15,
+      size: 10,
+      font: arial,
+      color: rgb(0,0,0)
+    });
+
+    // Grade
+    const gradeText = ` ${student.marks.grade || ""} `;
+    const gradeWidth = arialBold.widthOfTextAtSize(gradeText, 10);
+    const gradeX = pageWidth - 123 + (45 - gradeWidth) / 2;
+    
+    page.drawText(gradeText, {
+      x: gradeX,
+      y: yPosition + 2,
+      size: 10,
+      font: arialBold,
+      color: rgb(0,0,0),
+    });
+
+  
+
+    // ===========================
+    // LOGOS
+    // ===========================
+    const embedLogo = async (logoUrl, x, y, maxWidth, maxHeight, allowWider = false) => {
+      if (!logoUrl) return;
+
+      const logoPath = path.join(__dirname, "../public", logoUrl);
+      if (!fs.existsSync(logoPath)) return;
+
+      const bytes = fs.readFileSync(logoPath);
+      let image;
+      
+      try {
+        if (logoPath.endsWith(".png")) {
+          image = await pdfDoc.embedPng(bytes);
+        } else {
+          image = await pdfDoc.embedJpg(bytes);
+        }
+      } catch (err) {
+        console.error("❌ Error embedding logo:", logoUrl, err);
+        return;
+      }
+
+      const { width, height } = image.scale(1);
+      const aspectRatio = width / height;
+
+      let widthLimit = maxWidth;
+      let heightLimit = maxHeight;
+      if (allowWider && aspectRatio > 1.4) {
+        widthLimit *= 1.3;
+      }
+
+      const widthRatio = widthLimit / width;
+      const heightRatio = heightLimit / height;
+      const scale = Math.min(widthRatio, heightRatio);
+
+      const displayWidth = width * scale;
+      const displayHeight = height * scale;
+
+      const offsetX = x + (maxWidth - displayWidth) / 2;
+      const offsetY = y + (maxHeight - displayHeight) / 2;
+
+      page.drawImage(image, {
+        x: offsetX,
+        y: offsetY,
+        width: displayWidth,
+        height: displayHeight,
+      });
+    };
+
+    await embedLogo(institutionLogo, 239, 125, 80, 80, true);
+    await embedLogo(departmentLogo, 140, 125, 85.7, 86.7);
+
+    // ===========================
+    // ✅ FIXED: USE CERTIFICATE PATTERN FOR DOWNLOAD
+    // ===========================
+    const pdfBytes = await pdfDoc.save();
+    
+    console.log("✅ PDF generated successfully, size:", pdfBytes.length, "bytes");
+
+    // ✅ EXACT SAME PATTERN AS WORKING CERTIFICATE ROUTE
+    const fileName = `marklist_${student.marks.registrationNo || studentId}.pdf`;
+    
+    // ✅ Set headers exactly like certificate route
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Length', pdfBytes.length);
+    
+    // ✅ Send exactly like certificate route
+    res.send(Buffer.from(pdfBytes));
+
+  } catch (err) {
+    console.error("❌ Error downloading marklist:", err);
+    console.error("🔍 Stack trace:", err.stack);
+    
+    // Send error response
+    res.status(500).json({
+      error: "Error generating PDF",
+      message: err.message,
+      stack: err.stack
+    });
   }
 });
 
+// GET - Add Supply Mark Page// GET - Add Supply Mark Page
+router.get('/add-supply-mark/:id', verifyUserLogin, async (req, res) => {
+  try {
+    const studentId = new ObjectId(req.params.id);
+    const student = await db.get().collection(collection.STUDENT_COLLECTION).findOne({ _id: studentId });
+
+    if (!student) {
+      return res.status(404).send("Student not found");
+    }
+
+    if (!student.marks) {
+      return res.status(400).send("No regular marks found for this student");
+    }
+
+    // Identify failed subjects
+    const failedSubjects = student.marks.subjects.filter(subject => 
+      subject.result === 'FAILED'
+    );
+
+    if (failedSubjects.length === 0) {
+      return res.status(400).send("Student has no failed subjects");
+    }
+
+    res.render('user/add-supply-mark', {
+      hideNavbar: true,
+      studentId: req.params.id,
+      student,
+      failedSubjects,
+      regularMarks: student.marks
+    });
+  } catch (err) {
+    console.error("❌ Error loading supply mark page:", err);
+    res.status(500).send("Error loading supply mark page");
+  }
+});
+
+// POST - Save Supply Marks - FIXED PATH
+router.post('/add-supply-mark', verifyUserLogin, async (req, res) => {
+  try {
+    const studentId = req.body.studentId;
+    console.log("📝 Received supply marks for student:", studentId);
+
+    if (!ObjectId.isValid(studentId)) {
+      return res.status(400).send("Invalid Student ID");
+    }
+
+    // Get student data
+    const student = await db.get().collection(collection.STUDENT_COLLECTION).findOne({ 
+      _id: new ObjectId(studentId) 
+    });
+
+    if (!student || !student.marks) {
+      return res.status(400).send("Student or regular marks not found");
+    }
+
+    // Prepare supply marks data
+    const supplyMarksData = {
+      candidateName: student.marks.candidateName,
+      address: student.marks.address,
+      institute: student.marks.institute,
+      examination: "SUPPLY EXAMINATION",
+      course: student.marks.course,
+      courseDuration: student.marks.courseDuration,
+      registrationNo: student.marks.registrationNo,
+      department: student.marks.department,
+      examTitle: `SUPPLY - ${student.marks.examTitle}`,
+      
+      subjects: [],
+      isSupply: true,
+      originalMarksId: student.marks._id || studentId,
+      
+      totalWords: req.body.totalWords,
+      maxTotal: parseInt(req.body.maxTotal) || 0,
+      obtainedTotal: parseInt(req.body.obtainedTotal) || 0,
+      overallResult: req.body.overallResult,
+      grade: req.body.grade,
+      
+      createdAt: new Date()
+    };
+
+    // Process supply subjects
+    if (req.body.subjectName && Array.isArray(req.body.subjectName)) {
+      for (let i = 0; i < req.body.subjectName.length; i++) {
+        if (req.body.subjectName[i].trim() !== '') {
+          const subjectData = {
+            subject: req.body.subjectName[i],
+            theoryMax: parseInt(req.body.theoryMax[i]) || 0,
+            theoryMin: parseInt(req.body.theoryMin[i]) || 0,
+            theoryObt: parseInt(req.body.theoryObt[i]) || 0,
+            practicalMax: parseInt(req.body.practicalMax[i]) || 0,
+            practicalMin: parseInt(req.body.practicalMin[i]) || 0,
+            practicalObt: parseInt(req.body.practicalObt[i]) || 0,
+            totalMax: (parseInt(req.body.theoryMax[i]) || 0) + (parseInt(req.body.practicalMax[i]) || 0),
+            totalMin: (parseInt(req.body.theoryMin[i]) || 0) + (parseInt(req.body.practicalMin[i]) || 0),
+            totalObt: (parseInt(req.body.theoryObt[i]) || 0) + (parseInt(req.body.practicalObt[i]) || 0),
+            result: (parseInt(req.body.theoryObt[i]) >= parseInt(req.body.theoryMin[i]) && 
+                    parseInt(req.body.practicalObt[i]) >= parseInt(req.body.practicalMin[i])) ? 'PASSED' : 'FAILED',
+            isSupply: true,
+            originalResult: student.marks.subjects.find(s => s.subject === req.body.subjectName[i])?.result || 'FAILED'
+          };
+          
+          supplyMarksData.subjects.push(subjectData);
+        }
+      }
+    }
+
+    console.log("📊 Supply marks data to save:", JSON.stringify(supplyMarksData, null, 2));
+
+    // Update student with supply marks
+    const result = await db.get().collection(collection.STUDENT_COLLECTION).updateOne(
+      { _id: new ObjectId(studentId) },
+      { 
+        $set: { 
+          supplyMarks: supplyMarksData,
+          hasSupply: true,
+          updatedAt: new Date()
+        } 
+      }
+    );
+
+    console.log("💾 Supply marks saved successfully");
+    
+    // FIXED: Redirect to admin combined marklist
+    res.redirect('/user/preview-combined-marklist/' + studentId);
+    
+  } catch (err) {
+    console.error("❌ Error saving supply marks:", err);
+    res.status(500).send("Error submitting supply marks");
+  }
+});
+// ===========================
+// COMBINED MARKLIST PREVIEW (PDF-Lib Version)
+// ===========================
+router.get("/preview-combined-marklist/:id", verifyUserLogin, async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    console.log("🔄 Combined marklist PDF generation for:", studentId);
+
+    // 1️⃣ Fetch student data
+    const student = await db.get()
+      .collection(collection.STUDENT_COLLECTION)
+      .findOne({ _id: new ObjectId(studentId) });
+
+    if (!student) {
+      return res.status(404).send("Student not found");
+    }
+
+    if (!student.marks) {
+      return res.status(400).send("No regular marks found");
+    }
+
+    if (!student.supplyMarks) {
+      return res.status(400).send("No supply marks found");
+    }
+
+    // 2️⃣ Combine regular and supply marks
+    const combinedSubjects = [];
+    let maxTotal = 0;
+    let obtainedTotal = 0;
+    let allPassed = true;
+
+    // Regular subjects (only PASSED)
+    if (Array.isArray(student.marks.subjects)) {
+      student.marks.subjects.forEach(subject => {
+        if (subject.result === 'PASSED') {
+          combinedSubjects.push({ ...subject, source: 'regular' });
+          maxTotal += parseInt(subject.totalMax) || 0;
+          obtainedTotal += parseInt(subject.totalObt) || 0;
+        }
+      });
+    }
+
+    // Supply subjects (PASSED + FAILED)
+    if (Array.isArray(student.supplyMarks.subjects)) {
+      student.supplyMarks.subjects.forEach(supplySubject => {
+        combinedSubjects.push({ ...supplySubject, source: 'supply' });
+        maxTotal += parseInt(supplySubject.totalMax) || 0;
+        obtainedTotal += parseInt(supplySubject.totalObt) || 0;
+        if (supplySubject.result === 'FAILED') allPassed = false;
+      });
+    }
+
+    // Calculate percentage & grade
+    const percentage = maxTotal > 0 ? (obtainedTotal / maxTotal) * 100 : 0;
+    let grade = 'FAILED';
+
+    if (allPassed) {
+      if (percentage >= 80) grade = 'PASSED WITH A+ GRADE';
+      else if (percentage >= 70) grade = 'PASSED WITH A GRADE ';
+      else if (percentage >= 60) grade = 'PASSED WITH B+ GRADE ';
+      else if (percentage >= 50) grade = 'PASSED WITH B GRADE ';
+      else if (percentage >= 40) grade = 'PASSED WITH C GRADE';
+      else allPassed = false;
+    }
+
+    // Prepare combined marks object
+    const combinedMarks = {
+      ...student.marks,
+      subjects: combinedSubjects,
+      maxTotal: maxTotal.toString(),
+      obtainedTotal: obtainedTotal.toString(),
+      overallResult: allPassed ? 'PASSED' : 'FAILED',
+      grade,
+      totalWords: numberToWords(obtainedTotal),
+      isCombined: true,
+      combinedDate: new Date()
+    };
+
+    // ✅ Fetch center and logo data
+    const centreId = student.centreId;
+    const centerData = await centerHelpers.getCenterById(centreId);
+    const institutionLogo = centerData?.institutionLogo || null;
+
+    // ✅ Fetch department logo
+    let departmentLogo = null;
+    const departmentName = student.department || student.courseDepartmentName;
+
+    if (centerData?.departmentLogos && departmentName) {
+      const deptKeys = Object.keys(centerData.departmentLogos);
+      const matchedKey = deptKeys.find(
+        key => key.toLowerCase().trim() === departmentName.toLowerCase().trim()
+      );
+
+      if (matchedKey) {
+        departmentLogo = centerData.departmentLogos[matchedKey];
+        console.log("✅ Found department logo path:", departmentLogo);
+      }
+    }
+
+    // 3️⃣ Load background image
+    const bgPath = path.join(__dirname, "../public/images/Marklist-bg.jpg");
+    const bgBytes = fs.readFileSync(bgPath);
+
+    // 4️⃣ Create PDF document
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.registerFontkit(fontkit);
+
+    // 5️⃣ Load fonts
+    const arialPath = path.join(__dirname, "../public/fonts/arial.ttf");
+    const arialBytes = fs.readFileSync(arialPath);
+    const arial = await pdfDoc.embedFont(arialBytes);
+
+    const arialBoldPath = path.join(__dirname, "../public/fonts/arialbd.ttf");
+    let arialBold = arial;
+    if (fs.existsSync(arialBoldPath)) {
+      const arialBoldBytes = fs.readFileSync(arialBoldPath);
+      arialBold = await pdfDoc.embedFont(arialBoldBytes);
+    }
+
+    const squareFontPath = path.join(__dirname, "../public/fonts/SQR721N.TTF");
+    let squareFont = arial;
+    if (fs.existsSync(squareFontPath)) {
+      const squareBytes = fs.readFileSync(squareFontPath);
+      squareFont = await pdfDoc.embedFont(squareBytes);
+    }
+
+    const calibriPath = path.join(__dirname, "../public/fonts/CALIBRI.TTF");
+    let calibri = arial;
+    if (fs.existsSync(calibriPath)) {
+      const calibriBytes = fs.readFileSync(calibriPath);
+      calibri = await pdfDoc.embedFont(calibriBytes);
+    }
+
+    const calibriBoldPath = path.join(__dirname, "../public/fonts/CALIBRIB.TTF");
+    let calibriBold = calibri;
+    if (fs.existsSync(calibriBoldPath)) {
+      const calibriBoldBytes = fs.readFileSync(calibriBoldPath);
+      calibriBold = await pdfDoc.embedFont(calibriBoldBytes);
+    }
+    const zurichLightPath = path.join(__dirname, "../public/fonts/ZurichLightBT.ttf"); // or .otf depending on your file
+let zurichLight = arial; // fallback to Arial if not found
+if (fs.existsSync(zurichLightPath)) {
+  try {
+    const zurichLightBytes = fs.readFileSync(zurichLightPath);
+    zurichLight = await pdfDoc.embedFont(zurichLightBytes);
+    console.log("✅ Zurich Light BT font loaded successfully");
+  } catch (err) {
+    console.error("❌ Failed to load Zurich Light BT font:", err);
+  }
+} else {
+  console.log("⚠️ Zurich Light BT font file not found at:", zurichLightPath);
+}
+
+    // 6️⃣ Page size
+    const pageWidth = 8.543 * 72;
+    const pageHeight = 11.367 * 72;
+    const page = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    // 7️⃣ Background
+    const bgImage = await pdfDoc.embedJpg(bgBytes);
+    page.drawImage(bgImage, { 
+      x: 0, 
+      y: 0, 
+      width: pageWidth, 
+      height: pageHeight 
+    });
+
+    const { rgb } = require("pdf-lib");
+
+    // ===========================
+    // LINE CONTROL CONFIG
+    // ===========================
+    const SHOW_TABLE_LINES = true;
+    const lineSettings = {
+      thickness: SHOW_TABLE_LINES ? 0.3 : 0,
+      color: SHOW_TABLE_LINES ? rgb(0, 0, 0) : rgb(1, 1, 1),
+    };
+
+    // ===========================
+    // HEADER NOTICE
+    // ===========================
+    let yPosition = pageHeight - 180;
+    
+   
+
+    yPosition -= 25;
+    
+   
+
+    yPosition -= 13;
+
+    // ===========================
+    // STUDENT DETAILS
+    // ===========================
+    const details = [
+      `Registration Number                            : ${combinedMarks.registrationNo || ""}`,
+      `This combined mark sheet is Awarded to: ${combinedMarks.candidateName || ""}`,
+      `On successful Completion of the Course : ${combinedMarks.course || ""}`,
+      `Of Duration                                          : ${combinedMarks.courseDuration || ""}`,
+      `From our Authorized Training centre      : ${combinedMarks.institute || ""}`,
+      `Examination Type                                  : Regular + Supply Combined`
+    ];
+
+    details.forEach((text) => {
+      page.drawText(text, { 
+        x: 45, 
+        y: yPosition, 
+        size: 12, 
+        font: squareFont, 
+        color: rgb(0,0,0) 
+      });
+      yPosition -= 22;
+    });
+
+    yPosition -= 3;
+
+    // ===========================
+    // TABLE HEADER
+    // ===========================
+    const xStart = 45;
+    const colWidths = [28, 145, 30, 30, 30, 30, 30, 30, 30, 30, 30, 45, 40]; // Added source column
+    const rowHeight = 24;
+    const headerBg = rgb(0.83, 0.90, 0.98);
+    const tableTop = yPosition;
+
+    let xPos = xStart;
+
+    // Draw header background
+    page.drawRectangle({
+      x: xPos,
+      y: tableTop - 32,
+      width: colWidths.reduce((a, b) => a + b, 0),
+      height: 32,
+      color: headerBg,
+      borderColor: lineSettings.color,
+      borderWidth: lineSettings.thickness,
+    });
+
+    const mainHeaders = [
+      "S.No", "Name of Subject",
+      "Theory Marks", "", "",
+      "Practical Marks", "", "",
+      "Total Marks", "", "",
+      "Result", "Source"
+    ];
+
+    const subHeaders = [
+      "", "", "Max", "Min", "Obt",
+      "Max", "Min", "Obt",
+      "Max", "Min", "Obt", "", ""
+    ];
+
+    // FIXED: Draw main headers - Fixed version
+    xPos = xStart;
+    for (let i = 0; i < mainHeaders.length; i++) {
+      if (!mainHeaders[i]) {
+        // Skip empty header positions but still advance column width
+        xPos += colWidths[i];
+        continue;
+      }
+
+      let groupWidth = colWidths[i];
+      let columnsToSkip = 0;
+
+      // Check if this is a grouped header
+      if (mainHeaders[i] === "Theory Marks" || 
+          mainHeaders[i] === "Practical Marks" || 
+          mainHeaders[i] === "Total Marks") {
+        
+        // Span 3 columns
+        groupWidth = colWidths[i] + colWidths[i+1] + colWidths[i+2];
+        columnsToSkip = 2; // Skip the next 2 empty slots
+        
+        // Draw the header centered over the 3 columns
+        const textWidth = zurichLight.widthOfTextAtSize(mainHeaders[i], 11);
+        page.drawText(mainHeaders[i], {
+          x: xPos + (groupWidth - textWidth) / 2,
+          y: tableTop - 13,
+          size: 11,
+          font: zurichLight,
+          color: rgb(0,0,0)
+        });
+
+        xPos += groupWidth;
+        
+        // Skip the columns we've already accounted for
+        i += columnsToSkip;
+      } else {
+        // Regular single column header
+        const textWidth = zurichLight.widthOfTextAtSize(mainHeaders[i], 11);
+        page.drawText(mainHeaders[i], {
+          x: xPos + (colWidths[i] - textWidth) / 2,
+          y: tableTop - 18,
+          size: 11,
+          font: zurichLight,
+          color: rgb(0,0,0)
+        });
+
+        xPos += colWidths[i];
+      }
+    }
+
+    // Draw sub headers
+    xPos = xStart;
+    subHeaders.forEach((header, i) => {
+      if (header) {
+        const textWidth = calibriBold.widthOfTextAtSize(header, 11);
+        page.drawText(header, {
+          x: xPos + (colWidths[i] - textWidth) / 2,
+          y: tableTop - 28,
+          size: 10,
+          font: calibriBold,
+          color: rgb(0,0,0)
+        });
+      }
+      xPos += colWidths[i];
+    });
+
+    // Draw horizontal separator lines for grouped headers
+    if (SHOW_TABLE_LINES) {
+      const headerMid = tableTop - 16;
+
+      // Theory Marks separator
+      page.drawLine({
+        start: { x: xStart + colWidths[0] + colWidths[1], y: headerMid },
+        end: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4], y: headerMid },
+        thickness: lineSettings.thickness,
+        color: lineSettings.color
+      });
+
+      // Practical Marks separator
+      page.drawLine({
+        start: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4], y: headerMid },
+        end: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + colWidths[6] + colWidths[7], y: headerMid },
+        thickness: lineSettings.thickness,
+        color: lineSettings.color
+      });
+
+      // Total Marks separator
+      page.drawLine({
+        start: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + colWidths[6] + colWidths[7], y: headerMid },
+        end: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + colWidths[6] + colWidths[7] + colWidths[8] + colWidths[9] + colWidths[10], y: headerMid },
+        thickness: lineSettings.thickness,
+        color: lineSettings.color
+      });
+    }
+
+    // Draw vertical lines
+    if (SHOW_TABLE_LINES) {
+      xPos = xStart;
+      const shortLines = [2, 3, 5, 6, 8, 9];
+
+      colWidths.forEach((width, i) => {
+        if (i < colWidths.length - 1) {
+          const lineX = xPos + width;
+
+          if (shortLines.includes(i)) {
+            // Draw short line inside sub-header
+            page.drawLine({
+              start: { x: lineX, y: tableTop - 16 },
+              end: { x: lineX, y: tableTop - 32 },
+              thickness: lineSettings.thickness,
+              color: lineSettings.color,
+            });
+          } else {
+            // Draw full boundary line
+            page.drawLine({
+              start: { x: lineX, y: tableTop },
+              end: { x: lineX, y: tableTop - 32 },
+              thickness: lineSettings.thickness,
+              color: lineSettings.color,
+            });
+          }
+        }
+        xPos += width;
+      });
+    }
+
+    // ===========================
+    // SUBJECT ROWS
+    // ===========================
+    yPosition = tableTop - 32;
+
+    combinedMarks.subjects.forEach((subject, index) => {
+      xPos = xStart;
+
+      // Prepare row data
+      const rowData = [
+        (index + 1).toString(),
+        subject.subject || "",
+        subject.theoryMax || "",
+        subject.theoryMin || "",
+        subject.theoryObt || "",
+        subject.practicalMax || "",
+        subject.practicalMin || "",
+        subject.practicalObt || "",
+        subject.totalMax || "",
+        subject.totalMin || "",
+        subject.totalObt || "",
+        subject.result || "",
+        subject.source === 'supply' ? 'Supply' : 'Regular'
+      ];
+
+      // Wrap subject name
+      const subjectText = rowData[1];
+      const maxSubjectWidth = colWidths[1] - 8;
+      const words = subjectText.split(" ");
+      let lines = [];
+      let line = "";
+
+      words.forEach(word => {
+        const testLine = line ? line + " " + word : word;
+        const testWidth = calibri.widthOfTextAtSize(testLine, 11);
+        if (testWidth > maxSubjectWidth) {
+          lines.push(line);
+          line = word;
+        } else {
+          line = testLine;
+        }
+      });
+      lines.push(line);
+
+      // Adjust row height for wrapped text
+      const dynamicRowHeight = rowHeight + (lines.length - 1) * 10;
+
+      // Draw row rectangle
+      page.drawRectangle({
+        x: xPos,
+        y: yPosition - dynamicRowHeight,
+        width: colWidths.reduce((a, b) => a + b, 0),
+        height: dynamicRowHeight,
+        borderWidth: lineSettings.thickness,
+        borderColor: lineSettings.color,
+      });
+
+      // Draw each cell
+      rowData.forEach((data, i) => {
+        let textX;
+        
+        // Center align for numeric columns
+        if (i === 0 || [2,3,4,5,6,7,8,9,10,12].includes(i)) {
+          textX = xPos + (colWidths[i] - calibri.widthOfTextAtSize(String(data), 11)) / 2;
+        } else {
+          textX = xPos + 4; // Left align for subject and result
+        }
+
+        if (i === 1) {
+          // Draw wrapped subject text
+          const totalTextHeight = lines.length * 10;
+          const subjectStartY = yPosition - (dynamicRowHeight / 2) + (totalTextHeight / 2) - 9;
+        
+          lines.forEach((lineText, lineIndex) => {
+            page.drawText(lineText, {
+              x: textX,
+              y: subjectStartY - (lineIndex * 10),
+              size: 11,
+              font: calibri,
+              color: rgb(0,0,0),
+            });
+          });
+
+          // Draw source indicator below subject
+          const sourceText = subject.source === 'supply' ? '(Supply)' : '(Regular)';
+          const sourceColor = subject.source === 'supply' ? rgb(0, 0, 0) : rgb(0, 0, 0);
+          
+         
+        } else if (i === 11) {
+          // Result cell with color coding
+          const resultColor = data === 'PASSED' ? rgb(0, 0, 0) : rgb(0, 0, 0);
+          const centerY = yPosition - (dynamicRowHeight / 2) - 4;
+          
+          page.drawText(String(data), {
+            x: textX,
+            y: centerY,
+            size: 11,
+            font: calibriBold,
+            color: resultColor,
+          });
+        } else if (i === 12) {
+          // Source column
+          const sourceColor = data === 'Supply' ? rgb(0, 0, 0) : rgb(0, 0, 0);
+          const centerY = yPosition - (dynamicRowHeight / 2) - 4;
+          
+          page.drawText(String(data), {
+            x: textX,
+            y: centerY,
+            size: 11,
+            font: calibriBold,
+            color: sourceColor,
+          });
+        } else {
+          // Regular cells
+          const centerY = yPosition - (dynamicRowHeight / 2) - 4;
+          page.drawText(String(data), {
+            x: textX,
+            y: centerY,
+            size: 11,
+            font: calibri,
+            color: rgb(0,0,0),
+          });
+        }
+
+        // Draw vertical lines
+        if (SHOW_TABLE_LINES && i < colWidths.length - 1) {
+          page.drawLine({
+            start: { x: xPos + colWidths[i], y: yPosition - dynamicRowHeight },
+            end: { x: xPos + colWidths[i], y: yPosition },
+            color: lineSettings.color,
+            thickness: lineSettings.thickness
+          });
+        }
+
+        xPos += colWidths[i];
+      });
+
+      yPosition -= dynamicRowHeight;
+    });
+
+    // ===========================
+    // TOTAL ROWS
+    // ===========================
+    xPos = xStart;
+
+    // First total row: Total in words
+    page.drawRectangle({
+      x: xPos,
+      y: yPosition - rowHeight,
+      width: colWidths.reduce((a, b) => a + b, 0),
+      height: rowHeight,
+      color: rgb(0.85, 0.92, 0.98),
+      borderWidth: lineSettings.thickness,
+      borderColor: lineSettings.color,
+    });
+
+    // Draw vertical lines
+    let lineXPos = xStart;
+    colWidths.forEach((width, i) => {
+      if ([1,7,9,10,11, 12].includes(i)) {
+        page.drawLine({
+          start: { x: lineXPos + width, y: yPosition - rowHeight },
+          end: { x: lineXPos + width, y: yPosition },
+          thickness: lineSettings.thickness,
+          color: lineSettings.color,
+        });
+      }
+      lineXPos += width;
+    });
+
+    page.drawText("Total in words", {
+      x: xStart + 5,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: zurichLight,
+    });
+
+    page.drawText(`${combinedMarks.totalWords || ""}`, {
+      x: xStart + 178,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: zurichLight,
+    });
+    page.drawText(`${combinedMarks.maxTotal || ""}`, {
+      x: xStart + 370,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: zurichLight,
+    });
+    page.drawText(`${combinedMarks.obtainedTotal || ""}`, {
+      x: xStart + 419,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: zurichLight,
+    });
+
+    page.drawText(`${combinedMarks.overallResult || ""}`, {
+      x: xStart + 448,
+      y: yPosition - rowHeight + 8,
+      size: 10,
+      font: zurichLight,
+      color: combinedMarks.overallResult === 'PASSED' ? rgb(0, 0, 0) : rgb(0, 0, 0),
+    });
+
+    yPosition -= rowHeight;
+
+
+    page.drawText(`${combinedMarks.grade || ""}`, {
+      x: xStart + 426,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: calibriBold,
+      color: combinedMarks.overallResult === 'PASSED' ? rgb(0, 0, 0) : rgb(0, 0, 0),
+    });
+
+    // ===========================
+    // FOOTER
+    // ===========================
+    yPosition -= 15;
+    page.drawText(`Place of Issue : NETD (HO)`, { 
+      x: 45, 
+      y: yPosition, 
+      size: 10, 
+      font: arial 
+    });
+
+    const issueDate = combinedMarks.createdAt
+      ? new Date(combinedMarks.createdAt).toLocaleDateString()
+      : new Date().toLocaleDateString();
+
+    page.drawText(`Date of Issue : ${issueDate}`, {
+      x: 45,
+      y: yPosition - 15,
+      size: 10,
+      font: arial
+    });
+
+   
+
+    // ===========================
+    // EMBED LOGOS
+    // ===========================
+    const embedLogo = async (logoUrl, x, y, maxWidth, maxHeight, allowWider = false) => {
+      if (!logoUrl) return;
+    
+      const logoPath = path.join(__dirname, "../public", logoUrl);
+      if (!fs.existsSync(logoPath)) return;
+    
+      const bytes = fs.readFileSync(logoPath);
+      const image = logoPath.endsWith(".png")
+        ? await pdfDoc.embedPng(bytes)
+        : await pdfDoc.embedJpg(bytes);
+    
+      const { width, height } = image.scale(1);
+      const aspectRatio = width / height;
+    
+      let widthLimit = maxWidth;
+      let heightLimit = maxHeight;
+      if (allowWider && aspectRatio > 1.4) {
+        widthLimit *= 1.3;
+      }
+    
+      const widthRatio = widthLimit / width;
+      const heightRatio = heightLimit / height;
+      const scale = Math.min(widthRatio, heightRatio);
+    
+      const displayWidth = width * scale;
+      const displayHeight = height * scale;
+    
+      const offsetX = x + (maxWidth - displayWidth) / 2;
+      const offsetY = y + (maxHeight - displayHeight) / 2;
+    
+      page.drawImage(image, {
+        x: offsetX,
+        y: offsetY,
+        width: displayWidth,
+        height: displayHeight,
+      });
+    };
+
+    // Embed logos
+    await embedLogo(institutionLogo, 236, 120, 80, 80, true);
+    await embedLogo(departmentLogo, 134, 120, 85.7, 86.7);
+
+    // ===========================
+    // OUTPUT HTML PREVIEW
+    // ===========================
+    const pdfBytes = await pdfDoc.save();
+    const base64 = Buffer.from(pdfBytes).toString("base64");
+
+    res.send(`
+      <html>
+        <head>
+          <title>Combined Marklist Preview</title>
+          <style>
+            body { 
+              margin: 0;
+              padding: 0;
+              font-family: Arial, sans-serif;
+              background: #f5f5f5;
+              overflow: hidden;
+            }
+
+            .header {
+              width: 100%;
+              background: #2a3d66;
+              color: white;
+              padding: 12px;
+              text-align: center;
+              font-size: 20px;
+              font-weight: bold;
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              z-index: 1000;
+              box-shadow: 0px 2px 6px rgba(0,0,0,0.3);
+            }
+
+            iframe {
+              position: fixed;
+              top: 60px;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              width: 100%;
+              height: calc(100vh - 60px);
+              border: none;
+            }
+
+            .download-btn {
+              position: fixed;
+              top: 70px;
+              right: 20px;
+              background: #2a3d66;
+              color: white;
+              padding: 12px 24px;
+              border-radius: 6px;
+              text-decoration: none;
+              font-weight: bold;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+              transition: 0.3s;
+              z-index: 1001;
+            }
+
+            .download-btn:hover {
+              background: #1d2a47;
+              transform: translateY(-2px);
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">Combined Marklist Preview - ${combinedMarks.candidateName || "Student"}</div>
+          <iframe src="data:application/pdf;base64,${base64}"></iframe>
+          <a href="/user/download-combined-marklist/${studentId}" class="download-btn">
+            📥 Download Combined Marklist
+          </a>
+        </body>
+      </html>
+    `);
+
+  } catch (err) {
+    console.error("❌ Error generating combined marklist preview:", err);
+    res.status(500).send("Error generating combined marklist preview");
+  }
+});
+// ===========================
+// DOWNLOAD COMBINED MARKLIST
+// ===========================
+router.get("/download-combined-marklist/:id", verifyUserLogin, async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    console.log("📥 Download combined marklist for student:", studentId);
+
+    // 1️⃣ Fetch student data
+    const student = await db.get()
+      .collection(collection.STUDENT_COLLECTION)
+      .findOne({ _id: new ObjectId(studentId) });
+
+    if (!student) {
+      return res.status(404).send("Student not found");
+    }
+
+    if (!student.marks) {
+      return res.status(400).send("No regular marks found");
+    }
+
+    if (!student.supplyMarks) {
+      return res.status(400).send("No supply marks found");
+    }
+
+    // 2️⃣ Combine regular and supply marks
+    const combinedSubjects = [];
+    let maxTotal = 0;
+    let obtainedTotal = 0;
+    let allPassed = true;
+
+    // Regular subjects (only PASSED)
+    if (Array.isArray(student.marks.subjects)) {
+      student.marks.subjects.forEach(subject => {
+        if (subject.result === 'PASSED') {
+          combinedSubjects.push({ ...subject, source: 'regular' });
+          maxTotal += parseInt(subject.totalMax) || 0;
+          obtainedTotal += parseInt(subject.totalObt) || 0;
+        }
+      });
+    }
+
+    // Supply subjects (PASSED + FAILED)
+    if (Array.isArray(student.supplyMarks.subjects)) {
+      student.supplyMarks.subjects.forEach(supplySubject => {
+        combinedSubjects.push({ ...supplySubject, source: 'supply' });
+        maxTotal += parseInt(supplySubject.totalMax) || 0;
+        obtainedTotal += parseInt(supplySubject.totalObt) || 0;
+        if (supplySubject.result === 'FAILED') allPassed = false;
+      });
+    }
+
+    // Calculate percentage & grade
+    const percentage = maxTotal > 0 ? (obtainedTotal / maxTotal) * 100 : 0;
+    let grade = 'FAILED';
+
+    if (allPassed) {
+      if (percentage >= 80) grade = 'PASSED WITH A+ GRADE';
+      else if (percentage >= 70) grade = 'PASSED WITH A GRADE ';
+      else if (percentage >= 60) grade = 'PASSED WITH B+ GRADE ';
+      else if (percentage >= 50) grade = 'PASSED WITH B GRADE ';
+      else if (percentage >= 40) grade = 'PASSED WITH C GRADE';
+      else allPassed = false;
+    }
+
+    // Prepare combined marks object
+    const combinedMarks = {
+      ...student.marks,
+      subjects: combinedSubjects,
+      maxTotal: maxTotal.toString(),
+      obtainedTotal: obtainedTotal.toString(),
+      overallResult: allPassed ? 'PASSED' : 'FAILED',
+      grade,
+      totalWords: numberToWords(obtainedTotal),
+      isCombined: true,
+      combinedDate: new Date()
+    };
+
+    // ✅ Fetch center and logo data
+    const centreId = student.centreId;
+    const centerData = await centerHelpers.getCenterById(centreId);
+    const institutionLogo = centerData?.institutionLogo || null;
+
+    // ✅ Fetch department logo
+    let departmentLogo = null;
+    const departmentName = student.department || student.courseDepartmentName;
+
+    if (centerData?.departmentLogos && departmentName) {
+      const deptKeys = Object.keys(centerData.departmentLogos);
+      const matchedKey = deptKeys.find(
+        key => key.toLowerCase().trim() === departmentName.toLowerCase().trim()
+      );
+
+      if (matchedKey) {
+        departmentLogo = centerData.departmentLogos[matchedKey];
+      }
+    }
+
+    // 3️⃣ Load background image
+    const bgPath = path.join(__dirname, "../public/images/Marklist-bg.jpg");
+    const bgBytes = fs.readFileSync(bgPath);
+
+    // 4️⃣ Create PDF document
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.registerFontkit(fontkit);
+
+    // 5️⃣ Load fonts
+    const arialPath = path.join(__dirname, "../public/fonts/arial.ttf");
+    const arialBytes = fs.readFileSync(arialPath);
+    const arial = await pdfDoc.embedFont(arialBytes);
+
+    const arialBoldPath = path.join(__dirname, "../public/fonts/arialbd.ttf");
+    let arialBold = arial;
+    if (fs.existsSync(arialBoldPath)) {
+      const arialBoldBytes = fs.readFileSync(arialBoldPath);
+      arialBold = await pdfDoc.embedFont(arialBoldBytes);
+    }
+
+    const squareFontPath = path.join(__dirname, "../public/fonts/SQR721N.TTF");
+    let squareFont = arial;
+    if (fs.existsSync(squareFontPath)) {
+      const squareBytes = fs.readFileSync(squareFontPath);
+      squareFont = await pdfDoc.embedFont(squareBytes);
+    }
+
+    const calibriPath = path.join(__dirname, "../public/fonts/CALIBRI.TTF");
+    let calibri = arial;
+    if (fs.existsSync(calibriPath)) {
+      const calibriBytes = fs.readFileSync(calibriPath);
+      calibri = await pdfDoc.embedFont(calibriBytes);
+    }
+
+    const calibriBoldPath = path.join(__dirname, "../public/fonts/CALIBRIB.TTF");
+    let calibriBold = calibri;
+    if (fs.existsSync(calibriBoldPath)) {
+      const calibriBoldBytes = fs.readFileSync(calibriBoldPath);
+      calibriBold = await pdfDoc.embedFont(calibriBoldBytes);
+    }
+
+    const zurichLightPath = path.join(__dirname, "../public/fonts/ZurichLightBT.ttf");
+    let zurichLight = arial;
+    if (fs.existsSync(zurichLightPath)) {
+      try {
+        const zurichLightBytes = fs.readFileSync(zurichLightPath);
+        zurichLight = await pdfDoc.embedFont(zurichLightBytes);
+      } catch (err) {
+        console.error("❌ Failed to load Zurich Light BT font:", err);
+      }
+    }
+
+    // 6️⃣ Page size
+    const pageWidth = 8.543 * 72;
+    const pageHeight = 11.367 * 72;
+    const page = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    // 7️⃣ Background
+    const bgImage = await pdfDoc.embedJpg(bgBytes);
+    page.drawImage(bgImage, { 
+      x: 0, 
+      y: 0, 
+      width: pageWidth, 
+      height: pageHeight 
+    });
+
+    const { rgb } = require("pdf-lib");
+
+    // ===========================
+    // LINE CONTROL CONFIG
+    // ===========================
+    const SHOW_TABLE_LINES = true;
+    const lineSettings = {
+      thickness: SHOW_TABLE_LINES ? 0.3 : 0,
+      color: SHOW_TABLE_LINES ? rgb(0, 0, 0) : rgb(1, 1, 1),
+    };
+
+    // ===========================
+    // STUDENT DETAILS
+    // ===========================
+    let yPosition = pageHeight - 180;
+    
+    yPosition -= 25;
+    yPosition -= 13;
+
+    const details = [
+      `Registration Number                            : ${combinedMarks.registrationNo || ""}`,
+      `This combined mark sheet is Awarded to: ${combinedMarks.candidateName || ""}`,
+      `On successful Completion of the Course : ${combinedMarks.course || ""}`,
+      `Of Duration                                          : ${combinedMarks.courseDuration || ""}`,
+      `From our Authorized Training centre      : ${combinedMarks.institute || ""}`,
+      `Examination Type                                  : Regular + Supply Combined`
+    ];
+
+    details.forEach((text) => {
+      page.drawText(text, { 
+        x: 45, 
+        y: yPosition, 
+        size: 12, 
+        font: squareFont, 
+        color: rgb(0,0,0) 
+      });
+      yPosition -= 22;
+    });
+
+    yPosition -= 3;
+
+    // ===========================
+    // TABLE HEADER
+    // ===========================
+    const xStart = 45;
+    const colWidths = [28, 145, 30, 30, 30, 30, 30, 30, 30, 30, 30, 45, 40];
+    const rowHeight = 24;
+    const headerBg = rgb(0.83, 0.90, 0.98);
+    const tableTop = yPosition;
+
+    let xPos = xStart;
+
+    // Draw header background
+    page.drawRectangle({
+      x: xPos,
+      y: tableTop - 32,
+      width: colWidths.reduce((a, b) => a + b, 0),
+      height: 32,
+      color: headerBg,
+      borderColor: lineSettings.color,
+      borderWidth: lineSettings.thickness,
+    });
+
+    const mainHeaders = [
+      "S.No", "Name of Subject",
+      "Theory Marks", "", "",
+      "Practical Marks", "", "",
+      "Total Marks", "", "",
+      "Result", "Source"
+    ];
+
+    const subHeaders = [
+      "", "", "Max", "Min", "Obt",
+      "Max", "Min", "Obt",
+      "Max", "Min", "Obt", "", ""
+    ];
+
+    // Draw main headers
+    xPos = xStart;
+    for (let i = 0; i < mainHeaders.length; i++) {
+      if (!mainHeaders[i]) {
+        xPos += colWidths[i];
+        continue;
+      }
+
+      let groupWidth = colWidths[i];
+      let columnsToSkip = 0;
+
+      if (mainHeaders[i] === "Theory Marks" || 
+          mainHeaders[i] === "Practical Marks" || 
+          mainHeaders[i] === "Total Marks") {
+        
+        groupWidth = colWidths[i] + colWidths[i+1] + colWidths[i+2];
+        columnsToSkip = 2;
+        
+        const textWidth = zurichLight.widthOfTextAtSize(mainHeaders[i], 11);
+        page.drawText(mainHeaders[i], {
+          x: xPos + (groupWidth - textWidth) / 2,
+          y: tableTop - 13,
+          size: 11,
+          font: zurichLight,
+          color: rgb(0,0,0)
+        });
+
+        xPos += groupWidth;
+        i += columnsToSkip;
+      } else {
+        const textWidth = zurichLight.widthOfTextAtSize(mainHeaders[i], 11);
+        page.drawText(mainHeaders[i], {
+          x: xPos + (colWidths[i] - textWidth) / 2,
+          y: tableTop - 18,
+          size: 11,
+          font: zurichLight,
+          color: rgb(0,0,0)
+        });
+
+        xPos += colWidths[i];
+      }
+    }
+
+    // Draw sub headers
+    xPos = xStart;
+    subHeaders.forEach((header, i) => {
+      if (header) {
+        const textWidth = calibriBold.widthOfTextAtSize(header, 11);
+        page.drawText(header, {
+          x: xPos + (colWidths[i] - textWidth) / 2,
+          y: tableTop - 28,
+          size: 10,
+          font: calibriBold,
+          color: rgb(0,0,0)
+        });
+      }
+      xPos += colWidths[i];
+    });
+
+    // Draw horizontal separator lines for grouped headers
+    if (SHOW_TABLE_LINES) {
+      const headerMid = tableTop - 16;
+
+      page.drawLine({
+        start: { x: xStart + colWidths[0] + colWidths[1], y: headerMid },
+        end: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4], y: headerMid },
+        thickness: lineSettings.thickness,
+        color: lineSettings.color
+      });
+
+      page.drawLine({
+        start: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4], y: headerMid },
+        end: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + colWidths[6] + colWidths[7], y: headerMid },
+        thickness: lineSettings.thickness,
+        color: lineSettings.color
+      });
+
+      page.drawLine({
+        start: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + colWidths[6] + colWidths[7], y: headerMid },
+        end: { x: xStart + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + colWidths[6] + colWidths[7] + colWidths[8] + colWidths[9] + colWidths[10], y: headerMid },
+        thickness: lineSettings.thickness,
+        color: lineSettings.color
+      });
+    }
+
+    // Draw vertical lines
+    if (SHOW_TABLE_LINES) {
+      xPos = xStart;
+      const shortLines = [2, 3, 5, 6, 8, 9];
+
+      colWidths.forEach((width, i) => {
+        if (i < colWidths.length - 1) {
+          const lineX = xPos + width;
+
+          if (shortLines.includes(i)) {
+            page.drawLine({
+              start: { x: lineX, y: tableTop - 16 },
+              end: { x: lineX, y: tableTop - 32 },
+              thickness: lineSettings.thickness,
+              color: lineSettings.color,
+            });
+          } else {
+            page.drawLine({
+              start: { x: lineX, y: tableTop },
+              end: { x: lineX, y: tableTop - 32 },
+              thickness: lineSettings.thickness,
+              color: lineSettings.color,
+            });
+          }
+        }
+        xPos += width;
+      });
+    }
+
+    // ===========================
+    // SUBJECT ROWS
+    // ===========================
+    yPosition = tableTop - 32;
+
+    combinedMarks.subjects.forEach((subject, index) => {
+      xPos = xStart;
+
+      const rowData = [
+        (index + 1).toString(),
+        subject.subject || "",
+        subject.theoryMax || "",
+        subject.theoryMin || "",
+        subject.theoryObt || "",
+        subject.practicalMax || "",
+        subject.practicalMin || "",
+        subject.practicalObt || "",
+        subject.totalMax || "",
+        subject.totalMin || "",
+        subject.totalObt || "",
+        subject.result || "",
+        subject.source === 'supply' ? 'Supply' : 'Regular'
+      ];
+
+      // Wrap subject name
+      const subjectText = rowData[1];
+      const maxSubjectWidth = colWidths[1] - 8;
+      const words = subjectText.split(" ");
+      let lines = [];
+      let line = "";
+
+      words.forEach(word => {
+        const testLine = line ? line + " " + word : word;
+        const testWidth = calibri.widthOfTextAtSize(testLine, 11);
+        if (testWidth > maxSubjectWidth) {
+          lines.push(line);
+          line = word;
+        } else {
+          line = testLine;
+        }
+      });
+      lines.push(line);
+
+      const dynamicRowHeight = rowHeight + (lines.length - 1) * 10;
+
+      // Draw row rectangle
+      page.drawRectangle({
+        x: xPos,
+        y: yPosition - dynamicRowHeight,
+        width: colWidths.reduce((a, b) => a + b, 0),
+        height: dynamicRowHeight,
+        borderWidth: lineSettings.thickness,
+        borderColor: lineSettings.color,
+      });
+
+      // Draw each cell
+      rowData.forEach((data, i) => {
+        let textX;
+        
+        if (i === 0 || [2,3,4,5,6,7,8,9,10,12].includes(i)) {
+          textX = xPos + (colWidths[i] - calibri.widthOfTextAtSize(String(data), 11)) / 2;
+        } else {
+          textX = xPos + 4;
+        }
+
+        if (i === 1) {
+          const totalTextHeight = lines.length * 10;
+          const subjectStartY = yPosition - (dynamicRowHeight / 2) + (totalTextHeight / 2) - 9;
+        
+          lines.forEach((lineText, lineIndex) => {
+            page.drawText(lineText, {
+              x: textX,
+              y: subjectStartY - (lineIndex * 10),
+              size: 11,
+              font: calibri,
+              color: rgb(0,0,0),
+            });
+          });
+        } else if (i === 11) {
+          const resultColor = data === 'PASSED' ? rgb(0, 0, 0) : rgb(0, 0, 0);
+          const centerY = yPosition - (dynamicRowHeight / 2) - 4;
+          
+          page.drawText(String(data), {
+            x: textX,
+            y: centerY,
+            size: 11,
+            font: calibriBold,
+            color: resultColor,
+          });
+        } else if (i === 12) {
+          const sourceColor = data === 'Supply' ? rgb(0, 0, 0) : rgb(0, 0, 0);
+          const centerY = yPosition - (dynamicRowHeight / 2) - 4;
+          
+          page.drawText(String(data), {
+            x: textX,
+            y: centerY,
+            size: 11,
+            font: calibriBold,
+            color: sourceColor,
+          });
+        } else {
+          const centerY = yPosition - (dynamicRowHeight / 2) - 4;
+          page.drawText(String(data), {
+            x: textX,
+            y: centerY,
+            size: 11,
+            font: calibri,
+            color: rgb(0,0,0),
+          });
+        }
+
+        if (SHOW_TABLE_LINES && i < colWidths.length - 1) {
+          page.drawLine({
+            start: { x: xPos + colWidths[i], y: yPosition - dynamicRowHeight },
+            end: { x: xPos + colWidths[i], y: yPosition },
+            color: lineSettings.color,
+            thickness: lineSettings.thickness
+          });
+        }
+
+        xPos += colWidths[i];
+      });
+
+      yPosition -= dynamicRowHeight;
+    });
+
+    // ===========================
+    // TOTAL ROWS
+    // ===========================
+    xPos = xStart;
+
+    // First total row: Total in words
+    page.drawRectangle({
+      x: xPos,
+      y: yPosition - rowHeight,
+      width: colWidths.reduce((a, b) => a + b, 0),
+      height: rowHeight,
+      color: rgb(0.85, 0.92, 0.98),
+      borderWidth: lineSettings.thickness,
+      borderColor: lineSettings.color,
+    });
+
+    // Draw vertical lines
+    let lineXPos = xStart;
+    colWidths.forEach((width, i) => {
+      if ([1,7,9,10,11, 12].includes(i)) {
+        page.drawLine({
+          start: { x: lineXPos + width, y: yPosition - rowHeight },
+          end: { x: lineXPos + width, y: yPosition },
+          thickness: lineSettings.thickness,
+          color: lineSettings.color,
+        });
+      }
+      lineXPos += width;
+    });
+
+    page.drawText("Total in words", {
+      x: xStart + 5,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: zurichLight,
+      color: rgb(0,0,0)
+    });
+
+    page.drawText(`${combinedMarks.totalWords || ""}`, {
+      x: xStart + 178,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: zurichLight,
+      color: rgb(0,0,0)
+    });
+    
+    page.drawText(`${combinedMarks.maxTotal || ""}`, {
+      x: xStart + 370,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: zurichLight,
+      color: rgb(0,0,0)
+    });
+    
+    page.drawText(`${combinedMarks.obtainedTotal || ""}`, {
+      x: xStart + 419,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: zurichLight,
+      color: rgb(0,0,0)
+    });
+
+    page.drawText(`${combinedMarks.overallResult || ""}`, {
+      x: xStart + 448,
+      y: yPosition - rowHeight + 8,
+      size: 10,
+      font: zurichLight,
+      color: combinedMarks.overallResult === 'PASSED' ? rgb(0, 0, 0) : rgb(0, 0, 0),
+    });
+
+    yPosition -= rowHeight;
+
+    page.drawText(`${combinedMarks.grade || ""}`, {
+      x: xStart + 426,
+      y: yPosition - rowHeight + 8,
+      size: 10.5,
+      font: calibriBold,
+      color: combinedMarks.overallResult === 'PASSED' ? rgb(0, 0, 0) : rgb(0, 0, 0),
+    });
+
+    // ===========================
+    // FOOTER
+    // ===========================
+    yPosition -= 15;
+    page.drawText(`Place of Issue : NETD (HO)`, { 
+      x: 45, 
+      y: yPosition, 
+      size: 10, 
+      font: arial,
+      color: rgb(0,0,0)
+    });
+
+    const issueDate = combinedMarks.createdAt
+      ? new Date(combinedMarks.createdAt).toLocaleDateString()
+      : new Date().toLocaleDateString();
+
+    page.drawText(`Date of Issue : ${issueDate}`, {
+      x: 45,
+      y: yPosition - 15,
+      size: 10,
+      font: arial,
+      color: rgb(0,0,0)
+    });
+
+   
+
+    // ===========================
+    // EMBED LOGOS
+    // ===========================
+    const embedLogo = async (logoUrl, x, y, maxWidth, maxHeight, allowWider = false) => {
+      if (!logoUrl) return;
+    
+      const logoPath = path.join(__dirname, "../public", logoUrl);
+      if (!fs.existsSync(logoPath)) return;
+    
+      const bytes = fs.readFileSync(logoPath);
+      let image;
+      
+      try {
+        if (logoPath.endsWith(".png")) {
+          image = await pdfDoc.embedPng(bytes);
+        } else {
+          image = await pdfDoc.embedJpg(bytes);
+        }
+      } catch (err) {
+        console.error("❌ Error embedding logo:", logoUrl, err);
+        return;
+      }
+    
+      const { width, height } = image.scale(1);
+      const aspectRatio = width / height;
+    
+      let widthLimit = maxWidth;
+      let heightLimit = maxHeight;
+      if (allowWider && aspectRatio > 1.4) {
+        widthLimit *= 1.3;
+      }
+    
+      const widthRatio = widthLimit / width;
+      const heightRatio = heightLimit / height;
+      const scale = Math.min(widthRatio, heightRatio);
+    
+      const displayWidth = width * scale;
+      const displayHeight = height * scale;
+    
+      const offsetX = x + (maxWidth - displayWidth) / 2;
+      const offsetY = y + (maxHeight - displayHeight) / 2;
+    
+      page.drawImage(image, {
+        x: offsetX,
+        y: offsetY,
+        width: displayWidth,
+        height: displayHeight,
+      });
+    };
+
+    // Embed logos
+    await embedLogo(institutionLogo, 236, 120, 80, 80, true);
+    await embedLogo(departmentLogo, 134, 120, 85.7, 86.7);
+
+    // ===========================
+    // ✅ FIXED: USE CERTIFICATE PATTERN FOR DOWNLOAD
+    // ===========================
+    const pdfBytes = await pdfDoc.save();
+    
+    console.log("✅ PDF generated successfully, size:", pdfBytes.length, "bytes");
+
+    // ✅ EXACT SAME PATTERN AS WORKING CERTIFICATE ROUTE
+    const fileName = `combined_marklist_${combinedMarks.registrationNo || studentId}.pdf`;
+    
+    // ✅ Set headers exactly like certificate route
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Length', pdfBytes.length);
+    
+    // ✅ Send exactly like certificate route
+    res.send(Buffer.from(pdfBytes));
+
+  } catch (err) {
+    console.error("❌ Error downloading combined marklist:", err);
+    console.error("🔍 Stack trace:", err.stack);
+    
+    res.status(500).json({
+      error: "Error generating combined PDF",
+      message: err.message,
+      stack: err.stack
+    });
+  }
+});
+// ===========================
+// EDIT MARK PAGE
+// ===========================
+router.get('/edit-mark/:id', verifyUserLogin, async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    
+    // Fetch student data
+    const student = await db.get()
+      .collection(collection.STUDENT_COLLECTION)
+      .findOne({ _id: new ObjectId(studentId) });
+
+    if (!student) {
+      return res.status(404).send("Student not found");
+    }
+
+    if (!student.marks) {
+      return res.redirect(`/user/add-mark/${studentId}`);
+    }
+
+    // Fetch center data for logos
+    const centerData = await centerHelpers.getCenterById(student.centreId);
+    
+    res.render('user/edit-mark', {
+      student,
+      centerData,
+      hideNavbar: true
+    });
+
+  } catch (err) {
+    console.error("❌ Error loading edit mark page:", err);
+    res.status(500).send("Error loading edit mark page");
+  }
+});
+
+// ===========================
+// UPDATE MARK
+// ===========================
+router.post('/update-mark/:id', verifyUserLogin, async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    const updatedMarks = req.body;
+
+    console.log("🔄 Updating marks for student:", studentId);
+    console.log("Updated data:", updatedMarks);
+
+    // Prepare the updated marks object
+    const updatedData = {
+      "marks.registrationNo": updatedMarks.registrationNo,
+      "marks.candidateName": updatedMarks.candidateName,
+      "marks.course": updatedMarks.course,
+      "marks.courseDuration": updatedMarks.courseDuration,
+      "marks.institute": updatedMarks.institute,
+      "marks.subjects": [],
+      "marks.updatedAt": new Date()
+    };
+
+    // Process subjects
+    if (Array.isArray(updatedMarks.subjectName)) {
+      updatedMarks.subjectName.forEach((subjectName, index) => {
+        const subject = {
+          subject: subjectName,
+          theoryMax: parseInt(updatedMarks.theoryMax?.[index]) || 0,
+          theoryMin: parseInt(updatedMarks.theoryMin?.[index]) || 0,
+          theoryObt: parseInt(updatedMarks.theoryObt?.[index]) || 0,
+          practicalMax: parseInt(updatedMarks.practicalMax?.[index]) || 0,
+          practicalMin: parseInt(updatedMarks.practicalMin?.[index]) || 0,
+          practicalObt: parseInt(updatedMarks.practicalObt?.[index]) || 0,
+          totalMax: parseInt(updatedMarks.totalMax?.[index]) || 0,
+          totalMin: parseInt(updatedMarks.totalMin?.[index]) || 0,
+          totalObt: parseInt(updatedMarks.totalObt?.[index]) || 0,
+          result: updatedMarks.result?.[index] || 'FAILED'
+        };
+        
+        // Calculate totals if not provided
+        if (subject.totalMax === 0) {
+          subject.totalMax = subject.theoryMax + subject.practicalMax;
+        }
+        if (subject.totalObt === 0) {
+          subject.totalObt = subject.theoryObt + subject.practicalObt;
+        }
+        
+        updatedData["marks.subjects"].push(subject);
+      });
+    }
+
+    // Calculate overall totals
+    const maxTotal = updatedData["marks.subjects"].reduce((sum, subject) => sum + subject.totalMax, 0);
+    const obtainedTotal = updatedData["marks.subjects"].reduce((sum, subject) => sum + subject.totalObt, 0);
+    
+    updatedData["marks.maxTotal"] = maxTotal;
+    updatedData["marks.obtainedTotal"] = obtainedTotal;
+    updatedData["marks.totalWords"] = numberToWords(obtainedTotal);
+    
+    // Calculate percentage and grade
+    const percentage = maxTotal > 0 ? (obtainedTotal / maxTotal) * 100 : 0;
+    const allPassed = updatedData["marks.subjects"].every(subject => subject.result === 'PASSED');
+    
+    if (allPassed) {
+      if (percentage >= 80) updatedData["marks.grade"] = 'PASSED WITH A+ GRADE';
+      else if (percentage >= 70) updatedData["marks.grade"] = 'PASSED WITH A GRADE';
+      else if (percentage >= 60) updatedData["marks.grade"] = 'PASSED WITH B+ GRADE';
+      else if (percentage >= 50) updatedData["marks.grade"] = 'PASSED WITH B GRADE';
+      else if (percentage >= 40) updatedData["marks.grade"] = 'PASSED WITH C GRADE';
+      else updatedData["marks.overallResult"] = 'FAILED';
+    } else {
+      updatedData["marks.overallResult"] = 'FAILED';
+      updatedData["marks.grade"] = 'FAILED';
+    }
+
+    // Update the student record
+    const result = await db.get()
+      .collection(collection.STUDENT_COLLECTION)
+      .updateOne(
+        { _id: new ObjectId(studentId) },
+        { $set: updatedData }
+      );
+
+    if (result.modifiedCount === 1) {
+      console.log("✅ Marks updated successfully");
+      req.session.studentMessage = "Marks updated successfully!";
+      res.redirect(`/user/view-bstudent`);
+    } else {
+      console.log("⚠️ No changes made or student not found");
+      req.session.studentMessage = "No changes were made.";
+      res.redirect(`/user/edit-mark/${studentId}`);
+    }
+
+  } catch (err) {
+    console.error("❌ Error updating marks:", err);
+    req.session.studentMessage = "Error updating marks. Please try again.";
+    res.redirect(`/user/edit-mark/${req.params.id}`);
+  }
+});
+// Helper function for number to words
+function numberToWords(num) {
+  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 
+                'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+  
+  if (num === 0) return 'Zero';
+  
+  let words = '';
+  
+  if (num >= 1000) {
+      words += ones[Math.floor(num / 1000)] + ' Thousand ';
+      num %= 1000;
+  }
+  
+  if (num >= 100) {
+      words += ones[Math.floor(num / 100)] + ' Hundred ';
+      num %= 100;
+  }
+  
+  if (num >= 20) {
+      words += tens[Math.floor(num / 10)] + ' ';
+      num %= 10;
+  }
+  
+  if (num > 0) {
+      words += ones[num] + ' ';
+  }
+  
+  return words.trim() + ' Only';
+}
 
 // ✅ USER: Apply for Certificate
 // ✅ Apply Certificate Route
@@ -2805,274 +10282,8 @@ router.post('/edit-schedule/:batchId', verifyUserLogin, async (req, res) => {
   }
 });
 
-// GET - Add Supply Mark Page// GET - Add Supply Mark Page
-router.get('/add-supply-mark/:id', verifyUserLogin, async (req, res) => {
-  try {
-    const studentId = new ObjectId(req.params.id);
-    const student = await db.get().collection(collection.STUDENT_COLLECTION).findOne({ _id: studentId });
 
-    if (!student) {
-      return res.status(404).send("Student not found");
-    }
-
-    if (!student.marks) {
-      return res.status(400).send("No regular marks found for this student");
-    }
-
-    // Identify failed subjects
-    const failedSubjects = student.marks.subjects.filter(subject => 
-      subject.result === 'FAILED'
-    );
-
-    if (failedSubjects.length === 0) {
-      return res.status(400).send("Student has no failed subjects");
-    }
-
-    res.render('user/add-supply-mark', {
-      hideNavbar: true,
-      studentId: req.params.id,
-      student,
-      failedSubjects,
-      regularMarks: student.marks
-    });
-  } catch (err) {
-    console.error("❌ Error loading supply mark page:", err);
-    res.status(500).send("Error loading supply mark page");
-  }
-});
-
-// POST - Save Supply Marks - FIXED PATH
-router.post('/add-supply-mark', verifyUserLogin, async (req, res) => {
-  try {
-    const studentId = req.body.studentId;
-    console.log("📝 Received supply marks for student:", studentId);
-
-    if (!ObjectId.isValid(studentId)) {
-      return res.status(400).send("Invalid Student ID");
-    }
-
-    // Get student data
-    const student = await db.get().collection(collection.STUDENT_COLLECTION).findOne({ 
-      _id: new ObjectId(studentId) 
-    });
-
-    if (!student || !student.marks) {
-      return res.status(400).send("Student or regular marks not found");
-    }
-
-    // Prepare supply marks data
-    const supplyMarksData = {
-      candidateName: student.marks.candidateName,
-      address: student.marks.address,
-      institute: student.marks.institute,
-      examination: "SUPPLY EXAMINATION",
-      course: student.marks.course,
-      courseDuration: student.marks.courseDuration,
-      registrationNo: student.marks.registrationNo,
-      department: student.marks.department,
-      examTitle: `SUPPLY - ${student.marks.examTitle}`,
-      
-      subjects: [],
-      isSupply: true,
-      originalMarksId: student.marks._id || studentId,
-      
-      totalWords: req.body.totalWords,
-      maxTotal: parseInt(req.body.maxTotal) || 0,
-      obtainedTotal: parseInt(req.body.obtainedTotal) || 0,
-      overallResult: req.body.overallResult,
-      grade: req.body.grade,
-      
-      createdAt: new Date()
-    };
-
-    // Process supply subjects
-    if (req.body.subjectName && Array.isArray(req.body.subjectName)) {
-      for (let i = 0; i < req.body.subjectName.length; i++) {
-        if (req.body.subjectName[i].trim() !== '') {
-          const subjectData = {
-            subject: req.body.subjectName[i],
-            theoryMax: parseInt(req.body.theoryMax[i]) || 0,
-            theoryMin: parseInt(req.body.theoryMin[i]) || 0,
-            theoryObt: parseInt(req.body.theoryObt[i]) || 0,
-            practicalMax: parseInt(req.body.practicalMax[i]) || 0,
-            practicalMin: parseInt(req.body.practicalMin[i]) || 0,
-            practicalObt: parseInt(req.body.practicalObt[i]) || 0,
-            totalMax: (parseInt(req.body.theoryMax[i]) || 0) + (parseInt(req.body.practicalMax[i]) || 0),
-            totalMin: (parseInt(req.body.theoryMin[i]) || 0) + (parseInt(req.body.practicalMin[i]) || 0),
-            totalObt: (parseInt(req.body.theoryObt[i]) || 0) + (parseInt(req.body.practicalObt[i]) || 0),
-            result: (parseInt(req.body.theoryObt[i]) >= parseInt(req.body.theoryMin[i]) && 
-                    parseInt(req.body.practicalObt[i]) >= parseInt(req.body.practicalMin[i])) ? 'PASSED' : 'FAILED',
-            isSupply: true,
-            originalResult: student.marks.subjects.find(s => s.subject === req.body.subjectName[i])?.result || 'FAILED'
-          };
-          
-          supplyMarksData.subjects.push(subjectData);
-        }
-      }
-    }
-
-    console.log("📊 Supply marks data to save:", JSON.stringify(supplyMarksData, null, 2));
-
-    // Update student with supply marks
-    const result = await db.get().collection(collection.STUDENT_COLLECTION).updateOne(
-      { _id: new ObjectId(studentId) },
-      { 
-        $set: { 
-          supplyMarks: supplyMarksData,
-          hasSupply: true,
-          updatedAt: new Date()
-        } 
-      }
-    );
-
-    console.log("💾 Supply marks saved successfully");
-    
-    // FIXED: Redirect to admin combined marklist
-    res.redirect('/user/combined-marklist/' + studentId);
-    
-  } catch (err) {
-    console.error("❌ Error saving supply marks:", err);
-    res.status(500).send("Error submitting supply marks");
-  }
-});
-
-// Combined Marklist Route - FIXED
-router.get('/combined-marklist/:id', verifyUserLogin, async (req, res) => {
-  try {
-    console.log("🔄 Combined marklist route accessed for:", req.params.id);
-    
-    const studentId = new ObjectId(req.params.id);
-    const student = await db.get()
-      .collection(collection.STUDENT_COLLECTION)
-      .findOne({ _id: studentId });
-
-    if (!student) return res.status(404).send("Student not found");
-    if (!student.marks) return res.status(400).send("No regular marks found");
-    if (!student.supplyMarks) return res.status(400).send("No supply marks found");
-
-    console.log("✅ Student data loaded successfully");
-
-    // Combine regular and supply marks
-    const combinedSubjects = [];
-    let maxTotal = 0;
-    let obtainedTotal = 0;
-    let allPassed = true;
-
-    // Regular subjects (only PASSED)
-    if (Array.isArray(student.marks.subjects)) {
-      student.marks.subjects.forEach(subject => {
-        if (subject.result === 'PASSED') {
-          combinedSubjects.push({ ...subject, source: 'regular' });
-          maxTotal += subject.totalMax || 0;
-          obtainedTotal += subject.totalObt || 0;
-        }
-      });
-    }
-
-    // Supply subjects (PASSED + FAILED)
-    if (Array.isArray(student.supplyMarks.subjects)) {
-      student.supplyMarks.subjects.forEach(supplySubject => {
-        combinedSubjects.push({ ...supplySubject, source: 'supply' });
-        maxTotal += supplySubject.totalMax || 0;
-        obtainedTotal += supplySubject.totalObt || 0;
-        if (supplySubject.result === 'FAILED') allPassed = false;
-      });
-    }
-
-    // Calculate percentage & grade
-    const percentage = maxTotal > 0 ? (obtainedTotal / maxTotal) * 100 : 0;
-    let grade = 'FAILED';
-
-    if (allPassed) {
-      if (percentage >= 80) grade = 'PASSED WITH A+ GRADE (EXCELLENT)';
-      else if (percentage >= 70) grade = 'PASSED WITH A GRADE (VERY GOOD)';
-      else if (percentage >= 60) grade = 'PASSED WITH B+ GRADE (GOOD)';
-      else if (percentage >= 50) grade = 'PASSED WITH B GRADE (SATISFACTORY)';
-      else if (percentage >= 40) grade = 'PASSED WITH C GRADE';
-      else allPassed = false;
-    }
-
-    // Prepare combined marks object
-    const combinedMarks = {
-      ...student.marks,
-      subjects: combinedSubjects,
-      maxTotal,
-      obtainedTotal,
-      overallResult: allPassed ? 'PASSED' : 'FAILED',
-      grade,
-      totalWords: numberToWords(obtainedTotal),
-      isCombined: true,
-      combinedDate: new Date()
-    };
-
-    // ✅ Fetch logos
-    const centreId = student.centreId;
-    const departmentName = student.department; // 🔹 correct field name
-    const centerData = await centerHelpers.getCenterById(centreId);
-
-    // ✅ Fetch department logo properly
-    const departmentLogo = await centerHelpers.getDepartmentLogo(centreId, departmentName);
-
-    console.log("✅ Combined Marklist Debug:", {
-      centreId,
-      departmentName,
-      institutionLogo: centerData?.institutionLogo,
-      departmentLogo
-    });
-
-    // ✅ Render with both logos
-    res.render('user/combined-marklist', {
-      hideNavbar: true,
-      studentId: req.params.id,
-      student,
-      combinedMarks,
-      logoPath: centerData?.institutionLogo || '/images/default-institution-logo.png',
-      departmentLogoPath: departmentLogo || '/images/default-department-logo.png',
-      currentDate: new Date()
-    });
-
-  } catch (err) {
-    console.error("❌ Error loading combined mark list:", err);
-    res.status(500).send("Error loading combined mark list");
-  }
-});
-
-
-
-// Helper function to convert number to words
-function numberToWords(num) {
-  if (num === 0) return 'ZERO';
-  
-  const ones = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN', 
-                'ELEVEN', 'TWELVE', 'THIRTEEN', 'FOURTEEN', 'FIFTEEN', 'SIXTEEN', 'SEVENTEEN', 'EIGHTEEN', 'NINETEEN'];
-  const tens = ['', '', 'TWENTY', 'THIRTY', 'FORTY', 'FIFTY', 'SIXTY', 'SEVENTY', 'EIGHTY', 'NINETY'];
-  
-  let words = '';
-  
-  if (num >= 1000) {
-    words += ones[Math.floor(num / 1000)] + ' THOUSAND ';
-    num %= 1000;
-  }
-  
-  if (num >= 100) {
-    words += ones[Math.floor(num / 100)] + ' HUNDRED ';
-    num %= 100;
-  }
-  
-  if (num >= 20) {
-    words += tens[Math.floor(num / 10)] + ' ';
-    num %= 10;
-  }
-  
-  if (num > 0) {
-    words += ones[num] + ' ';
-  }
-  
-  return words.trim() + ' ONLY';
-}
 //supply marklist
-// Supply Mark List Route - Shows ONLY supply marks
-
 router.get('/supply-mark-list/:id', verifyUserLogin, async (req, res) => {
   try {
     console.log("🔄 Supply marklist route accessed for:", req.params.id);
@@ -3162,363 +10373,5 @@ router.post('/add-sdstudent', verifyUserLogin, async (req, res) => {
   }
 });
 
-//time tableeeee
-
-router.get('/add-timetable', verifyUserLogin, async (req, res) => {
-  try {
-    const centreId = req.session.centreId;   // ✅ Correct centre ID from session
-
-    if (!centreId) {
-      console.error("❌ No centreId found in session");
-      return res.render('user/add-timetable', {
-        hideNavbar: true,
-        batches: []
-      });
-    }
-
-    // ✅ Get batches for this centre ONLY
-    const batches = await batchHelpers.getBatchesByCentre(centreId);
-
-    res.render('user/add-timetable', {
-      hideNavbar: true,
-      batches   // ✅ This will now show in the dropdown
-    });
-
-  } catch (err) {
-    console.error("❌ Error in /add-timetable route:", err);
-    res.render('user/add-timetable', {
-      hideNavbar: true,
-      batches: []
-    });
-  }
-});
-//post of time table
-// POST of timetable - FIXED VERSION
-router.post('/save-timetable', verifyUserLogin, async (req, res) => {
-  try {
-    const centreId = req.session.centreId;
-
-    if (!centreId) {
-      return res.status(400).send("Centre ID missing in session");
-    }
-
-    console.log("📦 Form data received:", req.body);
-
-    // Prepare schedule array from dynamic rows
-    const schedule = [];
-    
-    // Check if we have array data (multiple rows)
-    if (req.body['srNo[]'] && Array.isArray(req.body['srNo[]'])) {
-      for (let i = 0; i < req.body['srNo[]'].length; i++) {
-        schedule.push({
-          srNo: parseInt(req.body['srNo[]'][i]) || 0,
-          date: req.body['date[]'][i],
-          time: req.body['time[]'][i],
-          course: req.body['course[]'][i],
-          year: parseInt(req.body['year[]'][i]) || 0,
-          sem: req.body['sem[]'][i],
-          paperName: req.body['paperName[]'][i]
-        });
-      }
-    } else if (req.body.srNo) {
-      // Handle single row case
-      schedule.push({
-        srNo: parseInt(req.body.srNo) || 0,
-        date: req.body.date,
-        time: req.body.time,
-        course: req.body.course,
-        year: parseInt(req.body.year) || 0,
-        sem: req.body.sem,
-        paperName: req.body.paperName
-      });
-    }
-
-    // Prepare data for the helper function
-    const timetableData = {
-      centreId: centreId,
-      batchId: req.body.batchId,           // This will be converted to ObjectId in helper
-      courseName: req.body.courseName,
-      semesterTitle: req.body.semesterTitle,
-      examMonthYear: req.body.examMonthYear,
-      notes: req.body.notes || "",
-      schedule: schedule,                  // Changed from 'subjects' to 'schedule'
-      createdAt: new Date(),
-      status: 'active'
-    };
-
-    console.log("💾 Prepared timetable data:", timetableData);
-
-    // Use the helper function to save
-    const timetableId = await batchHelpers.addTimetable(timetableData);
-    
-    console.log("✅ Timetable saved with ID:", timetableId);
-    
-    // Redirect to view timetables
-    res.redirect('/user/view-tbatch');
-
-  } catch (err) {
-    console.error("❌ Error saving timetable:", err);
-    res.status(500).send("Server Error While Saving Timetable: " + err.message);
-  }
-});
-
-router.get('/view-tbatch', verifyUserLogin, async (req, res) => {
-  try {
-    const centreId = req.session.centreId;
-
-    if (!centreId) {
-      return res.render('user/view-tbatch', { batches: [] });
-    }
-
-    console.log("📌 VIEW-TBATCH ROUTE HIT");
-    console.log("👉 centreId:", centreId);
-
-    // 1️⃣ Load all batches of this centre
-    const batches = await batchHelpers.getBatchesByCentre(centreId);
-    console.log(`📌 BATCHES LOADED (${batches.length})`);
-
-    // 2️⃣ Load ALL timetables for this centre
-    const timetables = await batchHelpers.getTimetablesByCentre(centreId);
-    console.log(`📌 TIMETABLES LOADED (${timetables.length})`);
-
-    // 3️⃣ Attach LAST timetable of each batch
-    const batchData = batches.map(b => {
-      const batchIdStr = b._id.toString();
-
-      // find latest timetable
-      const filtered = timetables
-        .filter(t => t.batchId.toString() === batchIdStr)
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // newest first
-
-      // attach last timetable
-      return {
-        ...b,
-        timetable: filtered.length > 0 ? filtered[0] : null
-      };
-    });
-
-    console.log("📌 FINAL BATCH DATA SENT TO VIEW:");
-    batchData.forEach(b => {
-      console.log(`   • ${b.batchName} → timetable: ${b.timetable ? "YES" : "NO"}`);
-    });
-
-    // 4️⃣ Render page
-    res.render('user/view-tbatch', {
-      hideNavbar: true,
-      batches: batchData
-    });
-
-  } catch (err) {
-    console.error("❌ ERROR in /view-tbatch:", err);
-    res.render('user/view-tbatch', { batches: [] });
-  }
-});
-
-
-router.get('/preview-pdf/:batchId', verifyUserLogin, async (req, res) => {
-  try {
-    const batchId = req.params.batchId;
-    console.log('📄 PDF GENERATION STARTED for batch:', batchId);
-
-    // 1️⃣ Fetch batch and timetable
-    const batch = await batchHelpers.getBatchById(batchId);
-    const timetable = await batchHelpers.getTimetableByBatch(batchId);
-
-    // 2️⃣ Create PDF
-    const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([595, 842]); // A4 size
-    const { width, height } = page.getSize();
-
-    // Embed fonts
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-
-    // 3️⃣ Add background image
-    const bgPath = path.join(__dirname, '../public/images/time-table.jpg');
-    if (fs.existsSync(bgPath)) {
-      const bgBytes = fs.readFileSync(bgPath);
-      const bgImage = await pdfDoc.embedJpg(bgBytes);
-      page.drawImage(bgImage, { x: 0, y: 0, width, height });
-    } else {
-      page.drawRectangle({ x: 0, y: 0, width, height, color: rgb(1, 1, 1) });
-    }
-
-    // 4️⃣ Header
-    let y = height - 80;
-    page.drawText('MEDICAL EQUIPMENT AND RESPECT', { x: 50, y, size: 18, font: fontBold, color: rgb(1, 1, 1) });
-    y -= 25;
-    page.drawText('NATIONAL EDUCATION TRAINING & DEVELOPMENT', { x: 50, y, size: 14, font: fontBold, color: rgb(1, 1, 1) });
-    y -= 25;
-    page.drawText('TECHNICAL EMPLOYMENT TRAINING CENTER', { x: 50, y, size: 12, font: fontBold, color: rgb(0.95, 0.82, 0.21) });
-
-    // 5️⃣ Main title
-    y -= 50;
-    page.drawText('EXAMINATION TIMETABLE / DATE SHEET', { x: 50, y, size: 20, font: fontBold, color: rgb(0, 0, 0) });
-    y -= 30;
-
-    // Batch info
-    if (timetable?.courseName) page.drawText(`Course: ${timetable.courseName}`, { x: 50, y, size: 14, font: fontBold, color: rgb(0.07, 0.24, 0.41) });
-    y -= 25;
-    if (timetable?.semesterTitle) page.drawText(`Semester/Year: ${timetable.semesterTitle}`, { x: 50, y, size: 12, font: fontBold, color: rgb(0.07, 0.24, 0.41) });
-    y -= 25;
-    if (timetable?.examMonthYear) page.drawText(`Exam Month/Year: ${timetable.examMonthYear}`, { x: 50, y, size: 12, font: fontBold, color: rgb(0.07, 0.24, 0.41) });
-    y -= 25;
-    if (batch) page.drawText(`Batch: ${batch.batchName} (${batch.batchId})`, { x: 50, y, size: 12, font: fontBold, color: rgb(0.07, 0.24, 0.41) });
-    y -= 40;
-
-    // 6️⃣ Table header
-    page.drawRectangle({ x: 40, y: y - 5, width: width - 80, height: 25, color: rgb(0.07, 0.24, 0.41) });
-    const headers = ['SR. NO', 'DATE', 'TIME', 'COURSE', 'YEAR', 'SEM', 'PAPER NAME'];
-    const headerX = [50, 100, 170, 240, 320, 370, 420];
-    headers.forEach((h, i) => page.drawText(h, { x: headerX[i], y, size: 10, font: fontBold, color: rgb(1, 1, 1) }));
-    y -= 30;
-
-    // 7️⃣ Table rows
-    const subjects = timetable?.subjects || [];
-    if (subjects.length > 0) {
-      subjects.forEach((subject, i) => {
-        // Alternate row color
-        if (i % 2 === 0) page.drawRectangle({ x: 40, y: y - 3, width: width - 80, height: 20, color: rgb(0.95, 0.95, 0.98) });
-
-        // Safe text function
-        const safeText = (val) => val ? val.toString() : '';
-
-        const srNo = safeText(subject.srNo || i + 1);
-        const date = safeText(Array.isArray(subject.date) ? subject.date[0] : subject.date);
-        const time = safeText(Array.isArray(subject.time) ? subject.time[0] : subject.time);
-        const course = safeText(Array.isArray(subject.course) ? subject.course[0] : subject.course);
-        const year = safeText(subject.year);
-        const sem = safeText(Array.isArray(subject.sem) ? subject.sem[0] : subject.sem);
-        const paperName = safeText(Array.isArray(subject.paperName) ? subject.paperName[0] : subject.paperName);
-
-        const displayPaper = paperName.length > 25 ? paperName.substring(0, 25) + '...' : paperName;
-
-        const rowValues = [srNo, date, time, course, year, sem, displayPaper];
-        rowValues.forEach((val, idx) => page.drawText(val, { x: headerX[idx], y, size: 9, font, color: rgb(0, 0, 0) }));
-
-        y -= 25;
-      });
-    } else {
-      page.drawText('No examination schedule available.', { x: 150, y, size: 14, font: fontBold, color: rgb(0.9, 0, 0) });
-      y -= 30;
-    }
-
-    // 8️⃣ Notes section
-    if (timetable?.notes) {
-      y -= 20;
-      page.drawRectangle({ x: 40, y: y - 30, width: width - 80, height: 120, color: rgb(0.98, 0.98, 0.95), borderColor: rgb(0.07, 0.24, 0.41), borderWidth: 1 });
-      page.drawText('IMPORTANT NOTES:', { x: 50, y, size: 12, font: fontBold, color: rgb(0.9, 0, 0) });
-      y -= 25;
-      timetable.notes.split('\n').forEach(note => {
-        if (note.trim()) {
-          page.drawText('• ' + note.trim(), { x: 60, y, size: 10, font, color: rgb(0, 0, 0) });
-          y -= 18;
-        }
-      });
-    }
-
-    // 9️⃣ Signatures
-    y -= 50;
-    page.drawLine({ start: { x: 100, y: y + 10 }, end: { x: 200, y: y + 10 }, thickness: 1, color: rgb(0, 0, 0) });
-    page.drawLine({ start: { x: 350, y: y + 10 }, end: { x: 500, y: y + 10 }, thickness: 1, color: rgb(0, 0, 0) });
-    page.drawText('Principal', { x: 130, y, size: 11, font: fontBold, color: rgb(0, 0, 0) });
-    page.drawText('Controller of Examinations', { x: 380, y, size: 11, font: fontBold, color: rgb(0, 0, 0) });
-
-    // 10️⃣ Footer
-    page.drawText('© Technical Employment Training Center', { x: 180, y: 50, size: 8, font, color: rgb(0.5, 0.5, 0.5) });
-    page.drawText('Generated on: ' + new Date().toLocaleDateString(), { x: 200, y: 35, size: 8, font, color: rgb(0.5, 0.5, 0.5) });
-
-    // 11️⃣ Save and send PDF
-    const pdfBytes = await pdfDoc.save();
-
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': 'inline; filename=timetable.pdf',
-      'Content-Length': pdfBytes.length
-    });
-
-    res.send(pdfBytes);
-
-  } catch (err) {
-    console.error('❌ PDF Generation Error:', err);
-    res.status(500).send(`
-      <html>
-        <head><title>PDF Error</title></head>
-        <body style="font-family: Arial; padding: 20px;">
-          <h1 style="color: red;">PDF Generation Failed</h1>
-          <h3>Error Details:</h3>
-          <p><strong>Message:</strong> ${err.message}</p>
-          <pre style="background: #f5f5f5; padding: 10px;">${err.stack}</pre>
-        </body>
-      </html>
-    `);
-  }
-});
-
-router.get('/test-simple-pdf', async (req, res) => {
-  try {
-    const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([595, 842]);
-    
-    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    
-    // SOLID RED BACKGROUND
-    page.drawRectangle({
-      x: 0, y: 0, width: 595, height: 842,
-      color: rgb(1, 0, 0)
-    });
-    
-    // LARGE BLACK TEXT
-    page.drawText('CAN YOU SEE THIS?', {
-      x: 100, y: 400,
-      size: 30,
-      font: fontBold,
-      color: rgb(0, 0, 0)
-    });
-    
-    page.drawText('PDF Generation Test', {
-      x: 150, y: 350,
-      size: 20,
-      font: fontBold,
-      color: rgb(0, 0, 0)
-    });
-    
-    const pdfBytes = await pdfDoc.save();
-    
-    res.set({
-      "Content-Type": "application/pdf",
-      "Content-Disposition": "inline; filename=test.pdf"
-    });
-    
-    res.send(pdfBytes);
-  } catch (err) {
-    res.send('Error: ' + err.message);
-  }
-});
-router.get("/test-pdf", async (req, res) => {
-  try {
-    const { PDFDocument, rgb } = require("pdf-lib");
-
-    const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([600, 400]);
-
-    page.drawText("PDF working!", {
-      x: 50,
-      y: 350,
-      size: 30,
-      color: rgb(1, 0, 0)
-    });
-
-    const pdfBytes = await pdfDoc.save();
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.send(Buffer.from(pdfBytes));
-  } catch (err) {
-    console.log("PDF ERROR:", err);
-    res.status(500).send("PDF Failed");
-  }
-});
-
 
 module.exports = router;
-

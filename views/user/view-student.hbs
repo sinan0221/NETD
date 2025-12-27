@@ -142,9 +142,10 @@
         <td>{{inc @index}}</td>
         <td>{{this.regNo}}</td>
         <td>{{this.fullName}}</td>
-        <td>{{this.batchDetails.batchName}}</td>
+        <td>{{this.courseName}}</td>
         <td>{{this.admissionYear}}</td>
         <td>
+          
           {{#if this.activated}}
             <span class="status-badge status-active">Activated</span>
           {{else}}
@@ -157,6 +158,9 @@
                class="student-photo">
         </td>
         <td>
+          <a href="/user/edit-student/{{this._id}}" class="btn btn-outline-info btn-sm">
+            <i class="fa fa-edit"></i>
+          </a>
           <a href="/user/delete-student/{{this._id}}" 
              class="btn btn-danger btn-sm"
              onclick="return confirm('Are you sure you want to delete this student?');">

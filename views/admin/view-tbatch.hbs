@@ -641,11 +641,11 @@
                                 <span>Timetable</span>
                             </div>
                             <div class="action-buttons">
-                                <a href="/user/add-timetable" class="btn btn-warning">
+                                <a href="/admin/add-timetable" class="btn btn-warning">
                                     <i class="fas fa-plus"></i> Add Time Table
                                 </a>
                                 {{#if this.timetable}}
-                                <a href="/user/preview-timetable/{{this._id}}" target="_blank" class="btn btn-danger">
+                                <a href="/admin/preview-timetable/{{this._id}}" target="_blank" class="btn btn-danger">
                                     <i class="fas fa-file-pdf"></i> View PDF
                                 </a>
                                 {{else}}
@@ -669,7 +669,7 @@
                                     </button>
 
                                     <!-- Download ENABLED -->
-                                    <a href="/user/batch-halltickets-download/{{this._id}}" class="btn btn-primary">
+                                    <a href="/admin/batch-halltickets-download/{{this._id}}" class="btn btn-primary">
                                         <i class="fas fa-download"></i> Download
                                     </a>
                                 {{else}}
@@ -694,12 +694,12 @@
                             </div>
 
                             <div class="action-buttons">
-                                <a href="/user/add-question-paper/{{this._id}}" class="btn btn-warning">
+                                <a href="/admin/add-question-paper/{{this._id}}" class="btn btn-warning">
                                     <i class="fas fa-plus"></i> Add Question Paper
                                 </a>
 
                                 {{#if this.questionPapers}}
-                                    <a href="/user/view-question-papers/{{this._id}}" class="btn btn-danger">
+                                    <a href="/admin/view-question-papers/{{this._id}}" class="btn btn-danger">
                                         <i class="fas fa-eye"></i> View ({{this.questionPapers.length}})
                                     </a>
                                 {{else}}
@@ -731,7 +731,7 @@
   <div class="modal-card" style="background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%;">
     <h4 style="color: var(--dark-blue); margin-bottom: 20px;">Apply Hall Ticket (Batch)</h4>
 
-    <form method="POST" action="/user/apply-hallticket-batch">
+    <form method="POST" action="/admin/apply-hallticket-batch">
       <input type="hidden" name="batchId" id="batchIdInput">
 
       <div class="form-group" style="margin-bottom: 20px;">

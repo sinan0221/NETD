@@ -36,6 +36,8 @@
             <h3>Note:All entries must be filled by the candidate in captal letters</h3>
             
             <form  id="studentForm" action="/admin/add-student" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="centreId" value="{{centreId}}">
+
                  <!-- Academic Details -->
       <h2><i class="fa-solid fa-building-columns"></i> Academic Details</h2>
        
@@ -44,7 +46,7 @@
         
         <div class="form-group" style="padding-top: 100px;">
           <label>Admission Year</label>
-          <input type="number" name="admissionYear">
+          <input type="text" name="admissionYear" placeholder="eg:2024-2025">
         </div>
         <div class="form-group" style="padding-top: 100px;">
           <label>Mode</label>
@@ -271,120 +273,113 @@
  </div>
  <div class="page-break"></div>
      <div id="page2" style=" padding: 20px; font-family: Arial, sans-serif; margin-top: 30px;" class="page2">
-      <!-- Qualification Details -->
-      <h2><i class="fa-solid fa-medal"></i> Qualification Details</h2>
-      <div class="table-container">
-        <table class="qualification-table">
-  <thead>
-    <tr>
-      <th>Education</th>
-      <th>Max Marks</th>
-      <th>Min Marks</th>
-      <th>Obtained Marks</th>
-      <th>Grade-%</th>
-      <th>Year</th>
-      <th>Board/University/Organisation</th>
-      <th>Action</th>
-    </tr>
-  </thead>
-  <tbody id="qualificationBody">
-    <tr>
-      <td>
-        <select name="education[]">
-          <option value="">Select</option>
-          <option value="10th">10th Standard</option>
-          <option value="12th">12th Standard</option>
-          <option value="diploma">Diploma</option>
-          <option value="ug">Undergraduate</option>
-          <option value="pg">Postgraduate</option>
-        </select>
-      </td>
-      <td><input type="number" name="maxMarks[]" placeholder="0"></td>
-      <td><input type="number" name="minMarks[]" placeholder="0"></td>
-      <td><input type="number" name="obtainedMarks[]" placeholder="Obtained"></td>
-      <td><input type="text" name="grade[]" placeholder="A/90%"></td>
-      <td><input type="number" name="year[]" placeholder="YYYY"></td>
-      <td><input type="text" name="board[]" placeholder="Board name"></td>
-      <td>
-        <button type="button" class="add-row-btn">
-          <i class="fas fa-plus-circle"></i> Add
-        </button>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<p style="padding-top: 10px;"><b>Enclosure : </b>  Demand Draft/DD/Online Pay Slip , Self-Attested Xerox Copy of All Qualification & Cast Certificate</p>
-      </div>
+     <!-- Qualification Details -->
+<h2><i class="fa-solid fa-medal"></i> Qualification Details</h2>
+<div class="table-container">
+  <table class="qualification-table">
+    <thead>
+      <tr>
+        <th>Education</th>
+        <th>Max Marks</th>
+        <th>Min Marks</th>
+        <th>Obtained Marks</th>
+        <th>Grade-%</th>
+        <th>Year</th>
+        <th>Board/University/Organisation</th>
+      </tr>
+    </thead>
+    <tbody id="qualificationBody">
+      <!-- 10th Standard - Fixed Row -->
+      <tr>
+        <td>
+          <input type="text" name="education[]" value="Under Class 10" readonly style="background: #f5f5f5; border: none;">
+        </td>
+        <td><input type="number" name="maxMarks[]" placeholder="100"></td>
+        <td><input type="number" name="minMarks[]" placeholder="33"></td>
+        <td><input type="number" name="obtainedMarks[]" placeholder="Obtained"></td>
+        <td><input type="text" name="grade[]" placeholder="A/90%"></td>
+        <td><input type="number" name="year[]" placeholder="YYYY"></td>
+        <td><input type="text" name="board[]" placeholder="Board name"></td>
+      </tr>
+      
+      <!-- 12th Standard - Fixed Row -->
+      <tr>
+        <td>
+          <input type="text" name="education[]" value="Class 10/SSC" readonly style="background: #f5f5f5; border: none;">
+        </td>
+        <td><input type="number" name="maxMarks[]" placeholder="100"></td>
+        <td><input type="number" name="minMarks[]" placeholder="33"></td>
+        <td><input type="number" name="obtainedMarks[]" placeholder="Obtained"></td>
+        <td><input type="text" name="grade[]" placeholder="A/90%"></td>
+        <td><input type="number" name="year[]" placeholder="YYYY"></td>
+        <td><input type="text" name="board[]" placeholder="Board name"></td>
+      </tr>
+      
+      <!-- Diploma - Fixed Row -->
+      <tr>
+        <td>
+          <input type="text" name="education[]" value="Class 12 VHSC" readonly style="background: #f5f5f5; border: none;">
+        </td>
+        <td><input type="number" name="maxMarks[]" placeholder="100"></td>
+        <td><input type="number" name="minMarks[]" placeholder="33"></td>
+        <td><input type="number" name="obtainedMarks[]" placeholder="Obtained"></td>
+        <td><input type="text" name="grade[]" placeholder="A/90%"></td>
+        <td><input type="number" name="year[]" placeholder="YYYY"></td>
+        <td><input type="text" name="board[]" placeholder="University name"></td>
+      </tr>
+      
+      <!-- Undergraduate - Fixed Row -->
+      <tr>
+        <td>
+          <input type="text" name="education[]" value="Graduate ..." readonly style="background: #f5f5f5; border: none;">
+        </td>
+        <td><input type="number" name="maxMarks[]" placeholder="100"></td>
+        <td><input type="number" name="minMarks[]" placeholder="33"></td>
+        <td><input type="number" name="obtainedMarks[]" placeholder="Obtained"></td>
+        <td><input type="text" name="grade[]" placeholder="A/90%"></td>
+        <td><input type="number" name="year[]" placeholder="YYYY"></td>
+        <td><input type="text" name="board[]" placeholder="University name"></td>
+      </tr>
+      
+      <!-- Postgraduate - Fixed Row -->
+      <tr>
+        <td>
+          <input type="text" name="education[]" value="PG/ Master......" readonly style="background: #f5f5f5; border: none;">
+        </td>
+        <td><input type="number" name="maxMarks[]" placeholder="100"></td>
+        <td><input type="number" name="minMarks[]" placeholder="33"></td>
+        <td><input type="number" name="obtainedMarks[]" placeholder="Obtained"></td>
+        <td><input type="text" name="grade[]" placeholder="A/90%"></td>
+        <td><input type="number" name="year[]" placeholder="YYYY"></td>
+        <td><input type="text" name="board[]" placeholder="University name"></td>
+      </tr>
+       <!-- othersss- Fixed Row -->
+      <tr>
+        <td>
+          <input type="text" name="education[]" value="Other...." readonly style="background: #f5f5f5; border: none;">
+        </td>
+        <td><input type="number" name="maxMarks[]" placeholder="100"></td>
+        <td><input type="number" name="minMarks[]" placeholder="33"></td>
+        <td><input type="number" name="obtainedMarks[]" placeholder="Obtained"></td>
+        <td><input type="text" name="grade[]" placeholder="A/90%"></td>
+        <td><input type="number" name="year[]" placeholder="YYYY"></td>
+        <td><input type="text" name="board[]" placeholder="University name"></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
       
 
-  <!-- DECLARATION BY THE APPLICANT -->
-  <h3 style="
-    text-align: center;
-    background: #eaeaea;
-    padding: 6px;
-    border: 1px solid #bbb;
-    font-weight: bold;
-  " class="h3-app">DECLARATION BY THE APPLICANT</h3>
 
-  <p style="font-size: 16px; line-height: 1.5; text-align: justify;">
-    I ............................................................. Son/Daughter of ............................................................. hereby declare
-    that I read all the rules and regulations of the institute and I am committed to follow all the rules with best of
-    my efforts. If found any violation then the institute authority has the rights to terminate my registration. In case
-    of termination the institute will not be responsible for any fee return or any kind of claim.
-  </p>
 
-  <p style="font-size: 16px; line-height: 1.5; text-align: justify;">
-    I also declare of my knowledge.
-  </p>
 
-  <!-- DATE & PLACE -->
-  <div style="display: flex; justify-content: space-between; margin-top: 30px;">
-    <div>
-      <b>Date:</b> _____ / _____ / 20_____
-      <br><br>
-      <b>Place:</b> __________________________________
-    </div>
 
-    <div style="text-align: center;">
-      <p style="margin-bottom: 40px;"><b>Signature of Applicant</b></p>
-    </div>
 
-    <div style="text-align: center;">
-      <p style="margin-bottom: 40px;"><b>Signature of Guardian</b></p>
-    </div>
 
-    <div style="text-align: center;">
-      <p style="margin-bottom: 40px;"><b>Signature of ATC Director<br><small>With rubber stamp and date</small></b></p>
-    </div>
-  </div>
 
-  <hr style="margin: 40px 0; border: none; border-top: 2px solid #000;">
 
-  <!-- HEAD OFFICE USE ONLY -->
-  <h3 style="
-    text-align: center;
-    background: #eaeaea;
-    padding: 6px;
-    border: 1px solid #bbb;
-    font-weight: bold;
-  ">TRAINING CENTER USE ONLY</h3>
 
-  <div style="display: flex; justify-content: space-between; margin-top: 25px;">
-    <div style="text-align: center; flex: 1;">
-      <b>Form Receiving Date</b>
-      <div style="border: 1px solid #000; height: 40px; margin-top: 5px;"></div>
-    </div>
-
-    <div style="text-align: center; flex: 1;">
-      <b>Enrollment No.</b>
-      <div style="border: 1px solid #000; height: 40px; margin-top: 5px;"></div>
-    </div>
-
-    <div style="text-align: center; flex: 1;">
-      <b>Authorised Signatory</b>
-      <div style="border: 1px solid #000; height: 40px; margin-top: 5px;"></div>
-    </div>
-  </div>
+ 
 
 </div>
       
@@ -394,9 +389,9 @@
       
 
       <br>
-      <input class="submit-btn" type="submit" value="Submit">
-    <button type="button" id="downloadPdf" class="btn btn-danger">
-  Preview Download
+  
+    <button class="submit-btn" type="submit" value="Submit" >
+  submit
 </button>
 
 
@@ -411,30 +406,7 @@
 
 
     <script>
-document.addEventListener("click", function (e) {
-  if (e.target.closest(".add-row-btn")) {
-    let tbody = document.getElementById("qualificationBody");
-    let newRow = tbody.rows[0].cloneNode(true);
 
-    // clear inputs
-    newRow.querySelectorAll("input, select").forEach(el => el.value = "");
-
-    // change button to remove
-    let actionCell = newRow.querySelector("td:last-child");
-    actionCell.innerHTML = `
-      <button type="button" class="remove-row-btn">
-        <i class="fas fa-minus-circle"></i> Remove
-      </button>
-    `;
-
-    tbody.appendChild(newRow);
-  }
-
-  if (e.target.closest(".remove-row-btn")) {
-    let row = e.target.closest("tr");
-    row.remove();
-  }
-});
 function previewPhoto(event) {
   const file = event.target.files[0];
   if (file) {

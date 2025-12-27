@@ -21,16 +21,19 @@
     "express-handlebars": "^8.0.2",
     "express-session": "^1.18.2",
     "fontkit": "^2.0.4",
+    "googleapis": "^169.0.0",
     "hbs": "^4.2.0",
     "html-pdf-node": "^1.0.8",
     "http-errors": "~1.6.3",
     "jpeg-autorotate": "^9.0.0",
+    "mammoth": "^1.11.0",
     "mongodb": "^6.19.0",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "nodemon": "^3.1.10",
     "pdf-lib": "^1.17.1",
     "pdfkit": "^0.17.2",
-    "puppeteer": "^22.15.0"
+    "puppeteer": "^22.15.0",
+    "xlsx": "^0.18.5"
   }
 }

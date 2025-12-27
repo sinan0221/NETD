@@ -1,237 +1,5 @@
 
-// var db = require('../config/connection');
-// var collection = require('../config/collections');
-// const { ObjectId } = require('mongodb');   // ✅ Import ObjectId
 
-// module.exports = {
-//   // ===============================
-//   // Add Student
-//   // ===============================
-//   addStudent: (studentData, callback) => {
-//     try {
-//       let qualifications = [];
-
-//       // ✅ Process qualification arrays if available
-//       if (studentData.education) {
-//         qualifications = studentData.education.map((edu, i) => ({
-//           education: edu,
-//           maxMarks: studentData.maxMarks[i],
-//           minMarks: studentData.minMarks[i],
-//           obtainedMarks: studentData.obtainedMarks[i],
-//           grade: studentData.grade[i],
-//           year: studentData.year[i],
-//           board: studentData.board[i]
-//         }));
-//       }
-
-//       studentData.qualifications = qualifications;
-//       studentData.createdAt = new Date();
-
-//       // 🟢 Convert batchId to ObjectId
-//       if (studentData.batchId) {
-//         try {
-//           studentData.batchId = new ObjectId(studentData.batchId);
-//         } catch (err) {
-//           console.warn("⚠️ Invalid batchId format:", studentData.batchId);
-//         }
-//       }
-//       studentData.appliedForHallTicket = false;
-
-//       // Remove raw arrays
-//       delete studentData.education;
-//       delete studentData.maxMarks;
-//       delete studentData.minMarks;
-//       delete studentData.obtainedMarks;
-//       delete studentData.grade;
-//       delete studentData.year;
-//       delete studentData.board;
-
-//       db.get()
-//         .collection(collection.STUDENT_COLLECTION)
-//         .insertOne(studentData)
-//         .then((data) => {
-//           console.log("✅ Student added:", data.insertedId);
-//           callback(data.insertedId);
-//         })
-//         .catch((err) => {
-//           console.error("❌ DB Error while adding student:", err);
-//         });
-
-//     } catch (err) {
-//       console.error("❌ Error in addStudent:", err);
-//     }
-//   },
-
-//   // ===============================
-//   // Get All Students
-//   // ===============================
-// //   getAllStudents: () => {
-// //     return db.get()
-// //       .collection(collection.STUDENT_COLLECTION)
-// //       .find({})
-// //       .toArray();
-// //   },
-// getAllStudents: () => {
-//     return new Promise(async (resolve, reject) => {
-//       try {
-//         let students = await db.get()
-//           .collection(collection.STUDENT_COLLECTION)
-//           .aggregate([
-//             {
-//               $lookup: {
-//                 from: collection.BATCH_COLLECTION,
-//                 localField: "batchId",
-//                 foreignField: "_id",
-//                 as: "batchDetails"
-//               }
-//             },
-//             { $unwind: { path: "$batchDetails", preserveNullAndEmptyArrays: true } }
-//           ])
-//           .toArray();
-//         resolve(students);
-//       } catch (err) {
-//         reject(err);
-//       }
-//     });
-//   },
-  
-
-//   // ===============================
-//   // Delete Student
-//   // ===============================
-//   deleteStudent: (studentId) => {
-//     return new Promise((resolve, reject) => {
-//       db.get()
-//         .collection(collection.STUDENT_COLLECTION)
-//         .deleteOne({ _id: new ObjectId(studentId) })
-//         .then((response) => {
-//           console.log("✅ Student deleted:", response);
-//           resolve(response);
-//         })
-//         .catch((err) => {
-//           console.error("❌ Error deleting student:", err);
-//           reject(err);
-//         });
-//     });
-//   },
-
-//   // ===============================
-//   // Get Student Details
-//   // ===============================
-//   getStudentDetails: (studentId) => {
-//     return new Promise((resolve, reject) => {
-//       db.get()
-//         .collection(collection.STUDENT_COLLECTION)
-//         .findOne({ _id: new ObjectId(studentId) })
-//         .then((student) => resolve(student))
-//         .catch((err) => {
-//           console.error("❌ Error fetching student details:", err);
-//           reject(err);
-//         });
-//     });
-//   },
-
-//   // ===============================
-//   // Update Student
-//   // ===============================
-//   updateStudent: (studentId, studentDetails) => {
-//     try {
-//       let qualifications = [];
-
-//       // ✅ Build structured qualifications if form sent arrays
-//       if (studentDetails.education) {
-//         qualifications = studentDetails.education.map((edu, i) => ({
-//           education: edu,
-//           maxMarks: studentDetails.maxMarks[i],
-//           minMarks: studentDetails.minMarks[i],
-//           obtainedMarks: studentDetails.obtainedMarks[i],
-//           grade: studentDetails.grade[i],
-//           year: studentDetails.year[i],
-//           board: studentDetails.board[i]
-//         }));
-//       }
-
-//       // 🟢 Convert batchId to ObjectId if exists
-//       if (studentDetails.batchId) {
-//         try {
-//           studentDetails.batchId = new ObjectId(studentDetails.batchId);
-//         } catch (err) {
-//           console.warn("⚠️ Invalid batchId format in update:", studentDetails.batchId);
-//         }
-//       }
-
-//       // Remove raw arrays
-//       delete studentDetails.education;
-//       delete studentDetails.maxMarks;
-//       delete studentDetails.minMarks;
-//       delete studentDetails.obtainedMarks;
-//       delete studentDetails.grade;
-//       delete studentDetails.year;
-//       delete studentDetails.board;
-
-//       return db.get()
-//         .collection(collection.STUDENT_COLLECTION)
-//         .updateOne(
-//           { _id: new ObjectId(studentId) },
-//           {
-//             $set: {
-//               ...studentDetails,
-//               qualifications: qualifications
-//             }
-//           }
-//         );
-//     } catch (err) {
-//       console.error("❌ Error in updateStudent:", err);
-//     }
-//   },
-
-//   // ===============================
-//   // Get Students By Batch
-//   // ===============================
-//   getStudentsByBatch: (batchId) => {
-//     return new Promise(async (resolve, reject) => {
-//       try {
-//         let students = await db.get()
-//           .collection(collection.STUDENT_COLLECTION)
-//           .find({ batchId: new ObjectId(batchId) })  // ✅ Proper filter
-//           .toArray();
-
-//         resolve(students);
-//       } catch (err) {
-//         console.error("❌ Error fetching students by batch:", err);
-//         reject(err);
-//       }
-//     });
-//   },
-//   searchStudents: (keyword) => {
-//     return new Promise(async (resolve, reject) => {
-//       try {
-//         const results = await db.get()
-//           .collection(collection.STUDENT_COLLECTION)
-//           .find({ name: { $regex: keyword, $options: "i" } })
-//           .toArray();
-//         resolve(results);
-//       } catch (err) {
-//         reject(err);
-//       }
-//     });
-//   },
-//   // ===============================
-// // Get Student By ID (with Application Form)
-// // ===============================
-// getStudentById: async (studentId) => {
-//     try {
-//       return await db.get()
-//         .collection(collection.STUDENT_COLLECTION)
-//         .findOne({ _id: new ObjectId(studentId) });
-//     } catch (err) {
-//       console.error("❌ Error fetching student by ID:", err);
-//       return null;
-//     }
-//   },
-  
-  
-// };
   
 var db = require('../config/connection');
 var collection = require('../config/collections');
@@ -371,61 +139,100 @@ module.exports = {
   // ===============================
   // Add Student (your existing function)
   // ===============================
+  // addStudent: (studentData, callback) => {
+  //   try {
+  //     let qualifications = [];
+
+  //     // ✅ Process qualification arrays if available
+  //     if (studentData.education) {
+  //       qualifications = studentData.education.map((edu, i) => ({
+  //         education: edu,
+  //         maxMarks: studentData.maxMarks[i],
+  //         minMarks: studentData.minMarks[i],
+  //         obtainedMarks: studentData.obtainedMarks[i],
+  //         grade: studentData.grade[i],
+  //         year: studentData.year[i],
+  //         board: studentData.board[i]
+  //       }));
+  //     }
+
+  //     studentData.qualifications = qualifications;
+  //     studentData.createdAt = new Date();
+
+  //     // 🟢 Convert batchId to ObjectId
+  //     if (studentData.batchId) {
+  //       try {
+  //         studentData.batchId = new ObjectId(studentData.batchId);
+  //       } catch (err) {
+  //         console.warn("⚠️ Invalid batchId format:", studentData.batchId);
+  //       }
+  //     }
+  //     studentData.appliedForHallTicket = false;
+
+  //     // Remove raw arrays
+  //     delete studentData.education;
+  //     delete studentData.maxMarks;
+  //     delete studentData.minMarks;
+  //     delete studentData.obtainedMarks;
+  //     delete studentData.grade;
+  //     delete studentData.year;
+  //     delete studentData.board;
+
+  //     db.get()
+  //       .collection(collection.STUDENT_COLLECTION)
+  //       .insertOne(studentData)
+  //       .then((data) => {
+  //         console.log("✅ Student added:", data.insertedId);
+  //         callback(data.insertedId);
+  //       })
+  //       .catch((err) => {
+  //         console.error("❌ DB Error while adding student:", err);
+  //       });
+
+  //   } catch (err) {
+  //     console.error("❌ Error in addStudent:", err);
+  //   }
+  // },
   addStudent: (studentData, callback) => {
     try {
-      let qualifications = [];
-
-      // ✅ Process qualification arrays if available
-      if (studentData.education) {
-        qualifications = studentData.education.map((edu, i) => ({
-          education: edu,
-          maxMarks: studentData.maxMarks[i],
-          minMarks: studentData.minMarks[i],
-          obtainedMarks: studentData.obtainedMarks[i],
-          grade: studentData.grade[i],
-          year: studentData.year[i],
-          board: studentData.board[i]
-        }));
+  
+      // 🟢 Do NOT rebuild qualifications
+      // They already come as studentData.qualifications
+  
+      if (!Array.isArray(studentData.qualifications)) {
+        studentData.qualifications = [];
       }
-
-      studentData.qualifications = qualifications;
+  
       studentData.createdAt = new Date();
-
+      studentData.appliedForHallTicket = false;
+  
       // 🟢 Convert batchId to ObjectId
       if (studentData.batchId) {
         try {
           studentData.batchId = new ObjectId(studentData.batchId);
         } catch (err) {
-          console.warn("⚠️ Invalid batchId format:", studentData.batchId);
+          console.warn("⚠️ Invalid batchId:", studentData.batchId);
         }
       }
-      studentData.appliedForHallTicket = false;
-
-      // Remove raw arrays
-      delete studentData.education;
-      delete studentData.maxMarks;
-      delete studentData.minMarks;
-      delete studentData.obtainedMarks;
-      delete studentData.grade;
-      delete studentData.year;
-      delete studentData.board;
-
+  
       db.get()
         .collection(collection.STUDENT_COLLECTION)
         .insertOne(studentData)
         .then((data) => {
-          console.log("✅ Student added:", data.insertedId);
+          console.log("✅ Student inserted with qualifications:", studentData.qualifications.length);
           callback(data.insertedId);
         })
         .catch((err) => {
-          console.error("❌ DB Error while adding student:", err);
+          console.error("❌ DB Error inserting student:", err);
+          callback(null);
         });
-
+  
     } catch (err) {
       console.error("❌ Error in addStudent:", err);
+      callback(null);
     }
   },
-
+  
   // ===============================
   // Get All Students
   // ===============================
@@ -765,5 +572,92 @@ searchStudentsByCenter: (keyword, centreId) => {
       }
     });
   },
+  autoApproveHallticketsByBatch: async (batchId) => {
+    try {
+      const students = await db.get()
+        .collection(collection.STUDENT_COLLECTION)
+        .find({
+          batchId: batchId,
+          hallticketStatus: "PENDING",
+          hallticketAppliedAt: { $exists: true }
+        })
+        .toArray();
+  
+      const now = new Date();
+  
+      for (const student of students) {
+        const appliedTime = new Date(student.hallticketAppliedAt);
+        const hoursPassed = (now - appliedTime) / (1000 * 60 * 60);
+  
+        if (hoursPassed >= 12) {
+          await db.get()
+            .collection(collection.STUDENT_COLLECTION)
+            .updateOne(
+              { _id: student._id },
+              { $set: { hallticketStatus: "APPROVED" } }
+            );
+  
+          console.log(`✅ Auto-approved hallticket: ${student._id}`);
+        }
+      }
+    } catch (err) {
+      console.error("❌ Batch auto-approve error:", err);
+    }
+  },
+  applyHallticketByBatch: async (batchId, examDate, examTime) => {
+    try {
+      const students = await db.get()
+        .collection(collection.STUDENT_COLLECTION)
+        .find({ batchId: new ObjectId(batchId) }) // ✅ FIX
+        .toArray();
+  
+      if (!students.length) {
+        console.log(`⚠️ No students found for batch ${batchId}`);
+        return false;
+      }
+  
+      for (const student of students) {
+  
+        if (student.appliedForHallTicket === true) continue;
+  
+        const applicationForm = {
+          studentId: student._id,
+          candidateName: student.fullName || student.name || "",
+          courseName: student.courseName || "",
+          studyCentre: student.centreName || "",
+          examCentre: student.centreName || "",
+          examDate,
+          examTime,
+          registerNumber: student.regNo || "",
+          studentName: student.fullName || student.name || "",
+          createdAt: new Date()
+        };
+  
+        await db.get()
+          .collection(collection.STUDENT_COLLECTION)
+          .updateOne(
+            { _id: student._id },
+            {
+              $set: {
+                appliedForHallTicket: true,
+                hallticketStatus: "PENDING",
+                hallticketAppliedAt: new Date(),
+                applicationForm
+              }
+            }
+          );
+      }
+  
+      console.log(`✅ Hall ticket applied for batch ${batchId}`);
+      return true;
+  
+    } catch (err) {
+      console.error("❌ applyHallticketByBatch error:", err);
+      throw err;
+    }
+  }
+  
+  
+    
     
 };

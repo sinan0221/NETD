@@ -172,6 +172,31 @@ section {
   box-shadow: 0 4px 8px rgba(0,78,137,0.3);
   color: var(--white);
 }
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background: #fff;
+  padding: 20px;
+  width: 350px;
+  border-radius: 8px;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+}
 
 /* Edit buttons */
 .btn-edit {
@@ -275,13 +300,14 @@ section {
 }
 
 /* Certificate Action Section */
-.table tbody td:nth-child(5) {
+.certificate-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
   align-items: center;
 }
+
 
 /* Form button inline */
 form[style*="display: inline"] {
@@ -344,9 +370,7 @@ form[style*="display: inline"] {
 
 <section>
     <div class="container">
-        <a href="javascript:void(0);" class="btn btn-success" onclick="showAllGradeInstructions('{{this.grade}}','{{this.stars}}')">
-            Grade : {{grade}} {{stars}}
-        </a>
+        
         
         <h2>BATCHES</h2>
         
@@ -364,10 +388,11 @@ Director Name : {{center.centreDirector}}
         <table class="table">
             <thead>
                 <tr>
-                    <th scope="col">Batch No</th>
+                    
                     <th scope="col">BATCH ID</th>
                     <th scope="col">BATCH NAME</th>
-                    <th scope="col">HALL TICKET</th>
+                    <th scope="col">RECIEPT</th>
+                    
                     <th scope="col">APPLY CERTIFICATE</th>
                     <th scope="col">ACTION</th>
                 </tr>
@@ -375,7 +400,7 @@ Director Name : {{center.centreDirector}}
             <tbody>
                 {{#each batches}}
                 <tr>
-                    <td data-label="Batch No">{{this.batchNo}}</td>
+                   
                     <td data-label="Batch ID">
                         {{this.batchId}}
                         <a href="/user/batch-idcards-download/{{this._id}}" class="btn btn-sm btn-primary">
@@ -383,37 +408,66 @@ Director Name : {{center.centreDirector}}
                         </a>
                     </td>
                     <td data-label="Batch Name">{{this.batchName}}</td>
-                    <td data-label="Hall Ticket">
+                  <td data-label="Links">
+  {{#if this.paymentLink}}
+    <a href="{{this.paymentLink}}" target="_blank" class="btn btn-sm btn-primary">
+      💳 Payment
+    </a>
+  {{else}}
+    <span class="text-muted">No Payment Link</span>
+  {{/if}}
+
+  
+</td>
+
+
+                    {{!-- <td data-label="Hall Ticket">
+                   {{#if this.appliedForHallTicket}}
+    <button class="btn btn-success btn-sm" disabled>
+      <i class="fas fa-check-circle me-1"></i>
+      Applied
+    </button>
+  {{else}}
+    <button 
+      class="btn btn-warning btn-sm"
+      onclick="openHallTicketModal('{{this._id}}')">
+      <i class="fas fa-ticket-alt me-1"></i>
+      Apply Hall Ticket (Batch)
+    </button>
+  {{/if}}
+
+
+
                         <a href="/user/batch-halltickets-download/{{this._id}}" class="btn btn-primary">
                             <i class="fas fa-download"></i> Download All Hall Tickets
                         </a>
-                    </td>
-                    <td data-label="Apply Certificate">
-                        {{#if this.courseStartDate}}
-                            <button class="btn btn-success btn-sm">
-                                <i class="fas fa-check-circle"></i> Applied
-                            </button>
-                            <a href="/user/edit-schedule/{{this._id}}" class="btn btn-sm btn-edit">
-                                <i class="fa fa-edit"></i>
-                            </a>
-                        {{else}}
-                            <a href="/user/course-schedule/{{this._id}}" class="btn btn-outline-dark btn-sm">
-                                Apply Certificate
-                            </a>
-                        {{/if}}
-                        
-                        <form action="/user/toggle-certificate-batch/{{this._id}}" method="POST" style="display: inline;">
-                            <button type="submit" class="btn btn-warning btn-sm">
-                                <i class="fas fa-sync-alt"></i> Mode ({{this.certificateType}})
-                            </button>
-                        </form>
-                    </td>
+                    </td> --}}
+                   <td data-label="Apply Certificate">
+  <div class="certificate-actions">
+    {{#if this.courseStartDate}}
+      <button class="btn btn-success btn-sm">
+        <i class="fas fa-check-circle"></i> Applied
+      </button>
+
+      <a href="/user/edit-schedule/{{this._id}}" class="btn btn-sm btn-edit">
+        <i class="fa fa-edit"></i>
+      </a>
+    {{else}}
+      <a href="/user/course-schedule/{{this._id}}" class="btn btn-outline-dark btn-sm">
+        Apply Certificate
+      </a>
+    {{/if}}
+
+  
+
+
+  </div>
+</td>
+
                     <td data-label="Action">
                       
                         <a href="/user/view-bstudent/{{this._id}}" class="btn btn-sm btn-view">View Students</a>
-                          <button class="btn btn-sm btn-fee" onclick="showFeeCard('{{this._id}}', '{{this.batchName}}')">
-      <i class="fas fa-money-bill-wave"></i> Fee
-    </button>
+                        
                         <a href="/user/edit-batch/{{this._id}}" class="btn btn-sm btn-edit">
                             <i class="fa fa-edit"></i>
                         </a>
@@ -459,4 +513,6 @@ Director Name : {{center.centreDirector}}
         alert(message);
     }
     </script>
+  
+
 </section>

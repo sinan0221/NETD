@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inactive Batches</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --dark-blue: rgba(0,78,137,1);
+            --golden-brown: rgba(176,149,114,1);
+            --white: #ffffff;
+            --dark-blue-hover: rgba(0,60,110,1);
+            --golden-brown-hover: rgba(156,129,94,1);
+            --transition: all 0.3s ease;
+            --light-gray: #f5f7fa;
+            --medium-gray: #e9ecef;
+            --text-dark: #333;
+            --text-medium: #666;
+            --text-light: #888;
+            --inactive-red: #dc3545;
+            --inactive-red-hover: #c82333;
+            --success-green: #28a745;
+            --success-green-hover: #218838;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius: 8px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-gray);
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        section {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 30px;
+            margin-top: 20px;
+        }
+        
+        /* Grade Display Button */
+        .btn.btn-success {
+            display: inline-block;
+            background-color: var(--success-green);
+            color: var(--white);
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn.btn-success:hover {
+            background-color: var(--success-green-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Heading Styles */
+        h2 {
+            color: var(--dark-blue);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--medium-gray);
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .inactive-indicator {
+            background-color: var(--inactive-red);
+            color: var(--white);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 12px 24px;
+            background-color: var(--dark-blue);
+            color: var(--white);
+            text-decoration: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            transition: var(--transition);
+            border: 2px solid var(--dark-blue);
+        }
+        
+        .nav-btn:hover {
+            background-color: var(--dark-blue-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-btn.inactive {
+            background-color: var(--golden-brown);
+            border-color: var(--golden-brown);
+        }
+        
+        .nav-btn.inactive:hover {
+            background-color: var(--golden-brown-hover);
+        }
+        
+        .nav-btn i {
+            font-size: 18px;
+        }
+        
+        /* Table Styles */
+        table.table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 0 0 1px var(--medium-gray);
+        }
+        
+        table.table thead {
+            background-color: var(--dark-blue);
+            color: var(--white);
+        }
+        
+        table.table th {
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 16px;
+            border-bottom: 2px solid var(--dark-blue);
+        }
+        
+        table.table tbody tr {
+            border-bottom: 1px solid var(--medium-gray);
+            transition: var(--transition);
+        }
+        
+        table.table tbody tr:hover {
+            background-color: rgba(0, 78, 137, 0.05);
+        }
+        
+        table.table td {
+            padding: 16px 15px;
+            color: var(--text-medium);
+        }
+        
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 15px;
+            background-color: var(--inactive-red);
+            color: var(--white);
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background-color: rgba(0, 78, 137, 0.03);
+            border-radius: var(--radius);
+            border: 2px dashed var(--medium-gray);
+            margin-top: 30px;
+        }
+        
+        .empty-icon {
+            font-size: 70px;
+            color: var(--success-green);
+            margin-bottom: 20px;
+        }
+        
+        .empty-title {
+            color: var(--dark-blue);
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+        
+        .empty-message {
+            color: var(--text-medium);
+            max-width: 600px;
+            margin: 0 auto 30px;
+            font-size: 18px;
+            line-height: 1.7;
+        }
+        
+        /* Responsive Table */
+        @media (max-width: 768px) {
+            table.table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            h2 {
+                font-size: 24px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .inactive-indicator {
+                align-self: flex-start;
+            }
+            
+            .empty-title {
+                font-size: 24px;
+            }
+            
+            .empty-message {
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            section {
+                padding: 20px 15px;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+            }
+            
+            .nav-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            table.table th, 
+            table.table td {
+                padding: 12px 10px;
+                font-size: 14px;
+            }
+            
+            .empty-state {
+                padding: 40px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section>
+        <div class="container">
+          
+            
+            <h2>INACTIVE BATCHES <span class="inactive-indicator">{{batches.length}} Inactive</span></h2>
+            
+            <!-- Navigation Buttons -->
+            <div class="nav-buttons">
+                <a href="/user/view-batch" class="nav-btn">
+                    <i class="fas fa-check-circle me-1"></i> Active Batches
+                </a>
+                <a href="/user/inactive-batches" class="nav-btn inactive">
+                    <i class="fas fa-pause-circle me-1"></i> Inactive Batches
+                </a>
+            </div>
+
+            {{#if batches.length}}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Centre Name</th>
+                        <th scope="col">Batch No</th>
+                        <th scope="col">Batch ID</th>
+                        <th scope="col">Batch Name</th>
+                        <th scope="col">No Of Students</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each batches}}
+                    <tr>
+                        <td data-label="Centre Name">{{this.centre.centreName}}</td>
+                        <td data-label="Batch No">{{this.batchNo}}</td>
+                        <td data-label="Batch ID">{{this.batchId}}</td>
+                        <td data-label="Batch Name">{{this.batchName}}</td>
+                        <td data-label="No Of Students">{{this.nostudents}}</td>
+                        <td data-label="Status">
+                            <span class="status-badge">INACTIVE</span>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+            {{else}}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3 class="empty-title">All Batches Are Active</h3>
+                <p class="empty-message">
+                    Great news! Currently, there are no inactive batches. All your batches are active and available for student access.
+                </p>
+                <a href="/user/view-batch" class="nav-btn">
+                    <i class="fas fa-arrow-left me-2"></i> View Active Batches
+                </a>
+            </div>
+            {{/if}}
+        </div>
+    </section>
+</body>
+</html>

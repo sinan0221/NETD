@@ -18,8 +18,8 @@ body {
 
 /* Container styling */
 .container {
-  max-width: 1100px;
-  margin: 20px auto;
+  max-width: 1000px;
+  margin: 8px auto;
   padding: 20px;
   background: #ffffff;
   border: 2px solid #000000;
@@ -27,6 +27,7 @@ body {
   font-size: 14px;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
+  padding-top: 70px;
  
 }
 
@@ -40,7 +41,7 @@ body {
   print-color-adjust: exact;
 }
 .page1{
-  padding-top: 100px;
+  padding-top: 10px;
 }
 
 .header h2 {
@@ -74,7 +75,7 @@ body {
 }
 
 .full-width-image-container {
-  width: 60%;
+  width: 100%;
   margin: 0 auto;
   padding: 0;
   overflow: hidden;
@@ -106,6 +107,24 @@ h2 {
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
+.fullForm {
+  margin-left: 50px;
+}
+
+/* remove default full-width border */
+.fullForm {
+  border-bottom: none;
+}
+
+h2.fullForm::after {
+  content: "";
+  display: block;
+  width: 854px;          /* 👈 reduce size here */
+  height: 2px;
+  background: #000;
+  margin-top: 6px;
+}
+
 .main-heading {
   margin-top: 20px;
   margin-bottom: 0;      /* remove extra space under text */
@@ -209,6 +228,19 @@ form {
   margin-bottom: 4px;
   color: #000000;
 }
+.tagline {
+  position: relative;        /* allow manual movement */
+  left: 70px;               /* move LEFT (adjust value) */
+  top: -10px;                /* move UP (adjust value) */
+
+  text-align: center;
+  margin: 0;
+  padding: 0;
+
+  text-decoration: none !important;
+  border-bottom: none !important;
+}
+
 
 input[type="text"],
 input[type="number"],
@@ -362,51 +394,20 @@ select:focus {
   font-size: 15px;
 }
 
-.dec-input {
-  width: 220px;
-  border: none;
-  border-bottom: 1px solid #333;
-  background: transparent;
-  outline: none;
-}
-
 .signature-row {
-  margin-top: 30px;
+  margin-top: 70px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
+  font-size: 15px;
 }
 
 .sig-box {
-  width: 30%;
+  width: 260px;
   text-align: center;
-  padding-top: 40px;
+  padding-top: 45px;
   border-top: 1px solid #333;
   font-size: 14px;
 }
-
-.signature-office {
-  margin-top: 50px;
-  text-align: right;
-  padding-top: 40px;
-  border-top: 1px solid #333;
-  width: 250px;
-  margin-left: auto;
-}
-/* ================= ENCLOSURE ================= */
-.enclosure-box {
-  border: 2px solid #000;
-  padding: 6px 10px;
-  margin-top: 12px;
-  font-size: 13px;
-  background: #fafafa;
-}
-
-.enclosure-box h3 {
-  font-size: 14px;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
 
 
 
@@ -452,3 +453,16 @@ select:focus {
   margin: 0 auto; /* center the form */
 }
 
+/* Hide elements only during PDF capture */
+.pdf-hide {
+  display: inline-block;
+}
+
+.hide-for-pdf {
+  display: none !important;
+}
+
+/* Remove border only during PDF */
+.no-border {
+  border: none !important;
+}

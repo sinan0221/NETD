@@ -18,44 +18,26 @@ section {
 
 /* ===== Heading ===== */
 .container h2 {
-  color: #1f3555;
+  color: #6c757d;
   font-weight: 700;
   margin-bottom: 20px;
   text-align: center;
-  border-bottom: 2px solid #2d4a70;
+  border-bottom: 2px solid #6c757d;
   padding-bottom: 10px;
   font-size: 26px;
   letter-spacing: 1px;
 }
 
-/* ===== Filter Buttons ===== */
-.filter-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.filter-buttons .btn {
-  min-width: 120px;
-}
-
-/* ===== Status Badges ===== */
-.status-badge {
-  padding: 4px 10px;
+/* Inactive batch indicator */
+.inactive-indicator {
+  display: inline-block;
+  background: #f8d7da;
+  color: #721c24;
+  padding: 3px 10px;
   border-radius: 20px;
   font-size: 12px;
+  margin-left: 10px;
   font-weight: 600;
-}
-
-.status-active {
-  background-color: #d4edda;
-  color: #155724;
-}
-
-.status-inactive {
-  background-color: #f8d7da;
-  color: #721c24;
 }
 
 /* ===== Table ===== */
@@ -68,7 +50,7 @@ section {
 }
 
 .table thead th {
-  background: #1f3555;
+  background: #6c757d;
   color: #fff;
   font-weight: 600;
   text-align: center;
@@ -88,6 +70,15 @@ section {
 .table tbody tr:hover {
   background-color: #f9fbfd;
   transition: 0.3s;
+}
+
+/* Inactive row styling */
+.table tbody tr {
+  opacity: 0.9;
+}
+
+.table tbody tr:hover {
+  opacity: 1;
 }
 
 /* ===== Action Buttons ===== */
@@ -126,15 +117,6 @@ section {
   color: #000;
 }
 
-.btn-delete {
-  background: #dc3545;
-  color: #fff;
-}
-
-.btn-delete:hover {
-  background: #b02a37;
-}
-
 .btn-activate {
   background: #28a745;
   color: #fff;
@@ -144,13 +126,13 @@ section {
   background: #218838;
 }
 
-.btn-deactivate {
-  background: #6c757d;
+.btn-delete {
+  background: #dc3545;
   color: #fff;
 }
 
-.btn-deactivate:hover {
-  background: #545b62;
+.btn-delete:hover {
+  background: #b02a37;
 }
 
 .btn-excel {
@@ -165,14 +147,14 @@ section {
 
 <section>
     <div class="container">
-        <h2>ALL BATCHES</h2>
+        <h2>INACTIVE BATCHES <span class="inactive-indicator">{{batches.length}} Inactive</span></h2>
         
-        <!-- Filter Buttons -->
-        <div class="filter-buttons">
-            <a href="/admin/view-batch" class="btn btn-primary {{#if showAll}}active{{/if}}">
+        <!-- Navigation Buttons -->
+        <div class="d-flex justify-content-center gap-3 mb-4">
+            <a href="/admin/view-batch" class="btn btn-outline-primary">
                 All Batches
             </a>
-            <a href="/admin/active-batches" class="btn btn-success">
+            <a href="/admin/active-batches" class="btn btn-outline-success">
                 Active Batches
             </a>
             <a href="/admin/inactive-batches" class="btn btn-secondary">
@@ -180,6 +162,7 @@ section {
             </a>
         </div>
 
+        {{#if batches.length}}
         <table class="table">
             <thead>
                 <tr>
@@ -188,7 +171,6 @@ section {
                     <th scope="col">Batch ID</th>
                     <th scope="col">Batch Name</th>
                     <th scope="col">No Of Students</th>
-                    <th scope="col">Status</th>
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
@@ -201,13 +183,6 @@ section {
                     <td>{{this.batchName}}</td>
                     <td>{{this.nostudents}}</td>
                     <td>
-                        {{#if this.active}}
-                            <span class="status-badge status-active">ACTIVE</span>
-                        {{else}}
-                            <span class="status-badge status-inactive">INACTIVE</span>
-                        {{/if}}
-                    </td>
-                    <td>
                         <div class="action-buttons">
                             <a href="/admin/export-students-excel/{{this._id}}" class="btn btn-excel btn-sm">
                                 <i class="fas fa-file-excel"></i>
@@ -218,24 +193,14 @@ section {
                             <a href="/admin/edit-batch/{{this._id}}" class="btn btn-edit btn-sm">
                                 <i class="fa fa-edit"></i>
                             </a>
-                            
-                            {{#if this.active}}
-                                <a href="/admin/deactivate-batch/{{this._id}}" 
-                                   class="btn btn-deactivate btn-sm"
-                                   onclick="return confirm('Deactivate this batch?');">
-                                    <i class="fas fa-ban"></i>
-                                </a>
-                            {{else}}
-                                <a href="/admin/activate-batch/{{this._id}}" 
-                                   class="btn btn-activate btn-sm"
-                                   onclick="return confirm('Activate this batch?');">
-                                    <i class="fas fa-check"></i>
-                                </a>
-                            {{/if}}
-                            
+                            <a href="/admin/activate-batch/{{this._id}}" 
+                               class="btn btn-activate btn-sm"
+                               onclick="return confirm('Activate {{this.batchName}}? Students will be able to access this batch.');">
+                                <i class="fas fa-check"></i> Activate
+                            </a>
                             <a href="/admin/delete-batch/{{this._id}}" 
                                class="btn btn-delete btn-sm"
-                               onclick="return confirm('Delete this batch permanently?');">
+                               onclick="return confirm('Permanently delete {{this.batchName}}? This action cannot be undone.');">
                                 <i class="fas fa-trash"></i>
                             </a>
                         </div>
@@ -244,5 +209,11 @@ section {
                 {{/each}}
             </tbody>
         </table>
+        {{else}}
+        <div class="alert alert-success text-center" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            Great! All batches are currently active.
+        </div>
+        {{/if}}
     </div>
 </section>

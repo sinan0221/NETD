@@ -11,10 +11,10 @@
     <div class="container">
         <div class="header">
             <div class="left-head">
-                <h2>NETD</h2>
+                
             </div>
             <div class="right-head">
-                <a href="/user" class="btn btn-dark">Back</a>
+                <a href="/user" class="btn btn-dark pdf-hide">Back</a>
             </div>
         </div>
         
@@ -23,7 +23,8 @@
         </div>
         
         <div class="content">
-            <h2>Skill Development Student Registration Form</h2>
+            <h2 class="tagline">Empowering Experience Through Certification</h2>
+            <h2 class="fullForm">Prior Recognition of Industrial Skill Mastery.</h2>
             <h3>Note: All entries must be filled by the candidate in capital letters</h3>
             
             <form action="/user/add-sdstudent" method="POST" enctype="multipart/form-data">
@@ -112,10 +113,39 @@
                         <input type="date" name="issueDate" required>
                     </div>
                 </div>
-                
+                <!-- ================= ENCLOSURE ================= -->
+<div class="enclosure-box">
+  <p style="font-size: 13.218px;">
+    <strong>Enclosure :</strong>
+    Demand Draft / DD / Online Pay Slip, Self-Attested Xerox Copy of All Qualification & Caste Certificate
+  </p>
+</div>
+
+<!-- ================= DECLARATION ================= -->
+<div class="declaration-box">
+  <h3 style="font-size: 18.141px; text-align: center;">
+   <b> DECLARATION BY THE APPLICANT</b>
+  </h3>
+
+  <p style="font-size: 16.141px; text-align: justify;">
+    I ..................................................... Son / Daughter of
+    ............................................................ hereby declare that I have read all the rules
+    and regulations of the institute and I am committed to follow all the rules with my best efforts.
+    If found any violation, the institute authority has the right to terminate my registration.
+    In case of termination, the institute will not be responsible for any fee return or any kind of claim.
+  </p>
+
+  <!-- Signature Row -->
+  <div class="signature-row">
+    <div class="signn-box">
+      Signature of the Applicant
+    </div>
+  </div>
+</div>
+
                 <br>
-                <input class="submit-btn" type="submit" value="Submit">
-                <button type="button" id="downloadPdf" class="btn btn-danger">Download as PDF</button>
+                <input class="submit-btn pdf-hide" type="submit" value="Submit">
+                <button type="button" id="downloadPdf" class="btn btn-danger pdf-hide">Download as PDF</button>
             </form>
         </div>
     </div>
@@ -138,28 +168,33 @@
             document.getElementById('imageUpload').click();
         });
         
-        // PDF download functionality
-        document.getElementById("downloadPdf").addEventListener("click", function () {
-            const { jsPDF } = window.jspdf;
-            
-            let formElement = document.querySelector(".container"); // main form wrapper
-            
-            html2canvas(formElement, { scale: 2 }).then(canvas => {
-                const imgData = canvas.toDataURL("image/png");
-                const pdf = new jsPDF("p", "mm", "a4");
-                
-                const pageWidth = pdf.internal.pageSize.getWidth();
-                const pageHeight = pdf.internal.pageSize.getHeight();
-                
-                const imgWidth = pageWidth;
-                const imgHeight = canvas.height * imgWidth / canvas.width;
-                
-                let position = 0;
-                pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-                
-                pdf.save("sd-student-form.pdf");
-            });
-        });
+    document.getElementById("downloadPdf").addEventListener("click", function () {
+  const { jsPDF } = window.jspdf;
+
+  const container = document.querySelector(".container");
+  const hideElements = document.querySelectorAll(".pdf-hide");
+
+  // 🔴 Hide buttons
+  hideElements.forEach(el => el.classList.add("hide-for-pdf"));
+
+  // 🔴 Remove border
+  container.classList.add("no-border");
+
+  html2canvas(container, { scale: 1.3 }).then(canvas => {
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const imgHeight = canvas.height * pageWidth / canvas.width;
+
+    pdf.addImage(imgData, "PNG", 0, 0, pageWidth, imgHeight);
+    pdf.save("sd-student-form.pdf");
+
+    // 🟢 Restore everything
+    hideElements.forEach(el => el.classList.remove("hide-for-pdf"));
+    container.classList.remove("no-border");
+  });
+});
     </script>
 </body>
 </html>

@@ -570,13 +570,13 @@
                 let grade = '';
                 
                 if (percentage >= 80) {
-                    grade = 'PASSED WITH A+ GRADE (EXCELLENT)';
+                    grade = 'PASSED WITH A+ GRADE ';
                 } else if (percentage >= 70) {
-                    grade = 'PASSED WITH A GRADE (VERY GOOD)';
+                    grade = 'PASSED WITH A GRADE ';
                 } else if (percentage >= 60) {
-                    grade = 'PASSED WITH B+ GRADE (GOOD)';
+                    grade = 'PASSED WITH B+ GRADE ';
                 } else if (percentage >= 50) {
-                    grade = 'PASSED WITH B GRADE (SATISFACTORY)';
+                    grade = 'PASSED WITH B GRADE ';
                 } else if (percentage >= 40) {
                     grade = 'PASSED WITH C GRADE';
                 } else {
@@ -591,21 +591,21 @@
             }
             
             function numberToWords(num) {
-                const ones = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN', 
-                              'ELEVEN', 'TWELVE', 'THIRTEEN', 'FOURTEEN', 'FIFTEEN', 'SIXTEEN', 'SEVENTEEN', 'EIGHTEEN', 'NINETEEN'];
-                const tens = ['', '', 'TWENTY', 'THIRTY', 'FORTY', 'FIFTY', 'SIXTY', 'SEVENTY', 'EIGHTY', 'NINETY'];
+                const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 
+                              'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+                const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
                 
-                if (num === 0) return 'ZERO';
+                if (num === 0) return 'Zero';
                 
                 let words = '';
                 
                 if (num >= 1000) {
-                    words += ones[Math.floor(num / 1000)] + ' THOUSAND ';
+                    words += ones[Math.floor(num / 1000)] + ' Thousand ';
                     num %= 1000;
                 }
                 
                 if (num >= 100) {
-                    words += ones[Math.floor(num / 100)] + ' HUNDRED ';
+                    words += ones[Math.floor(num / 100)] + ' Hundred ';
                     num %= 100;
                 }
                 
@@ -618,7 +618,7 @@
                     words += ones[num] + ' ';
                 }
                 
-                return words.trim() + ' ONLY';
+                return words.trim() + ' Only';
             }
         });
     </script>

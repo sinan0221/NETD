@@ -75,18 +75,104 @@ router.post("/student-access", async (req, res) => {
 
 
 
-// Student Dashboard Page
-// Student Dashboard Page
+// // Student Dashboard Page
+// // Student Dashboard Page
+// router.get("/dashboard", verifyStudentLogin, async (req, res) => {
+//   try {
+//     const studentId = req.session.student._id;
+
+//     // Auto-approve hall ticket if applicable
+//     await studentHelpers.autoApproveHallticket(studentId);
+
+//     // Get student profile
+//     const result = await studentHelpers.getStudentProfile(studentId);
+
+//     if (!result.status) {
+//       req.session.loginErr = "Student profile not found!";
+//       return res.redirect("/student/login");
+//     }
+
+//     const student = result.student;
+
+//     // =====================
+//     // CALCULATE GRADE
+//     // =====================
+//     let grade = "N/A";
+
+//     if (student.marks && student.marks.subjects && student.marks.subjects.length > 0) {
+//       const totalMarks = student.marks.obtainedTotal || 0;
+//       const maxMarks = student.marks.maxTotal || 600;
+
+//       const percent = (totalMarks / maxMarks) * 100;
+
+//       if (percent >= 80) grade = "A+";
+//       else if (percent >= 70) grade = "A";
+//       else if (percent >= 60) grade = "B+";
+//       else if (percent >= 50) grade = "B";
+//       else if (percent >= 40) grade = "C";
+//       else grade = "FAILED";
+//     }
+
+//     student.grade = grade;
+
+//     // =====================
+//     // GET DEPARTMENT LOGO
+//     // =====================
+//     let deptLogo = null;
+//     if (student.centreId && student.course?.department) {
+//       deptLogo = await centerHelpers.getDepartmentLogo(student.centreId, student.course.department);
+//     }
+
+//     // =====================
+//     // HALL TICKET STATUS
+//     // =====================
+//     const hallticketStatus = student.hallticketStatus || "NOT_APPLIED";
+
+//     // =====================
+//     // CERTIFICATE AVAILABILITY (24 HOURS RULE)
+//     // =====================
+//     let certificateAvailable = false;
+
+//     if (student.appliedForCertificate && student.certificateAppliedAt) {
+//       const appliedTime = new Date(student.certificateAppliedAt).getTime();
+//       const now = Date.now();
+//       const hoursSinceApplied = (now - appliedTime) / (1000 * 60 * 60);
+
+//       if (hoursSinceApplied >= 24) {
+//         certificateAvailable = true;
+//       }
+//     }
+
+//     // =====================
+//     // RENDER DASHBOARD
+//     // =====================
+//     res.render("student/dashboard", { 
+//       student, 
+//       deptLogo,
+//       hallticketStatus,
+//       certificateAvailable,  // pass flag to template
+//       hideOtherHeaders: true   
+//     });
+
+//   } catch (err) {
+//     console.error("❌ Error loading dashboard:", err);
+//     req.session.loginErr = "Something went wrong!";
+//     return res.redirect("/student/login");
+//   }
+// });
+
+
+// ===============================
+// STUDENT DASHBOARD
 router.get("/dashboard", verifyStudentLogin, async (req, res) => {
   try {
     const studentId = req.session.student._id;
 
-    // Auto-approve hall ticket if applicable
+    // Auto approve hall ticket if eligible
     await studentHelpers.autoApproveHallticket(studentId);
 
     // Get student profile
     const result = await studentHelpers.getStudentProfile(studentId);
-
     if (!result.status) {
       req.session.loginErr = "Student profile not found!";
       return res.redirect("/student/login");
@@ -94,16 +180,45 @@ router.get("/dashboard", verifyStudentLogin, async (req, res) => {
 
     const student = result.student;
 
-    // =====================
+    // ===============================
+    // NORMALIZE centreId (pick first if array)
+    // ===============================
+    if (Array.isArray(student.centreId)) {
+      student.centreId = student.centreId[0];
+    }
+
+    // ===============================
+    // FETCH BATCH COURSES
+    // ===============================
+    let batchLinks = {
+      courseLink1: null,
+      courseName1: null,
+      courseLink2: null,
+      courseName2: null
+    };
+
+    if (student.batchId) {
+      const batch = await batchHelpers.getBatchById(student.batchId);
+
+      if (batch) {
+        // Course 1 (with backward compatibility)
+        batchLinks.courseLink1 = batch.courseLink1 || batch.courseLink || null;
+        batchLinks.courseName1 = batch.courseName1 || "Free Course 1";
+        
+        // Course 2
+        batchLinks.courseLink2 = batch.courseLink2 || null;
+        batchLinks.courseName2 = batch.courseName2 || "Free Course 2";
+      }
+    }
+
+    // ===============================
     // CALCULATE GRADE
-    // =====================
+    // ===============================
     let grade = "N/A";
-
-    if (student.marks && student.marks.subjects && student.marks.subjects.length > 0) {
-      const totalMarks = student.marks.obtainedTotal || 0;
-      const maxMarks = student.marks.maxTotal || 600;
-
-      const percent = (totalMarks / maxMarks) * 100;
+    if (student.marks?.subjects?.length) {
+      const total = student.marks.obtainedTotal || 0;
+      const max = student.marks.maxTotal || 600;
+      const percent = (total / max) * 100;
 
       if (percent >= 80) grade = "A+";
       else if (percent >= 70) grade = "A";
@@ -112,58 +227,47 @@ router.get("/dashboard", verifyStudentLogin, async (req, res) => {
       else if (percent >= 40) grade = "C";
       else grade = "FAILED";
     }
-
     student.grade = grade;
 
-    // =====================
-    // GET DEPARTMENT LOGO
-    // =====================
-    let deptLogo = null;
-    if (student.centreId && student.course?.department) {
-      deptLogo = await centerHelpers.getDepartmentLogo(student.centreId, student.course.department);
-    }
-
-    // =====================
-    // HALL TICKET STATUS
-    // =====================
-    const hallticketStatus = student.hallticketStatus || "NOT_APPLIED";
-
-    // =====================
+    // ===============================
     // CERTIFICATE AVAILABILITY (24 HOURS RULE)
-    // =====================
+    // ===============================
     let certificateAvailable = false;
-
     if (student.appliedForCertificate && student.certificateAppliedAt) {
       const appliedTime = new Date(student.certificateAppliedAt).getTime();
-      const now = Date.now();
-      const hoursSinceApplied = (now - appliedTime) / (1000 * 60 * 60);
-
-      if (hoursSinceApplied >= 24) {
-        certificateAvailable = true;
-      }
+      const hours = (Date.now() - appliedTime) / (1000 * 60 * 60);
+      if (hours >= 24) certificateAvailable = true;
     }
 
-    // =====================
+    // ===============================
+    // DEPARTMENT LOGO
+    // ===============================
+    let deptLogo = null;
+    if (student.centreId && student.course?.department) {
+      deptLogo = await centerHelpers.getDepartmentLogo(
+        student.centreId,
+        student.course.department
+      );
+    }
+
+    // ===============================
     // RENDER DASHBOARD
-    // =====================
-    res.render("student/dashboard", { 
-      student, 
+    // ===============================
+    res.render("student/dashboard", {
+      student,
+      batchLinks,
       deptLogo,
-      hallticketStatus,
-      certificateAvailable,  // pass flag to template
-      hideOtherHeaders: true   
+      hallticketStatus: student.hallticketStatus || "NOT_APPLIED",
+      certificateAvailable,
+      hideOtherHeaders: true
     });
 
   } catch (err) {
-    console.error("❌ Error loading dashboard:", err);
+    console.error("❌ Dashboard Error:", err);
     req.session.loginErr = "Something went wrong!";
-    return res.redirect("/student/login");
+    res.redirect("/student/login");
   }
 });
-
-
-
-
 // Student Logout
 // Logout
 router.get("/logout", (req, res) => {

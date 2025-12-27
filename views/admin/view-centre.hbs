@@ -26,7 +26,7 @@
   z-index: 1; /* Lower than navbar but higher than page content */
 }
 .h2{
-  
+
 }
 
 .table {
@@ -437,6 +437,7 @@ a[onclick*="showAllGradeInstructions"]:hover {
          <th>Institution Logo</th>
       <th>Department Logos</th>
       <th>Add Logos</th>
+      <th>Batches</th>
         <th scope="col">Action</th>
 
       </tr>
@@ -493,14 +494,22 @@ a[onclick*="showAllGradeInstructions"]:hover {
 
   </div>
 </td>
+<td>
+<a href="/admin/view-cbatch/{{this._id}}" class="btn btn-outline-success btn-sm btn-action">
+    Course Administration
+
+  </a>
+   <a href="/admin/view-tbatch/{{this._id}}" class="apply-certificate-btn btn btn-outline-success btn-sm btn-action">
+                                   Exam Administration
+
+                                </a>
+</td>
         
      <td class="action-cell">
 
 
 <div class="action-btn-group">
-  <a href="/admin/view-cbatch/{{this._id}}" class="btn btn-outline-success btn-sm btn-action">
-    Batches
-  </a>
+  
    <a href="/admin/export-students-excel/{{this._id}}" class="btn btn-success btn-sm">
   <i class="fa fa-file-excel"></i> 
 </a>

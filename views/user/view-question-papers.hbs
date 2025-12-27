@@ -1,0 +1,606 @@
+<style>
+/* Question Papers Table Styling */
+:root {
+  --primary-blue: #1a365d;
+  --secondary-blue: #2c5282;
+  --accent-gold: #d4af37;
+  --light-gold: #f0e6d2;
+  --dark-blue: #0f2646;
+  --light-blue: #f7fafc;
+  --success-green: #38a169;
+  --warning-orange: #ed8936;
+  --danger-red: #e53e3e;
+  --info-blue: #3182ce;
+}
+
+.question-papers-table-container {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e9ecef;
+  background: white;
+  margin: 25px 0;
+}
+
+.question-papers-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+
+.question-papers-table thead {
+  background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+}
+
+.question-papers-table th {
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 20px 25px;
+  text-align: left;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.question-papers-table th:last-child {
+  border-right: none;
+}
+
+.question-papers-table th::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 25px;
+  right: 25px;
+  height: 2px;
+  background: var(--accent-gold);
+  opacity: 0.8;
+}
+
+.question-papers-table tbody tr {
+  transition: all 0.25s ease;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.question-papers-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.question-papers-table tbody tr:hover {
+  background: linear-gradient(90deg, rgba(0, 78, 137, 0.03), rgba(176, 149, 114, 0.03));
+  transform: translateX(4px);
+}
+
+.question-papers-table td {
+  padding: 22px 25px;
+  color: #2d3748;
+  font-size: 15px;
+  font-weight: 500;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.question-papers-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Subject Cell */
+.question-papers-table td:first-child {
+  font-weight: 600;
+  color: var(--primary-blue);
+  position: relative;
+  padding-left: 35px;
+}
+
+.question-papers-table td:first-child::before {
+  content: '📚';
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+}
+
+/* Exam Type Badge */
+.exam-type-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.exam-type-MID_TERM {
+  background: linear-gradient(135deg, #4299e1, #3182ce);
+  color: white;
+}
+
+.exam-type-END_TERM {
+  background: linear-gradient(135deg, #ed8936, #dd6b20);
+  color: white;
+}
+
+.exam-type-PRACTICAL {
+  background: linear-gradient(135deg, #38a169, #2f855a);
+  color: white;
+}
+
+.exam-type-THEORY {
+  background: linear-gradient(135deg, #9f7aea, #805ad5);
+  color: white;
+}
+
+.exam-type-ASSIGNMENT {
+  background: linear-gradient(135deg, #f6ad55, #ed8936);
+  color: white;
+}
+
+.exam-type-OTHER {
+  background: linear-gradient(135deg, #718096, #4a5568);
+  color: white;
+}
+
+/* Action Buttons Container */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Preview Button */
+.btn-preview {
+  background: linear-gradient(135deg, var(--danger-red), #c53030);
+  color: white;
+  padding: 10px 22px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(229, 62, 62, 0.2);
+  text-decoration: none;
+  cursor: pointer;
+  min-width: 130px;
+  justify-content: center;
+}
+
+.btn-preview:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(229, 62, 62, 0.3);
+  background: linear-gradient(135deg, #c53030, var(--danger-red));
+  color: white;
+  text-decoration: none;
+}
+
+/* Delete Button */
+.btn-delete {
+  background: linear-gradient(135deg, #718096, #4a5568);
+  color: white;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(113, 128, 150, 0.2);
+  text-decoration: none;
+  cursor: pointer;
+  min-width: 100px;
+  justify-content: center;
+}
+
+.btn-delete:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(113, 128, 150, 0.3);
+  background: linear-gradient(135deg, #4a5568, #718096);
+  color: white;
+  text-decoration: none;
+}
+
+.btn-sm {
+  padding: 8px 18px;
+  font-size: 12px;
+}
+
+/* Empty State */
+.no-papers {
+  text-align: center;
+  padding: 50px 20px;
+}
+
+.no-papers-icon {
+  font-size: 48px;
+  color: #cbd5e0;
+  margin-bottom: 15px;
+}
+
+.no-papers h4 {
+  color: var(--primary-blue);
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.no-papers p {
+  color: #718096;
+  font-size: 14px;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .question-papers-table-container {
+    border-radius: 10px;
+    overflow-x: auto;
+  }
+  
+  .question-papers-table {
+    min-width: 600px;
+  }
+  
+  .question-papers-table th,
+  .question-papers-table td {
+    padding: 18px 20px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .btn-preview,
+  .btn-delete {
+    width: 100%;
+    min-width: auto;
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .question-papers-table th,
+  .question-papers-table td {
+    padding: 16px 15px;
+  }
+  
+  .question-papers-table td:first-child {
+    padding-left: 30px;
+  }
+  
+  .btn-preview,
+  .btn-delete {
+    padding: 7px 14px;
+    font-size: 11px;
+  }
+  
+  .exam-type-badge {
+    padding: 5px 12px;
+    font-size: 11px;
+  }
+}
+
+/* Table Row Animation */
+@keyframes fadeInRow {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.question-papers-table tbody tr {
+  animation: fadeInRow 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.question-papers-table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+.question-papers-table tbody tr:nth-child(2) { animation-delay: 0.2s; }
+.question-papers-table tbody tr:nth-child(3) { animation-delay: 0.3s; }
+.question-papers-table tbody tr:nth-child(4) { animation-delay: 0.4s; }
+.question-papers-table tbody tr:nth-child(5) { animation-delay: 0.5s; }
+.question-papers-table tbody tr:nth-child(6) { animation-delay: 0.6s; }
+.question-papers-table tbody tr:nth-child(7) { animation-delay: 0.7s; }
+.question-papers-table tbody tr:nth-child(8) { animation-delay: 0.8s; }
+.question-papers-table tbody tr:nth-child(9) { animation-delay: 0.9s; }
+.question-papers-table tbody tr:nth-child(10) { animation-delay: 1s; }
+
+/* Hover Effects for Buttons */
+.btn-preview, .btn-delete {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-preview::after,
+.btn-delete::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+}
+
+.btn-preview:hover::after,
+.btn-delete:hover::after {
+  animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(20, 20);
+    opacity: 0;
+  }
+}
+
+/* Delete Confirmation Modal */
+.delete-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.delete-modal-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.delete-modal-icon {
+  font-size: 48px;
+  color: var(--danger-red);
+  margin-bottom: 15px;
+}
+
+.delete-modal-title {
+  color: var(--primary-blue);
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.delete-modal-text {
+  color: #64748b;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.delete-modal-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.modal-btn-cancel {
+  background: linear-gradient(135deg, #718096, #4a5568);
+  color: white;
+  padding: 12px 30px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-btn-delete {
+  background: linear-gradient(135deg, var(--danger-red), #c53030);
+  color: white;
+  padding: 12px 30px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-btn-cancel:hover,
+.modal-btn-delete:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+</style>
+
+<div class="question-papers-table-container">
+  <table class="question-papers-table">
+    <thead>
+      <tr>
+        <th>Subject</th>
+        <th>Exam Type</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#if papers.length}}
+        {{#each papers}}
+        <tr>
+          <td>{{this.subject}}</td>
+          <td>
+            <span class="exam-type-badge exam-type-{{this.examType}}">
+              {{this.examType}}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <a href="/user/preview-question-paper/{{../batch._id}}/{{this._id}}"
+                 target="_blank"
+                 class="btn-preview btn-sm">
+                <i class="fas fa-file-pdf"></i> Preview PDF
+              </a>
+              <button class="btn-delete btn-sm" 
+                      onclick="showDeleteModal('{{../batch._id}}', '{{this._id}}', '{{this.subject}}', '{{this.examType}}')">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </div>
+          </td>
+        </tr>
+        {{/each}}
+      {{else}}
+        <tr>
+          <td colspan="3">
+            <div class="no-papers">
+              <div class="no-papers-icon">
+                <i class="far fa-file-alt"></i>
+              </div>
+              <h4>No Question Papers</h4>
+              <p>No question papers have been added yet.</p>
+            </div>
+          </td>
+        </tr>
+      {{/if}}
+    </tbody>
+  </table>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="delete-modal" id="deleteModal">
+  <div class="delete-modal-content">
+    <div class="delete-modal-header">
+      <div class="delete-modal-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <h3 class="delete-modal-title">Delete Question Paper</h3>
+      <p class="delete-modal-text" id="deleteModalText">
+        Are you sure you want to delete this question paper? This action cannot be undone.
+      </p>
+    </div>
+    <div class="delete-modal-actions">
+      <button class="modal-btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <button class="modal-btn-delete" onclick="confirmDelete()">Delete Paper</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Variables to store delete data
+let currentBatchId = '';
+let currentPaperId = '';
+let currentSubject = '';
+let currentExamType = '';
+
+// Show delete confirmation modal
+function showDeleteModal(batchId, paperId, subject, examType) {
+  currentBatchId = batchId;
+  currentPaperId = paperId;
+  currentSubject = subject;
+  currentExamType = examType;
+  
+  // Update modal text with paper details
+  document.getElementById('deleteModalText').innerHTML = 
+    `Are you sure you want to delete the question paper for <strong>${subject}</strong> (${examType})?<br><br>This action cannot be undone.`;
+  
+  // Show modal
+  document.getElementById('deleteModal').style.display = 'flex';
+}
+
+// Close delete modal
+function closeDeleteModal() {
+  document.getElementById('deleteModal').style.display = 'none';
+  // Reset variables
+  currentBatchId = '';
+  currentPaperId = '';
+  currentSubject = '';
+  currentExamType = '';
+}
+
+// Confirm delete action
+async function confirmDelete() {
+  try {
+    // Show loading state
+    const deleteBtn = document.querySelector('.modal-btn-delete');
+    const originalText = deleteBtn.innerHTML;
+    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+    deleteBtn.disabled = true;
+    
+    // Make API call to delete the question paper
+    const response = await fetch(`/user/delete-question-paper/${currentBatchId}/${currentPaperId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      // Show success message
+      alert('Question paper deleted successfully!');
+      // Reload the page to reflect changes
+      window.location.reload();
+    } else {
+      const errorData = await response.json();
+      alert('Error deleting question paper: ' + (errorData.message || 'Unknown error'));
+      closeDeleteModal();
+    }
+    
+  } catch (error) {
+    console.error('Delete error:', error);
+    alert('Error deleting question paper. Please try again.');
+    closeDeleteModal();
+  }
+}
+
+// Close modal when clicking outside
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeDeleteModal();
+  }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('deleteModal').style.display === 'flex') {
+    closeDeleteModal();
+  }
+});
+</script>

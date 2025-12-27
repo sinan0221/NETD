@@ -27,6 +27,11 @@ const deptUploadDir = path.join(__dirname, '../public/images/department_logos');
 
 
 
+
+
+
+
+
 /* ================================
    MIDDLEWARE
    ================================ */
@@ -315,38 +320,135 @@ router.post('/add-batch', verifyAdminLogin, (req, res) => {
   });
 });
 // View all batches
+// router.get('/view-batch', verifyAdminLogin, async (req, res) => {
+//   try {
+//     const batches = await batchHelpers.getAllBatchesWithCentre();
+
+//     res.render('admin/view-batch', { batches, admin: true });
+//   } catch (err) {
+//     console.error("❌ Error fetching batches:", err);
+//     res.status(500).send("Error loading batches");
+//   }
+// });
+// ============================================
+// BATCH MANAGEMENT SYSTEM
+// ============================================
+
+// View ALL Batches
 router.get('/view-batch', verifyAdminLogin, async (req, res) => {
   try {
     const batches = await batchHelpers.getAllBatchesWithCentre();
-
-    res.render('admin/view-batch', { batches, admin: true });
+    
+    res.render('admin/view-batch', { 
+      batches, 
+      admin: true,
+      pageTitle: 'All Batches',
+      showAll: true
+    });
   } catch (err) {
     console.error("❌ Error fetching batches:", err);
     res.status(500).send("Error loading batches");
   }
 });
-//edit batch:
+
+// View ACTIVE Batches
+router.get('/active-batches', verifyAdminLogin, async (req, res) => {
+  try {
+    const batches = await batchHelpers.getBatchesByStatus(true);
+    
+    res.render('admin/active-batches', { 
+      batches, 
+      admin: true,
+      pageTitle: 'Active Batches'
+    });
+  } catch (err) {
+    console.error("❌ Error fetching active batches:", err);
+    res.status(500).send("Error loading active batches");
+  }
+});
+
+// View INACTIVE Batches
+router.get('/inactive-batches', verifyAdminLogin, async (req, res) => {
+  try {
+    const batches = await batchHelpers.getBatchesByStatus(false);
+    
+    res.render('admin/inactive-batches', { 
+      batches, 
+      admin: true,
+      pageTitle: 'Inactive Batches'
+    });
+  } catch (err) {
+    console.error("❌ Error fetching inactive batches:", err);
+    res.status(500).send("Error loading inactive batches");
+  }
+});
+
+// Activate Batch
+router.get('/activate-batch/:id', verifyAdminLogin, async (req, res) => {
+  const batchId = req.params.id;
+
+  try {
+    const activatedDate = new Date();
+
+    // Update batch with activation
+    await batchHelpers.updateBatch(batchId, { 
+      active: true, 
+      activatedDate: activatedDate 
+    });
+
+    // Redirect to inactive batches page
+    res.redirect('/admin/inactive-batches');
+  } catch (err) {
+    console.error("❌ Error activating batch:", err);
+    res.status(500).send("Error activating batch");
+  }
+});
+
+// Deactivate Batch
+router.get('/deactivate-batch/:id', verifyAdminLogin, async (req, res) => {
+  const batchId = req.params.id;
+  
+  try {
+    await batchHelpers.updateBatch(batchId, { 
+      active: false
+    });
+
+    // Redirect to active batches page
+    res.redirect('/admin/active-batches');
+  } catch (err) {
+    console.error("❌ Error deactivating batch:", err);
+    res.status(500).send("Error deactivating batch");
+  }
+});
+// ===============================
+// EDIT BATCH (ADMIN - GET)
+// ===============================
 router.get('/edit-batch/:id', verifyAdminLogin, async (req, res) => {
   try {
-    let batchId = req.params.id;
-    let batch = await batchHelpers.getBatchDetails(batchId);
-    
+    const batchId = req.params.id;
+
+    const batch = await batchHelpers.getBatchById(batchId);
 
     if (!batch) {
-      return res.status(404).send("batch not found");
+      return res.status(404).send("Batch not found");
     }
 
-    res.render('admin/edit-batch', { 
-      admin: true, 
+    res.render('admin/edit-batch', {
+      admin: true,
       hideNavbar: true,
-      batch // 👈 pass center to hbs
+      batch
     });
+
   } catch (err) {
     console.error("❌ Error fetching batch:", err);
     res.status(500).send("Error loading batch details");
   }
 });
-//post route:
+
+
+// ===============================
+// EDIT BATCH (ADMIN - POST)
+// ===============================
 router.post('/edit-batch/:id', verifyAdminLogin, async (req, res) => {
   try {
     await batchHelpers.updateBatch(req.params.id, req.body);
@@ -356,32 +458,83 @@ router.post('/edit-batch/:id', verifyAdminLogin, async (req, res) => {
     res.status(500).send("Error updating batch");
   }
 });
+
 // View Batches by Centre
 
+// router.get('/view-cbatch/:centreId', verifyAdminLogin, async (req, res) => {
+//   try {
+//     const centreId = req.params.centreId;
+
+//     // Fetch all batches
+//     let batches = await batchHelpers.getBatchesByCentre(centreId);
+
+//     const oneMonth = 30 * 24 * 60 * 60 * 1000; // 30 days
+//     const now = Date.now();
+
+//     // Hide batches downloaded more than 1 month ago
+//     batches = batches.filter(batch => {
+//       if (!batch.certificateDownloadAt) return true;
+//       const downloadedAt = new Date(batch.certificateDownloadAt).getTime();
+//       const difference = now - downloadedAt;
+//       return difference <= oneMonth;
+//     });
+
+//     // Add appliedForHallTicket flag for each batch
+//     batches = batches.map(batch => ({
+//       ...batch,
+//       appliedForHallTicket: batch.appliedForHallTicket || false
+//     }));
+
+//     // ✅ Log batches to check appliedForHallTicket
+//     console.log("Batches after adding appliedForHallTicket:");
+//     batches.forEach(batch => {
+//       console.log(`Batch ID: ${batch._id}, appliedForHallTicket: ${batch.appliedForHallTicket}`);
+//     });
+
+//     res.render('admin/view-cbatch', {
+//       admin: true,
+//       batches,
+//       centreId
+//     });
+
+//   } catch (err) {
+//     console.error("Error loading batches:", err);
+//     res.status(500).send("Internal server error");
+//   }
+// });
 router.get('/view-cbatch/:centreId', verifyAdminLogin, async (req, res) => {
   try {
     const centreId = req.params.centreId;
 
-    // Fetch all batches
     let batches = await batchHelpers.getBatchesByCentre(centreId);
 
-    const oneMonth = 30 * 24 * 60 * 60 * 1000; // 30 days
+    const oneMonth = 30 * 24 * 60 * 60 * 1000;
     const now = Date.now();
 
-    // Hide batches downloaded more than 1 month ago
     batches = batches.filter(batch => {
-      if (!batch.certificateDownloadAt) {
-        // Not downloaded → keep visible
-        return true;
-      }
-
+      if (!batch.certificateDownloadAt) return true;
       const downloadedAt = new Date(batch.certificateDownloadAt).getTime();
-      const difference = now - downloadedAt;
-
-      // Show only if within 1 month
-      return difference <= oneMonth;
+      return (now - downloadedAt) <= oneMonth;
     });
 
+   
+
+    batches = await Promise.all(
+      batches.map(async (batch) => {
+        const appliedCount = await db.get()
+          .collection(collection.STUDENT_COLLECTION)
+          .countDocuments({
+            batchId: new ObjectId(batch._id), // ✅ FIX
+            appliedForHallTicket: true
+          });
+    
+        return { 
+          ...batch, 
+          appliedForHallTicket: appliedCount > 0 
+        };
+      })
+    );
+    
     res.render('admin/view-cbatch', {
       admin: true,
       batches,
@@ -389,7 +542,7 @@ router.get('/view-cbatch/:centreId', verifyAdminLogin, async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Error loading batches:", err);
+    console.error("❌ Error loading batches:", err);
     res.status(500).send("Internal server error");
   }
 });
@@ -397,14 +550,55 @@ router.get('/view-cbatch/:centreId', verifyAdminLogin, async (req, res) => {
 
 
 
+//links
+//links
+router.get('/edit-batch-links/:id', verifyAdminLogin, async (req, res) => {
+  const batchId = req.params.id;
 
-// Delete batch
-router.get('/delete-batch/:id', verifyAdminLogin, (req, res) => {
-  let batchId = req.params.id;
-  batchHelpers.deleteBatch(batchId).then(() => {
-    res.redirect('/admin');
+  const batch = await batchHelpers.getBatchById(batchId);
+
+  res.render('admin/edit-batch-links', {
+    admin: true,
+    batch
   });
 });
+
+router.post('/edit-batch-links/:id', verifyAdminLogin, async (req, res) => {
+  const batchId = req.params.id;
+  const { paymentLink, courseName1, courseLink1, courseName2, courseLink2 } = req.body;
+
+  await batchHelpers.updateBatch(batchId, {
+    paymentLink,
+    courseName1,
+    courseLink1,
+    courseName2,
+    courseLink2
+  });
+
+  res.redirect('back');
+});
+
+
+
+
+// Delete batch
+router.get('/delete-batch/:id', verifyAdminLogin, async (req, res) => {
+  try {
+    const batchId = req.params.id;
+
+    await batchHelpers.updateBatch(batchId, {
+      isDeleted: true,
+      deletedAt: new Date(),
+      active: false
+    });
+
+    res.redirect('/admin/view-batch');
+  } catch (err) {
+    console.error("❌ Batch delete error:", err);
+    res.status(500).send("Unable to delete batch");
+  }
+});
+
 
 
 /* ================================
@@ -435,39 +629,7 @@ router.get('/view-student', verifyAdminLogin, async (req, res) => {
   }
 });
 
-//add student
 
-// router.get('/add-student', verifyAdminLogin, async (req, res) => {
-//   try {
-//     const centreId = req.query.centreId; // get center ID from URL
-//     if (!centreId) {
-//       return res.status(400).send("Centre ID is missing");
-//     }
-
-//     // 🔹 Fetch the center by its _id (from Mongo)
-//     const center = await centerHelpers.getCenterDetails(centreId);
-//     if (!center) {
-//       return res.status(404).send("Center not found");
-//     }
-
-//     // 🔹 Get batches (if needed)
-//     const batches = await batchHelpers.getAllBatchesWithCentre();
-
-//     // 🔹 Pass full center data to view
-//     res.render('admin/add-student', {
-//       admin: true,
-//       hideNavbar: true,
-//       centreId: center.centreId,        // human-friendly ID
-//       centreName: center.centreName,
-//       department: center.department,    // department from center
-//       batches
-//     });
-
-//   } catch (err) {
-//     console.error("❌ Error loading add-student page:", err);
-//     res.status(500).send("Error loading add-student page");
-//   }
-// });
 router.get('/add-student', verifyAdminLogin, async (req, res) => {
   try {
     const centreId = req.query.centreId;
@@ -501,73 +663,109 @@ router.get('/add-student', verifyAdminLogin, async (req, res) => {
 
 
 router.post('/add-student', verifyAdminLogin, (req, res) => {
-  // 🟢 Raw form data
-  console.log("📥 Raw Form Data:", req.body);
-
-  // 🟢 Prepare qualification objects
-  let qualifications = [];
-
-  let eduArr = Array.isArray(req.body['education[]']) ? req.body['education[]'] : [req.body['education[]']];
-  let maxArr = Array.isArray(req.body['maxMarks[]']) ? req.body['maxMarks[]'] : [req.body['maxMarks[]']];
-  let minArr = Array.isArray(req.body['minMarks[]']) ? req.body['minMarks[]'] : [req.body['minMarks[]']];
-  let obtArr = Array.isArray(req.body['obtainedMarks[]']) ? req.body['obtainedMarks[]'] : [req.body['obtainedMarks[]']];
-  let gradeArr = Array.isArray(req.body['grade[]']) ? req.body['grade[]'] : [req.body['grade[]']];
-  let yearArr = Array.isArray(req.body['year[]']) ? req.body['year[]'] : [req.body['year[]']];
-  let boardArr = Array.isArray(req.body['board[]']) ? req.body['board[]'] : [req.body['board[]']];
-
-  eduArr.forEach((edu, i) => {
-    if (edu && maxArr[i] && yearArr[i]) {   // filter out empty rows
-      qualifications.push({
-        education: edu,
-        maxMarks: maxArr[i],
-        minMarks: minArr[i],
-        obtainedMarks: obtArr[i],
-        grade: gradeArr[i],
-        year: yearArr[i],
-        board: boardArr[i]
-      });
-    }
-  });
-
-  console.log("🎓 Qualifications Parsed:", qualifications);
-
-  // Merge qualifications into req.body
-  let studentData = {
-    ...req.body,
-    qualifications
-  };
-  studentData.activated = false;
-
-
-  studentHelpers.addStudent(studentData, (id) => {
-    if (req.files && req.files.image) {
-      let imageFile = req.files.image;
-      let uploadPath = path.join(__dirname, '../public/studentImages/', id + '.jpg');
-
-      imageFile.mv(uploadPath, (err) => {
-        if (err) console.error("❌ Error saving image:", err);
-      });
-    }
-    res.redirect('/admin/view-student');
-  });
-});
-
-// Edit Student Route
-router.get('/edit-student/:id', verifyAdminLogin, async (req, res) => {
   try {
-      const studentId = req.params.id;
-      const student = await studentHelpers.getStudentDetails(studentId);
-      const batches = await batchHelpers.getAllBatchesWithCentre();
-      
-      res.render('admin/edit-student', {
-          admin: true,
-          hideNavbar: true,
-          student,
-          batches
+    // 🟢 Raw form data
+    console.log("📥 Raw Form Data:", req.body);
+
+    // 🟢 Prepare qualification objects
+    let qualifications = [];
+
+    // Check if data is coming as arrays or single values
+    let eduArr = req.body['education[]'];
+    let maxArr = req.body['maxMarks[]'];
+    let minArr = req.body['minMarks[]'];
+    let obtArr = req.body['obtainedMarks[]'];
+    let gradeArr = req.body['grade[]'];
+    let yearArr = req.body['year[]'];
+    let boardArr = req.body['board[]'];
+
+    // Convert to arrays if they're not already
+    if (!Array.isArray(eduArr) && eduArr) {
+      eduArr = [eduArr];
+      maxArr = [maxArr];
+      minArr = [minArr];
+      obtArr = [obtArr];
+      gradeArr = [gradeArr];
+      yearArr = [yearArr];
+      boardArr = [boardArr];
+    }
+
+    // Process qualifications
+    if (eduArr && Array.isArray(eduArr)) {
+      eduArr.forEach((edu, i) => {
+        if (edu && edu.trim() !== '' && maxArr[i] && maxArr[i].toString().trim() !== '') {
+          qualifications.push({
+            education: edu,
+            maxMarks: maxArr[i],
+            minMarks: minArr[i],
+            obtainedMarks: obtArr[i],
+            grade: gradeArr[i],
+            year: yearArr[i],
+            board: boardArr[i]
+          });
+        }
       });
-  } catch (error) {
-      console.error("❌ Error loading edit student:", error);
-      res.status(500).send("Error loading edit form");
+    }
+
+    console.log("🎓 Qualifications Parsed:", qualifications);
+    console.log("🔢 Qualification count:", qualifications.length);
+
+    // Merge qualifications into req.body
+    let studentData = {
+      ...req.body,
+      qualifications
+    };
+    
+    // Remove the array fields since we're passing them as structured objects
+    delete studentData['education[]'];
+    delete studentData['maxMarks[]'];
+    delete studentData['minMarks[]'];
+    delete studentData['obtainedMarks[]'];
+    delete studentData['grade[]'];
+    delete studentData['year[]'];
+    delete studentData['board[]'];
+
+    // Add additional fields
+    studentData.activated = false;
+    studentData.createdAt = new Date();
+    
+    // 🟢 IMPORTANT: Use the same field names expected by studentHelpers
+    // The helper expects: education, maxMarks, minMarks, obtainedMarks, grade, year, board
+    // But we're passing them as qualifications array
+    
+    console.log("📤 Student Data ready for insertion:", JSON.stringify(studentData, null, 2));
+
+    // Call the helper with the data
+    studentHelpers.addStudent(studentData, (insertedId) => {
+      if (!insertedId) {
+        console.error("❌ No ID returned from addStudent");
+        return res.status(500).send("Error adding student");
+      }
+      
+      console.log("✅ Student added with ID:", insertedId);
+      
+      // Save student image if uploaded
+      if (req.files && req.files.image) {
+        let imageFile = req.files.image;
+        let uploadPath = path.join(__dirname, '../public/studentImages/', insertedId + '.jpg');
+
+        imageFile.mv(uploadPath, (err) => {
+          if (err) {
+            console.error("❌ Error saving image:", err);
+          } else {
+            console.log("✅ Student image saved:", uploadPath);
+          }
+        });
+      }
+      
+      // Redirect to registration form preview
+      console.log("🔄 Redirecting to preview:", `/admin/preview-registration/${insertedId}`);
+      res.redirect(`/admin/preview-registration/${insertedId}`);
+    });
+
+  } catch (err) {
+    console.error("❌ Error in POST /add-student route:", err);
+    res.status(500).send("Server error: " + err.message);
   }
 });
 // ===========================
@@ -637,7 +835,1750 @@ router.post('/update-student/:id', verifyAdminLogin, (req, res) => {
       res.status(500).send("Error updating student");
     });
 });
+// ===========================
+// ADMIN EDIT STUDENT - GET ROUTE (FIXED)
+// ===========================
+router.get('/edit-student/:id', verifyAdminLogin, async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    
+    console.log("🟢 Admin Edit Student - Student ID:", studentId);
+    
+    // Fetch student details
+    const student = await studentHelpers.getStudentById(studentId);
+    
+    if (!student) {
+      console.log("❌ Student not found:", studentId);
+      return res.status(404).send("Student not found");
+    }
+    
+    console.log("🟢 Student data for admin edit:", {
+      id: student._id,
+      centreId: student.centreId,
+      centreIdType: typeof student.centreId,
+      isArray: Array.isArray(student.centreId)
+    });
+    
+    // Handle centreId - it might be an array
+    let centreId;
+    if (Array.isArray(student.centreId)) {
+      // Take the first non-empty value from the array
+      centreId = student.centreId.find(id => id && id.trim() !== '');
+      console.log("🟢 Extracted centreId from array:", centreId);
+    } else {
+      centreId = student.centreId;
+    }
+    
+    if (!centreId) {
+      console.log("❌ No valid centreId found for student");
+      return res.status(400).send("Student has no valid centre assigned");
+    }
+    
+    // Fetch centre details - try multiple approaches
+    let center = null;
+    
+    // Try 1: Get center by centreId string (like '298571')
+    if (typeof centreId === 'string' && !ObjectId.isValid(centreId)) {
+      console.log("🟢 Trying to get center by centreId string:", centreId);
+      center = await centerHelpers.getCenterById(centreId);
+    }
+    
+    // Try 2: If still not found, try as ObjectId
+    if (!center && ObjectId.isValid(centreId)) {
+      console.log("🟢 Trying to get center by ObjectId:", centreId);
+      center = await centerHelpers.getCenterDetails(centreId);
+    }
+    
+    // Try 3: If still not found, try to get from centers collection directly
+    if (!center) {
+      console.log("🟢 Trying direct database query for centreId:", centreId);
+      const db = require('../config/connection').get();
+      const collection = require('../config/collections');
+      
+      // Try to find center by centreId field
+      center = await db.collection(collection.CENTER_COLLECTION)
+        .findOne({ centreId: centreId });
+      
+      // If not found by centreId, try by _id
+      if (!center && ObjectId.isValid(centreId)) {
+        center = await db.collection(collection.CENTER_COLLECTION)
+          .findOne({ _id: new ObjectId(centreId) });
+      }
+    }
+    
+    if (!center) {
+      console.log("❌ Center not found for student. CentreId value:", centreId);
+      // Instead of returning error, render with empty center
+      // and use student data directly
+      console.log("⚠️ Proceeding with student data only");
+    } else {
+      console.log("🟢 Center found for admin:", { 
+        centreId: center.centreId, 
+        department: center.department,
+        courseName: center.courseName 
+      });
+    }
+    
+    // Fetch batches - try different approaches
+    let batches = [];
+    
+    if (center && center._id) {
+      // Use center's ObjectId
+      batches = await batchHelpers.getBatchesByCentre(center._id);
+    } else if (centreId) {
+      // Try with centreId string
+      batches = await batchHelpers.getBatchesByCentre(centreId);
+    }
+    
+    // If still no batches, get all batches
+    if (!batches || batches.length === 0) {
+      console.log("⚠️ No batches found for centre, fetching all batches");
+      batches = await batchHelpers.getAllBatchesWithCentre();
+    }
+    
+    console.log("🟢 Batches found:", batches.length);
+    
+    // Get course names from center or use defaults
+    let courseNames = [];
+    if (center && center.courseName) {
+      courseNames = Array.isArray(center.courseName) ? center.courseName : [center.courseName];
+    } else {
+      // Default course names
+      courseNames = [
+        "Diploma in Medical Laboratory Technology (DMLT)",
+        "Diploma in Operation Theatre Technology (DOTT)",
+        "Diploma in X-Ray & ECG Technology (DXET)",
+        "Diploma in Optometry (DOPT)",
+        "Diploma in Medical Electronics (DME)"
+      ];
+    }
+    
+    // Get qualifications
+    const qualifications = student.qualifications || [];
+    console.log("🟢 Qualifications found:", qualifications.length);
+    
+    // Format date for input field
+    let formattedDOB = '';
+    if (student.dob) {
+      try {
+        const dobDate = new Date(student.dob);
+        if (!isNaN(dobDate.getTime())) {
+          const year = dobDate.getFullYear();
+          const month = String(dobDate.getMonth() + 1).padStart(2, '0');
+          const day = String(dobDate.getDate()).padStart(2, '0');
+          formattedDOB = `${year}-${month}-${day}`;
+        }
+      } catch (e) {
+        console.log("⚠️ Could not format date:", student.dob);
+      }
+    }
+    
+    // Update student object with formatted date
+    const studentWithFormattedDate = {
+      ...student,
+      dob: formattedDOB || student.dob
+    };
+    
+    res.render('admin/edit-student', {
+      admin: true,
+      hideNavbar: true,
+      student: studentWithFormattedDate,
+      centreId: center ? center.centreId : centreId,
+      centreName: center ? center.centreName : 'Unknown Centre',
+      department: center ? center.department : student.department || '',
+      centre: center || {},
+      courseNames: courseNames,
+      batches: batches || [],
+      // Helper functions
+      formatDate: function(date) {
+        if (!date) return '';
+        try {
+          const d = new Date(date);
+          if (isNaN(d.getTime())) return '';
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        } catch (e) {
+          return '';
+        }
+      }
+    });
+    
+  } catch (err) {
+    console.error("❌ Admin Error loading edit-student page:", err);
+    console.error("❌ Error details:", err.message);
+    res.status(500).send("Error loading edit-student page: " + err.message);
+  }
+});
 
+// ===========================
+// ADMIN UPDATE STUDENT - POST ROUTE
+// ===========================
+router.post('/update-student/:id', verifyAdminLogin, (req, res) => {
+  const studentId = req.params.id;
+  
+  // 🟢 Raw form data
+  console.log("📥 Admin Raw Update Form Data:", req.body);
+
+  // 🟢 Prepare qualification objects (same as add-student)
+  let qualifications = [];
+
+  // Check if data is coming as arrays or single values
+  let eduArr = req.body['education[]'];
+  let maxArr = req.body['maxMarks[]'];
+  let minArr = req.body['minMarks[]'];
+  let obtArr = req.body['obtainedMarks[]'];
+  let gradeArr = req.body['grade[]'];
+  let yearArr = req.body['year[]'];
+  let boardArr = req.body['board[]'];
+
+  // Convert to arrays if they're not already (same as add-student)
+  if (!Array.isArray(eduArr) && eduArr) {
+    eduArr = [eduArr];
+    maxArr = [maxArr];
+    minArr = [minArr];
+    obtArr = [obtArr];
+    gradeArr = [gradeArr];
+    yearArr = [yearArr];
+    boardArr = [boardArr];
+  }
+
+  // Process qualifications (same as add-student)
+  if (eduArr && Array.isArray(eduArr)) {
+    eduArr.forEach((edu, i) => {
+      if (edu && edu.trim() !== '' && maxArr[i] && maxArr[i].toString().trim() !== '') {
+        qualifications.push({
+          education: edu,
+          maxMarks: maxArr[i],
+          minMarks: minArr[i],
+          obtainedMarks: obtArr[i],
+          grade: gradeArr[i],
+          year: yearArr[i],
+          board: boardArr[i]
+        });
+      }
+    });
+  }
+
+  console.log("🎓 Admin Updated Qualifications:", qualifications);
+  console.log("🔢 Qualification count:", qualifications.length);
+
+  // Merge qualifications into req.body
+  let studentData = {
+    ...req.body,
+    qualifications
+  };
+  
+  // Remove the array fields since we're passing them as structured objects
+  delete studentData['education[]'];
+  delete studentData['maxMarks[]'];
+  delete studentData['minMarks[]'];
+  delete studentData['obtainedMarks[]'];
+  delete studentData['grade[]'];
+  delete studentData['year[]'];
+  delete studentData['board[]'];
+
+  console.log("📤 Admin Student Data for update:", JSON.stringify(studentData, null, 2));
+
+  // Update student in database
+  studentHelpers.updateStudent(studentId, studentData)
+    .then((response) => {
+      console.log("✅ Admin Database update response:", response);
+      
+      // Handle photo update if new image is uploaded
+      if (req.files && req.files.image) {
+        let imageFile = req.files.image;
+        let uploadPath = path.join(__dirname, '../public/studentImages/', studentId + '.jpg');
+
+        imageFile.mv(uploadPath, (err) => {
+          if (err) {
+            console.error("❌ Error updating image:", err);
+          } else {
+            console.log("✅ Student photo updated");
+          }
+        });
+      }
+      
+      console.log("✅ Admin: Student updated successfully");
+      res.redirect(`/admin/preview-registration/${studentId}`);
+    })
+    .catch((err) => {
+      console.error("❌ Admin Error updating student:", err);
+      res.status(500).send("Error updating student");
+    });
+});
+// ===========================
+// REGISTRATION FORM PREVIEW (COMPLETE FIXED VERSION)
+// ===========================
+router.get("/preview-registration/:id", verifyAdminLogin, async (req, res) => {
+  try {
+    const studentId = req.params.id;
+
+    // 1️⃣ Fetch student data
+    const student = await db.get()
+      .collection(collection.STUDENT_COLLECTION)
+      .findOne({ _id: new ObjectId(studentId) });
+
+    if (!student) {
+      return res.status(404).send("Student not found");
+    }
+
+    console.log("📋 Generating PDF for student:", student.fullName);
+
+    // 2️⃣ Load background image - check if it exists
+    const bgPath = path.join(__dirname, "../public/images/registration-bg.jpg");
+    let bgBytes = null;
+    
+    if (fs.existsSync(bgPath)) {
+      bgBytes = fs.readFileSync(bgPath);
+    } else {
+      console.log("ℹ️ No background image found, creating plain PDF");
+    }
+
+    // 3️⃣ Create PDF document
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.registerFontkit(fontkit);
+
+    // 4️⃣ Load fonts
+    const arialPath = path.join(__dirname, "../public/fonts/arial.ttf");
+    const arialBytes = fs.readFileSync(arialPath);
+    const arial = await pdfDoc.embedFont(arialBytes);
+
+    const arialBoldPath = path.join(__dirname, "../public/fonts/arialbd.ttf");
+    let arialBold = arial;
+    if (fs.existsSync(arialBoldPath)) {
+      const arialBoldBytes = fs.readFileSync(arialBoldPath);
+      arialBold = await pdfDoc.embedFont(arialBoldBytes);
+    }
+
+    // 5️⃣ Page size (A4)
+    const pageWidth = 8.27 * 72;  // A4 width in points
+    const pageHeight = 11.69 * 72; // A4 height in points
+
+    // ===========================
+    // PAGE 1: MAIN REGISTRATION FORM
+    // ===========================
+    const page1 = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    // Background (if exists)
+    if (bgBytes) {
+      try {
+        const bgImage = await pdfDoc.embedJpg(bgBytes);
+        page1.drawImage(bgImage, { 
+          x: 0, 
+          y: 0, 
+          width: pageWidth, 
+          height: pageHeight 
+        });
+      } catch (err) {
+        console.warn("⚠️ Background image error:", err.message);
+      }
+    }
+
+    const { rgb } = require("pdf-lib");
+
+    // ===========================
+    // SAFE VALUE HELPER FUNCTION
+    // ===========================
+    const safeValue = (value) => {
+      if (value === undefined || value === null) {
+        return "N/A";
+      }
+      
+      if (typeof value === 'number') {
+        return isNaN(value) || value === 0 ? "N/A" : value.toString();
+      }
+      
+      if (typeof value === 'boolean') {
+        return value ? "Yes" : "No";
+      }
+      
+      if (value instanceof Date) {
+        return value.toLocaleDateString();
+      }
+      
+      const strValue = String(value).trim();
+      return strValue === "" ? "N/A" : strValue;
+    };
+    const currentDate = new Date();
+    const issueDate = currentDate.toLocaleDateString('en-GB'); // Format: DD/MM/YYYY
+  // ✅ Student Photo - WITH SIMPLE rotation check
+const imageDir = path.join(__dirname, "../public/studentImages/");
+const possibleExtensions = [".jpg", ".jpeg", ".png"];
+let photoFound = false;
+
+for (const ext of possibleExtensions) {
+  const photoPath = path.join(imageDir, `${student._id}${ext}`);
+  if (fs.existsSync(photoPath)) {
+    try {
+      console.log(`✅ Found student photo at: ${photoPath}`);
+      let photoBytes = fs.readFileSync(photoPath);
+      let photo;
+
+      if (ext === ".png") {
+        photo = await pdfDoc.embedPng(photoBytes);
+      } else {
+        // Try-catch for JPG embedding
+        try {
+          photo = await pdfDoc.embedJpg(photoBytes);
+        } catch (jpgErr) {
+          console.log("⚠️ Could not embed as JPG, trying different approach");
+          // Alternative: create a placeholder or skip
+          continue;
+        }
+      }
+
+      // Student photo position - TRY DIFFERENT VALUES IF NOT VISIBLE
+      page1.drawImage(photo, {
+        x: 485.5,    // Try 50 if not visible
+        y: 584.3,    // Try 50 if not visible  
+        width: 71.8,
+        height: 91.3,
+      });
+
+      photoFound = true;
+      console.log(`✅ Photo drawn successfully`);
+      break;
+      
+    } catch (photoError) {
+      console.log("❌ Error in photo processing:", photoError.message);
+      continue;
+    }
+  }
+}
+function drawTextCenteredAtX(page, text, centerX, y, font, size) {
+  if (!text) return;
+
+  const textWidth = font.widthOfTextAtSize(text, size);
+  const x = centerX - textWidth / 2;
+
+  page.drawText(text, {
+    x,
+    y,
+    size,
+    font,
+    color: rgb(0, 0, 0)
+  });
+}
+
+
+    // ===========================
+    // DRAW FIELD FUNCTION
+    // ===========================
+    const drawField = (label, value, x, y) => {
+      const displayValue = safeValue(value);
+      
+      page1.drawText(`${label}`, {
+        x: x,
+        y: y,
+        size: 9,
+        font: arialBold,
+        color: rgb(0, 0, 0)
+      });
+      
+      page1.drawText(displayValue, {
+        x: x + 100,
+        y: y,
+        size: 9,
+        font: arial,
+        color: rgb(0.3, 0.3, 0.3) // softer black
+      });
+      
+    };
+
+    // ===========================
+    // PAGE 1 CONTENT
+    // ===========================
+    
+    // Registration Number (top right)
+    drawField("", student.regNo, 405, 817.3);  
+    
+    // ACADEMIC DETAILS
+    const [startYear, endYear] = (student.admissionYear || "").split("-");
+
+    drawField("", startYear, 85, 669);
+
+    drawField("", endYear, 160, 669);
+    
+    
+
+    drawField("", student.mode, 267, 669);
+    // drawField("", student.centreId, 76, 649.5);
+    const centreId = Array.isArray(student.centreId)
+    ? student.centreId[0]
+    : student.centreId;
+    const centre = await db.get()
+    .collection(collection.CENTER_COLLECTION)
+    .findOne({ centreId: centreId });
+    const centreName = centre?.centreName || "N/A";
+    drawField("", `${centreName} / ${centreId}`, 76, 649.5);
+
+
+    drawField("", student.courseName, 76, 629.5);
+    drawField("", student.courseCode, 76, 608.5);
+    drawField("", student.courseDuration, 76, 590);
+    drawField("", student.shortName, 297, 609);
+    drawField("", student.medium, 285, 590);
+    drawField("", student.department, 76, 550.2);
+    const batchId = student.batchId;
+    const batch = await batchHelpers.getBatchById(batchId);
+
+    const batchName = batch?.batchName || "N/A";
+    
+    drawField("", batchName, 76, 570);
+
+  
+
+    // PERSONAL DETAILS
+    drawField("", student.fullName, 33, 519);
+    drawField("", student.fatherName, 33, 501);
+    drawField("", student.motherName, 33, 484);
+    const gender = (student.gender || "").trim().toLowerCase();
+    const yGender = 449;
+
+    const MALE_X   = 296;
+    const FEMALE_X = 210;
+    const OTHER_X  = 280;
+    if (gender === "male") {
+      drawField("", "X", MALE_X, yGender);
+    } else if (gender === "female") {
+      drawField("", "X", FEMALE_X, yGender);
+    } else if (gender === "other") {
+      drawField("", "X", OTHER_X, yGender);
+    }
+        
+    
+    // drawField("", student.dob, 48, 465);
+    const dobStr = student.dob;
+
+    if (dobStr) {
+      const dob = new Date(dobStr);
+      const today = new Date();
+    
+      // DOB → DD-MM-YYYY
+      const day = String(dob.getDate()).padStart(2, "0");
+      const month = String(dob.getMonth() + 1).padStart(2, "0");
+      const year = dob.getFullYear();
+      const formattedDOB = `${day}-${month}-${year}`;
+    
+      // Age calculation
+      let years = today.getFullYear() - year;
+      let months = today.getMonth() - dob.getMonth();
+    
+      if (today.getDate() < dob.getDate()) {
+        months--;
+      }
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+    
+      const yPos = 466.2;
+    
+      // ✅ Draw each value in its own column
+      drawField("", formattedDOB, 33, yPos);   // DOB column
+      drawField("", years.toString(), 163.5, yPos);  // Years column
+      drawField("", months.toString(), 230, yPos); // Months column
+    }
+    
+
+    drawField("", student.number, 33, 449);
+    drawField("", student.emerNum, 33, 431);
+    drawField("", student.candOcc, 33, 414);
+    drawField("", student.fatherOcc, 33, 398);
+    drawField("", student.adharNo, 33, 362.5);
+    drawField("", student.address, 33, 347.5);
+    drawField("", `${student.district}, ${student.city}`, 33, 330);
+
+    
+    const bpl = (student.bpl || "").trim().toLowerCase();
+
+    const yBPL = 413;
+
+    const YES_X = 350;
+    const NO_X  = 296;
+    if (bpl === "yes") {
+      drawField("", "X", YES_X, yBPL);
+    } else if (bpl === "no") {
+      drawField("", "X", NO_X, yBPL);
+    }
+        
+   
+    const ph = (student.ph || "").trim().toLowerCase();
+    const yPH = 397;
+
+    if (student.ph === "Yes") {
+      drawField("", "X", 350, 397);
+    } else if (student.ph === "No") {
+      drawField("", "X", 296, 397);
+    }
+    
+
+    
+    const caste = (student.caste || "").trim().toLowerCase();
+const yCaste = 379;
+
+if (caste === "gen") {
+  drawField("", "X", 47, yCaste);
+} else if (caste === "obc") {
+  drawField("", "X", 88.5, yCaste);
+} else if (caste === "sc") {
+  drawField("", "X", 130, yCaste);
+} else if (caste === "st") {
+  drawField("", "X", 162, yCaste);
+} else if (caste === "other") {
+  drawField("", "X", 213, yCaste);
+}
+
+    drawField("", student.pinCode, 300.5, 362);
+    drawField("", student.state, 300.5, 330.5);
+    drawField("", student.nationality, 300.5, 378.7);
+    drawField("", student.regNo, 110, 26);
+
+    drawField("", student.email, 300.5, 431);
+   //declaration
+ 
+  drawTextCenteredAtX(
+    page1,
+    safeValue(student.fullName),
+    100,     // 👈 center point for student name
+    156,
+    arial,
+    9
+  );
+  
+  drawTextCenteredAtX(
+    page1,
+    safeValue(student.fatherName),
+    280,     // 👈 center point for father name
+    156,
+    arial,
+    9
+  );
+  
+   drawField("", issueDate, -44, 93);
+   drawField("", student.city, -44, 80);
+   let activatedDateText = "";
+
+   if (student.activatedDate) {
+     const d = new Date(student.activatedDate);
+   
+     const day = String(d.getDate()).padStart(2, "0");
+     const month = String(d.getMonth() + 1).padStart(2, "0");
+     const year = d.getFullYear();
+   
+     activatedDateText = `${day}-${month}-${year}`;
+   }
+   
+   // Draw the field with activated date
+   drawField("apd", activatedDateText, -54, 26);
+   // ===========================
+// QUALIFICATIONS → PDF (VALUES ONLY)
+// ===========================
+
+let y = 280;        // start Y
+const gap = 15.3;
+
+(student.qualifications || []).forEach((q) => {
+
+  
+
+  page1.drawText(q.maxMarks?.toString() || '', {
+    x: 135,
+    y,
+    size: 9,
+    font: arial
+  });
+
+  page1.drawText(q.minMarks?.toString() || '', {
+    x: 190,
+    y,
+    size: 9,
+    font: arial
+  });
+
+  page1.drawText(q.obtainedMarks?.toString() || '', {
+    x: 245,
+    y,
+    size: 9,
+    font: arial
+  });
+
+  page1.drawText(q.grade || '', {
+    x: 290,
+    y,
+    size: 9,
+    font: arial
+  });
+
+  page1.drawText(q.year || '', {
+    x: 343,
+    y,
+    size: 9,
+    font: arial
+  });
+
+  page1.drawText(q.board || '', {
+    x: 400,
+    y,
+    size: 9,
+    font: arial,
+    maxWidth: 140
+  });
+
+  y -= gap;
+});
+
+
+   
+    // ===========================
+    // PAGE 2: SDECLARE.JPG (Student Declaration)
+    // ===========================
+    const page2 = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    try {
+      const sdeclarePath = path.join(__dirname, "../public/images/sdeclare.jpg");
+      if (fs.existsSync(sdeclarePath)) {
+        const sdeclareBytes = fs.readFileSync(sdeclarePath);
+        const sdeclareImage = await pdfDoc.embedJpg(sdeclareBytes);
+        page2.drawImage(sdeclareImage, { 
+          x: 0, 
+          y: 0, 
+          width: pageWidth, 
+          height: pageHeight 
+        });
+
+        // Declaration page – centered fields
+drawTextCenteredAtX(
+  page2,
+  safeValue(student.fullName),
+  165,                 // 👈 center position
+  pageHeight - 94,
+  arial,
+  9
+);
+
+drawTextCenteredAtX(
+  page2,
+  safeValue(student.fatherName),
+  420,                 // 👈 center position
+  pageHeight - 94,
+  arial,
+  9
+);
+
+drawTextCenteredAtX(
+  page2,
+  safeValue(student.courseName),
+  115,
+  pageHeight - 115,
+  arial,
+  9
+);
+
+drawTextCenteredAtX(
+  page2,
+  safeValue(student.courseDuration),
+  285,
+  pageHeight - 115,
+  arial,
+  9
+);
+
+drawTextCenteredAtX(
+  page2,
+  safeValue(student.department),
+  465,
+  pageHeight - 115,
+  arial,
+  9
+);
+
+       
+const fontSize = 9;
+const maxWidth = 200; // 🔴 adjust this value to fit your layout
+const address = safeValue(student.address);
+function splitTextByWidth(text, font, fontSize, maxWidth) {
+  const words = text.split(' ');
+  let line1 = '';
+  let line2 = '';
+
+  for (let i = 0; i < words.length; i++) {
+    const testLine = line1 ? line1 + ' ' + words[i] : words[i];
+    const testWidth = font.widthOfTextAtSize(testLine, fontSize);
+
+    if (testWidth <= maxWidth) {
+      line1 = testLine;
+    } else {
+      line2 = words.slice(i).join(' ');
+      break;
+    }
+  }
+
+  return { line1, line2 };
+}
+const { line1, line2 } = splitTextByWidth(
+  address,
+  arial,
+  fontSize,
+  145 // same maxWidth
+);
+
+page2.drawText(line1, {
+  x: 435,
+  y: pageHeight - 137,
+  size: fontSize,
+  font: arial,
+  color: rgb(0, 0, 0)
+});
+
+page2.drawText(line2, {
+  x: 36,
+  y: pageHeight - 160,
+  size: fontSize,
+  font: arial,
+  color: rgb(0, 0, 0)
+});
+
+        page2.drawText(` ${safeValue(student.pinCode)}`, {
+          x: 321,
+          y: pageHeight - 160,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+        page2.drawText(` ${safeValue(student.number)}`, {
+          x: 450,
+          y: pageHeight - 160,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+      } else {
+        console.log("ℹ️ sdeclare.jpg not found, creating text declaration");
+        page2.drawText("STUDENT DECLARATION", {
+          x: pageWidth / 2 - 80,
+          y: pageHeight - 100,
+          size: 18,
+          font: arialBold,
+          color: rgb(0, 0, 0)
+        });
+
+        const declarationText = `I, ${safeValue(student.fullName)}, son/daughter of ${safeValue(student.fatherName)}, hereby declare that all information provided in this registration form is true and correct to the best of my knowledge.`;
+        
+        page2.drawText(declarationText, {
+          x: 45,
+          y: pageHeight - 150,
+          size: 12,
+          font: arial,
+          color: rgb(0, 0, 0),
+          maxWidth: pageWidth - 90
+        });
+      }
+    } catch (err) {
+      console.warn("⚠️ Error loading sdeclare.jpg:", err.message);
+    }
+
+    // ===========================
+    // PAGE 3: PDECLARE.JPG (Parent/Guardian Declaration)
+    // ===========================
+    const page3 = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    try {
+      const pdeclarePath = path.join(__dirname, "../public/images/pdeclare.jpg");
+      if (fs.existsSync(pdeclarePath)) {
+        const pdeclareBytes = fs.readFileSync(pdeclarePath);
+        const pdeclareImage = await pdfDoc.embedJpg(pdeclareBytes);
+        page3.drawImage(pdeclareImage, { 
+          x: 0, 
+          y: 0, 
+          width: pageWidth, 
+          height: pageHeight 
+        });
+
+        // Add student details on the parent declaration page
+        page3.drawText(` ${safeValue(issueDate)}`, {
+          x: 65,
+          y: pageHeight - 421.8,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+        page3.drawText(` ${safeValue(student.city)}`, {
+          x: 65,
+          y: pageHeight - 450.8,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+
+        page3.drawText(` ${safeValue(student.fatherName)}`, {
+          x: 70,
+          y: pageHeight - 598,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+        
+        page3.drawText(` ${safeValue(issueDate)}`, {
+          x: 65,
+          y: pageHeight - 706.5,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+        page3.drawText(` ${safeValue(student.city)}`, {
+          x: 65,
+          y: pageHeight - 733.5,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+
+      
+      } else {
+        console.log("ℹ️ pdeclare.jpg not found, creating text declaration");
+        page3.drawText("PARENT/GUARDIAN DECLARATION", {
+          x: pageWidth / 2 - 120,
+          y: pageHeight - 100,
+          size: 18,
+          font: arialBold,
+          color: rgb(0, 0, 0)
+        });
+
+        const parentDeclaration = `I, ${safeValue(student.fatherName)}/${safeValue(student.motherName)}, parent/guardian of ${safeValue(student.fullName)}, hereby declare that I have read and understood all the terms and conditions and give my consent for the admission.`;
+        
+        page3.drawText(parentDeclaration, {
+          x: 45,
+          y: pageHeight - 150,
+          size: 12,
+          font: arial,
+          color: rgb(0, 0, 0),
+          maxWidth: pageWidth - 90
+        });
+      }
+    } catch (err) {
+      console.warn("⚠️ Error loading pdeclare.jpg:", err.message);
+    }
+
+    // ===========================
+    // OUTPUT PDF AS PREVIEW
+    // ===========================
+    const pdfBytes = await pdfDoc.save();
+    const base64 = Buffer.from(pdfBytes).toString("base64");
+
+    res.send(`
+      <html>
+        <head>
+          <title>Registration Form Preview</title>
+          <style>
+            body { 
+              margin: 0;
+              padding: 0;
+              font-family: Arial, sans-serif;
+              background: #f5f5f5;
+              overflow: hidden;
+            }
+
+            .header {
+              width: 100%;
+              background: #2a3d66;
+              color: white;
+              padding: 12px;
+              text-align: center;
+              font-size: 20px;
+              font-weight: bold;
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              z-index: 1000;
+              box-shadow: 0px 2px 6px rgba(0,0,0,0.3);
+            }
+
+            iframe {
+              position: fixed;
+              top: 60px;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              width: 100%;
+              height: calc(100vh - 60px);
+              border: none;
+            }
+
+            .download-btn {
+              position: fixed;
+              top: 70px;
+              right: 20px;
+              background: #2a3d66;
+              color: white;
+              padding: 12px 24px;
+              border-radius: 6px;
+              text-decoration: none;
+              font-weight: bold;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+              transition: 0.3s;
+              z-index: 1001;
+            }
+
+            .download-btn:hover {
+              background: #1d2a47;
+              transform: translateY(-2px);
+            }
+
+            .back-btn {
+              position: fixed;
+              top: 70px;
+              left: 20px;
+              background: #6c757d;
+              color: white;
+              padding: 12px 24px;
+              border-radius: 6px;
+              text-decoration: none;
+              font-weight: bold;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+              transition: 0.3s;
+              z-index: 1001;
+            }
+
+            .back-btn:hover {
+              background: #545b62;
+              transform: translateY(-2px);
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">Registration Form Preview - ${safeValue(student.fullName)}</div>
+          <a href="/admin/view-student" class="back-btn">← Back to Students</a>
+          <a href="/admin/download-registration/${studentId}" class="download-btn">
+            📥 Download PDF
+          </a>
+          <iframe src="data:application/pdf;base64,${base64}"></iframe>
+        </body>
+      </html>
+    `);
+
+  } catch (err) {
+    console.error("❌ Error generating registration form preview:", err);
+    res.status(500).send(`
+      <html>
+        <head>
+          <title>Error</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; text-align: center; }
+            .error { background: #ffe6e6; border: 1px solid #ff9999; padding: 20px; border-radius: 5px; }
+            .back-btn { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #2a3d66; color: white; text-decoration: none; border-radius: 5px; }
+          </style>
+        </head>
+        <body>
+          <div class="error">
+            <h2>Error Generating PDF Preview</h2>
+            <p>${err.message}</p>
+            <a href="/admin/view-student" class="back-btn">← Back to Students</a>
+          </div>
+        </body>
+      </html>
+    `);
+  }
+});
+// ===========================
+// DOWNLOAD REGISTRATION FORM (PDF) - WITH UPDATED COORDINATES
+// ===========================
+router.get("/download-registration/:id", verifyAdminLogin, async (req, res) => {
+  try {
+    const studentId = req.params.id;
+
+    // 1️⃣ Fetch student data
+    const student = await db.get()
+      .collection(collection.STUDENT_COLLECTION)
+      .findOne({ _id: new ObjectId(studentId) });
+
+    if (!student) {
+      return res.status(404).send("Student not found");
+    }
+
+    console.log("📥 Downloading PDF for student:", student.fullName);
+
+    // 2️⃣ Load background image - check if it exists
+    const bgPath = path.join(__dirname, "../public/images/registration-bg.jpg");
+    let bgBytes = null;
+    
+    if (fs.existsSync(bgPath)) {
+      bgBytes = fs.readFileSync(bgPath);
+    } else {
+      console.log("ℹ️ No background image found, creating plain PDF");
+    }
+
+    // 3️⃣ Create PDF document
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.registerFontkit(fontkit);
+
+    // 4️⃣ Load fonts
+    const arialPath = path.join(__dirname, "../public/fonts/arial.ttf");
+    const arialBytes = fs.readFileSync(arialPath);
+    const arial = await pdfDoc.embedFont(arialBytes);
+
+    const arialBoldPath = path.join(__dirname, "../public/fonts/arialbd.ttf");
+    let arialBold = arial;
+    if (fs.existsSync(arialBoldPath)) {
+      const arialBoldBytes = fs.readFileSync(arialBoldPath);
+      arialBold = await pdfDoc.embedFont(arialBoldBytes);
+    }
+
+    // 5️⃣ Page size (A4)
+    const pageWidth = 8.27 * 72;  // A4 width in points
+    const pageHeight = 11.69 * 72; // A4 height in points
+
+    // ===========================
+    // PAGE 1: MAIN REGISTRATION FORM
+    // ===========================
+    const page1 = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    // Background (if exists)
+    if (bgBytes) {
+      try {
+        const bgImage = await pdfDoc.embedJpg(bgBytes);
+        page1.drawImage(bgImage, { 
+          x: 0, 
+          y: 0, 
+          width: pageWidth, 
+          height: pageHeight 
+        });
+      } catch (err) {
+        console.warn("⚠️ Background image error:", err.message);
+      }
+    }
+
+    const { rgb } = require("pdf-lib");
+
+    // ===========================
+    // SAFE VALUE HELPER FUNCTION
+    // ===========================
+    const safeValue = (value) => {
+      if (value === undefined || value === null) {
+        return "N/A";
+      }
+      
+      if (typeof value === 'number') {
+        return isNaN(value) || value === 0 ? "N/A" : value.toString();
+      }
+      
+      if (typeof value === 'boolean') {
+        return value ? "Yes" : "No";
+      }
+      
+      if (value instanceof Date) {
+        return value.toLocaleDateString();
+      }
+      
+      const strValue = String(value).trim();
+      return strValue === "" ? "N/A" : strValue;
+    };
+    const currentDate = new Date();
+    const issueDate = currentDate.toLocaleDateString('en-GB'); // Format: DD/MM/YYYY
+    
+    // ✅ Student Photo - WITH SIMPLE rotation check
+    const imageDir = path.join(__dirname, "../public/studentImages/");
+    const possibleExtensions = [".jpg", ".jpeg", ".png"];
+    let photoFound = false;
+
+    for (const ext of possibleExtensions) {
+      const photoPath = path.join(imageDir, `${student._id}${ext}`);
+      if (fs.existsSync(photoPath)) {
+        try {
+          console.log(`✅ Found student photo at: ${photoPath}`);
+          let photoBytes = fs.readFileSync(photoPath);
+          let photo;
+
+          if (ext === ".png") {
+            photo = await pdfDoc.embedPng(photoBytes);
+          } else {
+            // Try-catch for JPG embedding
+            try {
+              photo = await pdfDoc.embedJpg(photoBytes);
+            } catch (jpgErr) {
+              console.log("⚠️ Could not embed as JPG, trying different approach");
+              continue;
+            }
+          }
+
+          // Student photo position
+          page1.drawImage(photo, {
+            x: 485.5,
+            y: 584.3,
+            width: 71.8,
+            height: 91.3,
+          });
+
+          photoFound = true;
+          console.log(`✅ Photo drawn successfully`);
+          break;
+          
+        } catch (photoError) {
+          console.log("❌ Error in photo processing:", photoError.message);
+          continue;
+        }
+      }
+    }
+
+    function drawTextCenteredAtX(page, text, centerX, y, font, size) {
+      if (!text) return;
+
+      const textWidth = font.widthOfTextAtSize(text, size);
+      const x = centerX - textWidth / 2;
+
+      page.drawText(text, {
+        x,
+        y,
+        size,
+        font,
+        color: rgb(0, 0, 0)
+      });
+    }
+
+    // ===========================
+    // DRAW FIELD FUNCTION
+    // ===========================
+    const drawField = (label, value, x, y) => {
+      const displayValue = safeValue(value);
+      
+      page1.drawText(`${label}`, {
+        x: x,
+        y: y,
+        size: 9,
+        font: arialBold,
+        color: rgb(0, 0, 0)
+      });
+      
+      page1.drawText(displayValue, {
+        x: x + 100,
+        y: y,
+        size: 9,
+        font: arial,
+        color: rgb(0.3, 0.3, 0.3) // softer black
+      });
+      
+    };
+
+    // ===========================
+    // PAGE 1 CONTENT
+    // ===========================
+    
+    // Registration Number (top right)
+    drawField("", student.regNo, 405, 817.3);  
+    
+    // ACADEMIC DETAILS
+    const [startYear, endYear] = (student.admissionYear || "").split("-");
+
+    drawField("", startYear, 85, 669);
+    drawField("", endYear, 160, 669);
+    drawField("", student.mode, 267, 669);
+    
+    const centreId = Array.isArray(student.centreId)
+      ? student.centreId[0]
+      : student.centreId;
+    const centre = await db.get()
+      .collection(collection.CENTER_COLLECTION)
+      .findOne({ centreId: centreId });
+    const centreName = centre?.centreName || "N/A";
+    drawField("", `${centreName} / ${centreId}`, 76, 649.5);
+
+    drawField("", student.courseName, 76, 629.5);
+    drawField("", student.courseCode, 76, 608.5);
+    drawField("", student.courseDuration, 76, 590);
+    drawField("", student.shortName, 297, 609);
+    drawField("", student.medium, 285, 590);
+    drawField("", student.department, 76, 550.2);
+    
+    const batchId = student.batchId;
+    const batch = await batchHelpers.getBatchById(batchId);
+    const batchName = batch?.batchName || "N/A";
+    drawField("", batchName, 76, 570);
+
+    // PERSONAL DETAILS
+    drawField("", student.fullName, 33, 519);
+    drawField("", student.fatherName, 33, 501);
+    drawField("", student.motherName, 33, 484);
+    
+    const gender = (student.gender || "").trim().toLowerCase();
+    const yGender = 449;
+    const MALE_X = 296;
+    const FEMALE_X = 210;
+    const OTHER_X = 280;
+    if (gender === "male") {
+      drawField("", "X", MALE_X, yGender);
+    } else if (gender === "female") {
+      drawField("", "X", FEMALE_X, yGender);
+    } else if (gender === "other") {
+      drawField("", "X", OTHER_X, yGender);
+    }
+    
+    const dobStr = student.dob;
+    if (dobStr) {
+      const dob = new Date(dobStr);
+      const today = new Date();
+      
+      // DOB → DD-MM-YYYY
+      const day = String(dob.getDate()).padStart(2, "0");
+      const month = String(dob.getMonth() + 1).padStart(2, "0");
+      const year = dob.getFullYear();
+      const formattedDOB = `${day}-${month}-${year}`;
+      
+      // Age calculation
+      let years = today.getFullYear() - year;
+      let months = today.getMonth() - dob.getMonth();
+      
+      if (today.getDate() < dob.getDate()) {
+        months--;
+      }
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+      
+      const yPos = 466.2;
+      
+      // ✅ Draw each value in its own column
+      drawField("", formattedDOB, 33, yPos);   // DOB column
+      drawField("", years.toString(), 163.5, yPos);  // Years column
+      drawField("", months.toString(), 230, yPos); // Months column
+    }
+
+    drawField("", student.number, 33, 449);
+    drawField("", student.emerNum, 33, 431);
+    drawField("", student.candOcc, 33, 414);
+    drawField("", student.fatherOcc, 33, 398);
+    drawField("", student.adharNo, 33, 362.5);
+    drawField("", student.address, 33, 347.5);
+    drawField("", `${student.district}, ${student.city}`, 33, 330);
+
+    const bpl = (student.bpl || "").trim().toLowerCase();
+    const yBPL = 413;
+    const YES_X = 350;
+    const NO_X = 296;
+    if (bpl === "yes") {
+      drawField("", "X", YES_X, yBPL);
+    } else if (bpl === "no") {
+      drawField("", "X", NO_X, yBPL);
+    }
+
+    const ph = (student.ph || "").trim().toLowerCase();
+    const yPH = 397;
+    if (student.ph === "Yes") {
+      drawField("", "X", 350, 397);
+    } else if (student.ph === "No") {
+      drawField("", "X", 296, 397);
+    }
+
+    const caste = (student.caste || "").trim().toLowerCase();
+    const yCaste = 379;
+    if (caste === "gen") {
+      drawField("", "X", 47, yCaste);
+    } else if (caste === "obc") {
+      drawField("", "X", 88.5, yCaste);
+    } else if (caste === "sc") {
+      drawField("", "X", 130, yCaste);
+    } else if (caste === "st") {
+      drawField("", "X", 162, yCaste);
+    } else if (caste === "other") {
+      drawField("", "X", 213, yCaste);
+    }
+
+    drawField("", student.pinCode, 300.5, 362);
+    drawField("", student.state, 300.5, 330.5);
+    drawField("", student.nationality, 300.5, 378.7);
+    drawField("", student.regNo, 110, 26);
+    drawField("", student.email, 300.5, 431);
+    
+    // Declaration
+    drawTextCenteredAtX(
+      page1,
+      safeValue(student.fullName),
+      100,
+      156,
+      arial,
+      9
+    );
+    
+    drawTextCenteredAtX(
+      page1,
+      safeValue(student.fatherName),
+      280,
+      156,
+      arial,
+      9
+    );
+    
+    drawField("", issueDate, -44, 93);
+    drawField("", student.city, -44, 80);
+    
+    let activatedDateText = "";
+    if (student.activatedDate) {
+      const d = new Date(student.activatedDate);
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      activatedDateText = `${day}-${month}-${year}`;
+    }
+    
+    drawField("apd", activatedDateText, -54, 26);
+    
+    // ===========================
+    // QUALIFICATIONS → PDF (VALUES ONLY)
+    // ===========================
+    let y = 280; // start Y
+    const gap = 15.3;
+
+    (student.qualifications || []).forEach((q) => {
+      page1.drawText(q.maxMarks?.toString() || '', {
+        x: 135,
+        y,
+        size: 9,
+        font: arial
+      });
+
+      page1.drawText(q.minMarks?.toString() || '', {
+        x: 190,
+        y,
+        size: 9,
+        font: arial
+      });
+
+      page1.drawText(q.obtainedMarks?.toString() || '', {
+        x: 245,
+        y,
+        size: 9,
+        font: arial
+      });
+
+      page1.drawText(q.grade || '', {
+        x: 290,
+        y,
+        size: 9,
+        font: arial
+      });
+
+      page1.drawText(q.year || '', {
+        x: 343,
+        y,
+        size: 9,
+        font: arial
+      });
+
+      page1.drawText(q.board || '', {
+        x: 400,
+        y,
+        size: 9,
+        font: arial,
+        maxWidth: 140
+      });
+
+      y -= gap;
+    });
+
+    // ===========================
+    // PAGE 2: SDECLARE.JPG (Student Declaration)
+    // ===========================
+    const page2 = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    try {
+      const sdeclarePath = path.join(__dirname, "../public/images/sdeclare.jpg");
+      if (fs.existsSync(sdeclarePath)) {
+        const sdeclareBytes = fs.readFileSync(sdeclarePath);
+        const sdeclareImage = await pdfDoc.embedJpg(sdeclareBytes);
+        page2.drawImage(sdeclareImage, { 
+          x: 0, 
+          y: 0, 
+          width: pageWidth, 
+          height: pageHeight 
+        });
+
+        // Declaration page – centered fields
+        drawTextCenteredAtX(
+          page2,
+          safeValue(student.fullName),
+          165,
+          pageHeight - 94,
+          arial,
+          9
+        );
+
+        drawTextCenteredAtX(
+          page2,
+          safeValue(student.fatherName),
+          420,
+          pageHeight - 94,
+          arial,
+          9
+        );
+
+        drawTextCenteredAtX(
+          page2,
+          safeValue(student.courseName),
+          115,
+          pageHeight - 115,
+          arial,
+          9
+        );
+
+        drawTextCenteredAtX(
+          page2,
+          safeValue(student.courseDuration),
+          285,
+          pageHeight - 115,
+          arial,
+          9
+        );
+
+        drawTextCenteredAtX(
+          page2,
+          safeValue(student.department),
+          465,
+          pageHeight - 115,
+          arial,
+          9
+        );
+
+        const fontSize = 9;
+        const maxWidth = 200;
+        const address = safeValue(student.address);
+        
+        function splitTextByWidth(text, font, fontSize, maxWidth) {
+          const words = text.split(' ');
+          let line1 = '';
+          let line2 = '';
+
+          for (let i = 0; i < words.length; i++) {
+            const testLine = line1 ? line1 + ' ' + words[i] : words[i];
+            const testWidth = font.widthOfTextAtSize(testLine, fontSize);
+
+            if (testWidth <= maxWidth) {
+              line1 = testLine;
+            } else {
+              line2 = words.slice(i).join(' ');
+              break;
+            }
+          }
+
+          return { line1, line2 };
+        }
+        
+        const { line1, line2 } = splitTextByWidth(
+          address,
+          arial,
+          fontSize,
+          145
+        );
+
+        page2.drawText(line1, {
+          x: 435,
+          y: pageHeight - 137,
+          size: fontSize,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+
+        page2.drawText(line2, {
+          x: 36,
+          y: pageHeight - 160,
+          size: fontSize,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+
+        page2.drawText(` ${safeValue(student.pinCode)}`, {
+          x: 321,
+          y: pageHeight - 160,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+        
+        page2.drawText(` ${safeValue(student.number)}`, {
+          x: 450,
+          y: pageHeight - 160,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+      } else {
+        console.log("ℹ️ sdeclare.jpg not found, creating text declaration");
+        page2.drawText("STUDENT DECLARATION", {
+          x: pageWidth / 2 - 80,
+          y: pageHeight - 100,
+          size: 18,
+          font: arialBold,
+          color: rgb(0, 0, 0)
+        });
+
+        const declarationText = `I, ${safeValue(student.fullName)}, son/daughter of ${safeValue(student.fatherName)}, hereby declare that all information provided in this registration form is true and correct to the best of my knowledge.`;
+        
+        page2.drawText(declarationText, {
+          x: 45,
+          y: pageHeight - 150,
+          size: 12,
+          font: arial,
+          color: rgb(0, 0, 0),
+          maxWidth: pageWidth - 90
+        });
+      }
+    } catch (err) {
+      console.warn("⚠️ Error loading sdeclare.jpg:", err.message);
+    }
+
+    // ===========================
+    // PAGE 3: PDECLARE.JPG (Parent/Guardian Declaration) - WITH UPDATED COORDINATES
+    // ===========================
+    const page3 = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    try {
+      const pdeclarePath = path.join(__dirname, "../public/images/pdeclare.jpg");
+      if (fs.existsSync(pdeclarePath)) {
+        const pdeclareBytes = fs.readFileSync(pdeclarePath);
+        const pdeclareImage = await pdfDoc.embedJpg(pdeclareBytes);
+        page3.drawImage(pdeclareImage, { 
+          x: 0, 
+          y: 0, 
+          width: pageWidth, 
+          height: pageHeight 
+        });
+
+        // Add student details on the parent declaration page - USING YOUR UPDATED COORDINATES
+        page3.drawText(` ${safeValue(issueDate)}`, {
+          x: 65,
+          y: pageHeight - 421.8,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+        
+        page3.drawText(` ${safeValue(student.city)}`, {
+          x: 65,
+          y: pageHeight - 450.8,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+
+        page3.drawText(` ${safeValue(student.fatherName)}`, {
+          x: 70,
+          y: pageHeight - 598,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+        
+        page3.drawText(` ${safeValue(issueDate)}`, {
+          x: 65,
+          y: pageHeight - 706.5,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+        
+        page3.drawText(` ${safeValue(student.city)}`, {
+          x: 65,
+          y: pageHeight - 733.5,
+          size: 9,
+          font: arial,
+          color: rgb(0, 0, 0)
+        });
+
+      } else {
+        console.log("ℹ️ pdeclare.jpg not found, creating text declaration");
+        page3.drawText("PARENT/GUARDIAN DECLARATION", {
+          x: pageWidth / 2 - 120,
+          y: pageHeight - 100,
+          size: 18,
+          font: arialBold,
+          color: rgb(0, 0, 0)
+        });
+
+        const parentDeclaration = `I, ${safeValue(student.fatherName)}/${safeValue(student.motherName)}, parent/guardian of ${safeValue(student.fullName)}, hereby declare that I have read and understood all the terms and conditions and give my consent for the admission.`;
+        
+        page3.drawText(parentDeclaration, {
+          x: 45,
+          y: pageHeight - 150,
+          size: 12,
+          font: arial,
+          color: rgb(0, 0, 0),
+          maxWidth: pageWidth - 90
+        });
+      }
+    } catch (err) {
+      console.warn("⚠️ Error loading pdeclare.jpg:", err.message);
+    }
+
+    // ===========================
+    // OUTPUT PDF FOR DOWNLOAD
+    // ===========================
+    const pdfBytes = await pdfDoc.save();
+    
+    // Set headers for download
+    const fileName = `Registration_Form_${student.regNo || student._id}.pdf`;
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Length', pdfBytes.length);
+    
+    // Send the PDF as a download
+    res.send(Buffer.from(pdfBytes));
+
+  } catch (err) {
+    console.error("❌ Error downloading registration form:", err);
+    
+    // Send error response
+    res.status(500).send(`
+      <html>
+        <head>
+          <title>Download Error</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              padding: 40px; 
+              text-align: center; 
+              background: #f5f5f5;
+            }
+            .error { 
+              background: #ffe6e6; 
+              border: 1px solid #ff9999; 
+              padding: 30px; 
+              border-radius: 10px;
+              max-width: 600px;
+              margin: 0 auto;
+              box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+            h2 { color: #d32f2f; margin-top: 0; }
+            .back-btn { 
+              display: inline-block; 
+              margin-top: 20px; 
+              padding: 12px 24px; 
+              background: #2a3d66; 
+              color: white; 
+              text-decoration: none; 
+              border-radius: 5px;
+              font-weight: bold;
+              transition: background 0.3s;
+            }
+            .back-btn:hover {
+              background: #1d2a47;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="error">
+            <h2>Error Downloading PDF</h2>
+            <p><strong>Message:</strong> ${err.message}</p>
+            <p>Please try again or contact support if the issue persists.</p>
+            <a href="/user/all-students" class="back-btn">← Back to Students</a>
+          </div>
+        </body>
+      </html>
+    `);
+  }
+});
 
 // Delete Student
 router.get('/delete-student/:id', verifyAdminLogin, (req, res) => {
@@ -1872,18 +3813,28 @@ router.get('/approved-students', verifyAdminLogin, async (req, res) => {
   }
 });
 // 🔹 Approve student
-// Activate Student - FIXED REDIRECT
+// Activate Student - LOG ACTIVATION DATE
 router.get('/activate-student/:id', verifyAdminLogin, async (req, res) => {
   const studentId = req.params.id;
+
   try {
+    const activatedDate = new Date(); // current date
+
+    // Update student with activation and activation date
     await db.get()
       .collection(collection.STUDENT_COLLECTION)
       .updateOne(
         { _id: new ObjectId(studentId) },
-        { $set: { activated: true } }
+        { $set: { activated: true, activatedDate: activatedDate } }
       );
-    
-    // FIXED: Redirect based on referer or to pending-students
+
+    // Log the activation date
+    const day = String(activatedDate.getDate()).padStart(2, "0");
+    const month = String(activatedDate.getMonth() + 1).padStart(2, "0");
+    const year = activatedDate.getFullYear();
+    console.log(`Student ${studentId} activated on: ${day}-${month}-${year}`);
+
+    // Redirect based on referer
     const referer = req.get('Referer');
     if (referer && referer.includes('/pending-students')) {
       res.redirect('/admin/pending-students');
@@ -1895,6 +3846,7 @@ router.get('/activate-student/:id', verifyAdminLogin, async (req, res) => {
     res.status(500).send("Error activating student");
   }
 });
+
 // Deactivate Student
 router.get('/deactivate-student/:id', verifyAdminLogin, async (req, res) => {
   const studentId = req.params.id;
@@ -1929,7 +3881,8 @@ router.get('/approve-student/:id', async (req, res) => {
       .collection(collection.STUDENT_COLLECTION)
       .updateOne(
         { _id: new ObjectId(studentId) },
-        { $set: { approved: true } }
+        { $set: { approved: true
+         } }
       );
 
     res.redirect('/admin/view-student');
@@ -2090,6 +4043,982 @@ router.post('/add-batch/:centreId', verifyAdminLogin, (req, res) => {
 //   }
 // });
 
+router.get('/view-tbatch/:centreId', verifyAdminLogin, async (req, res) => {
+  try {
+    const centreId = req.params.centreId; // ✅ FIX
+
+    console.log("📌 VIEW-TBATCH ROUTE HIT");
+    console.log("👉 centreId:", centreId);
+
+    // 1️⃣ Load batches
+    const batches = await batchHelpers.getBatchesByCentre(centreId);
+
+    // 2️⃣ Load timetables
+    const timetables = await batchHelpers.getTimetablesByCentre(centreId);
+
+    const batchData = await Promise.all(
+      batches.map(async (b) => {
+        const batchId = new ObjectId(b._id);
+
+        const filtered = timetables
+          .filter(t => t.batchId.toString() === b._id.toString())
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        const appliedCount = await db.get()
+          .collection(collection.STUDENT_COLLECTION)
+          .countDocuments({
+            batchId: batchId,
+            appliedForHallTicket: true
+          });
+
+        return {
+          ...b,
+          timetable: filtered.length ? filtered[0] : null,
+          appliedForHallTicket: appliedCount > 0
+        };
+      })
+    );
+
+    res.render('admin/view-tbatch', {
+      hideNavbar: true,
+      batches: batchData
+    });
+
+  } catch (err) {
+    console.error("❌ ERROR in /view-tbatch:", err);
+    res.render('admin/view-tbatch', { batches: [] });
+  }
+});
+//time tableeeee
+
+router.get('/add-timetable', verifyAdminLogin, async (req, res) => {
+  try {
+    const centreId = req.session.centreId;   // ✅ Correct centre ID from session
+
+    if (!centreId) {
+      console.error("❌ No centreId found in session");
+      return res.render('admin/add-timetable', {
+        hideNavbar: true,
+        batches: []
+      });
+    }
+
+    // ✅ Get batches for this centre ONLY
+    const batches = await batchHelpers.getBatchesByCentre(centreId);
+
+    res.render('admin/add-timetable', {
+      hideNavbar: true,
+      batches   // ✅ This will now show in the dropdown
+    });
+
+  } catch (err) {
+    console.error("❌ Error in /add-timetable route:", err);
+    res.render('admin/add-timetable', {
+      hideNavbar: true,
+      batches: []
+    });
+  }
+});
+//post of time table
+// POST /save-timetable - FIXED VERSION
+router.post('/save-timetable', verifyAdminLogin, async (req, res) => {
+  try {
+    const centreId = req.session.centreId;
+    if (!centreId) return res.status(400).send("Centre ID missing in session");
+
+    console.log("📦 Form data received:", req.body);
+
+    // Prepare schedule array from dynamic rows
+    const schedule = [];
+
+    // Multi-row case
+    if (Array.isArray(req.body['srNo[]']) || Array.isArray(req.body['date[]'])) {
+      const rowCount = Array.isArray(req.body['srNo[]']) ? req.body['srNo[]'].length : 1;
+      for (let i = 0; i < rowCount; i++) {
+        schedule.push({
+          srNo: parseInt(req.body['srNo[]']?.[i]) || i + 1,
+          date: req.body['date[]']?.[i] || "",
+          time: req.body['time[]']?.[i] || "",
+          course: req.body['course[]']?.[i] || "",
+          year: parseInt(req.body['year[]']?.[i]) || 0,
+          sem: req.body['sem[]']?.[i] || "",
+          paperName: req.body['paperName[]']?.[i] || ""
+        });
+      }
+    } else {
+      // Single-row case
+      schedule.push({
+        srNo: parseInt(req.body.srNo) || 1,
+        date: req.body.date || "",
+        time: req.body.time || "",
+        course: req.body.course || "",
+        year: parseInt(req.body.year) || 0,
+        sem: req.body.sem || "",
+        paperName: req.body.paperName || ""
+      });
+    }
+
+    // Prepare final timetable object
+    const timetableData = {
+      centreId,
+      batchId: new ObjectId(req.body.batchId),  // Convert to ObjectId
+      firstTitle: req.body.firstTitle || "",
+      secondTitle: req.body.secondTitle || "",
+      examMonthYear: req.body.examMonthYear || "",
+      notes: req.body.notes || "",
+      subjects: schedule,                        // Use 'subjects' for PDF compatibility
+      createdAt: new Date(),
+      status: 'active'
+    };
+
+    console.log("💾 Prepared timetable data:", timetableData);
+
+    // Save using helper
+    const timetableId = await batchHelpers.addTimetable(timetableData);
+
+    console.log("✅ Timetable saved with ID:", timetableId);
+
+    res.redirect('/admin/view-tbatch');
+
+  } catch (err) {
+    console.error("❌ Error saving timetable:", err);
+    res.status(500).send("Server Error While Saving Timetable: " + err.message);
+  }
+});
+router.get('/preview-timetable/:batchId', verifyAdminLogin, async (req, res) => {
+  try {
+    const { batchId } = req.params;
+    console.log('✅ PREVIEW TIMETABLE PDF HIT:', batchId);
+
+    const batch = await batchHelpers.getBatchById(batchId);
+    const timetable = await batchHelpers.getTimetableByBatch(batchId);
+
+    const pdfDoc = await PDFDocument.create();
+
+    // A4 Landscape
+    let page = pdfDoc.addPage([842, 595]);
+    const { width, height } = page.getSize();
+
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    const margin = 30;
+
+    // =========================
+    // BACKGROUND IMAGE
+    // =========================
+    const bgPath = path.join(__dirname, '../public/images/time-table.jpg');
+    let bgImage = null;
+    if (fs.existsSync(bgPath)) {
+      bgImage = await pdfDoc.embedJpg(fs.readFileSync(bgPath));
+      page.drawImage(bgImage, { x: 0, y: 0, width, height });
+    }
+
+    // =========================
+    // FUNCTION TO DRAW HEADER AND TABLE ON A PAGE
+    // =========================
+    const drawPageHeaderAndTable = (currentPage) => {
+      // Draw background if exists
+      if (bgImage) {
+        currentPage.drawImage(bgImage, { x: 0, y: 0, width, height });
+      }
+      
+      const offset = 5;
+
+      currentPage.drawRectangle({
+        x: margin - offset,
+        y: margin - offset,
+        width: width - margin * 2 + offset * 2,
+        height: height - margin * 2 + offset * 2,
+        borderWidth: 1.5,
+        borderColor: rgb(0, 0, 0),
+      });
+
+      // Titles and separator lines
+      const line1Y = height - margin - 85;
+      const firstTitleY = line1Y - 20;
+      const line2Y = firstTitleY - 10;
+      const secondTitleY = line2Y - 20;
+      const line3Y = secondTitleY - 10;
+
+      const lineStartX = margin - offset;
+      const lineEndX = width - margin + offset;
+
+      // Line 1
+      currentPage.drawLine({
+        start: { x: lineStartX, y: line1Y },
+        end: { x: lineEndX, y: line1Y },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      // First title
+      if (timetable?.firstTitle) {
+        const t1 = String(timetable.firstTitle);
+        const t1Width = fontBold.widthOfTextAtSize(t1, 14);
+        currentPage.drawText(t1, {
+          x: (width - t1Width) / 2,
+          y: firstTitleY,
+          size: 14,
+          font: fontBold,
+        });
+      }
+
+      // Line 2
+      currentPage.drawLine({
+        start: { x: lineStartX, y: line2Y },
+        end: { x: lineEndX, y: line2Y },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      // Second title
+      if (timetable?.secondTitle) {
+        const t2 = String(timetable.secondTitle);
+        const t2Width = fontBold.widthOfTextAtSize(t2, 14);
+        currentPage.drawText(t2, {
+          x: (width - t2Width) / 2,
+          y: secondTitleY,
+          size: 14,
+          font: fontBold,
+        });
+      }
+
+      // Line 3
+      currentPage.drawLine({
+        start: { x: lineStartX, y: line3Y },
+        end: { x: lineEndX, y: line3Y },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      return line3Y - 10; // Return starting Y position for table
+    };
+
+    // Draw header on first page
+    let y = drawPageHeaderAndTable(page);
+
+    // =========================
+    // TABLE HEADER
+    // =========================
+    const tableX = margin + 10;
+    const tableWidth = width - (margin * 2) - 20;
+    const rowHeight = 22;
+
+    const columns = [
+      { title: 'Sr. No', key: 'no', width: 50 },
+      { title: 'Date', key: 'date', width: 90 },
+      { title: 'Time', key: 'time', width: 120 },
+      { title: 'Course', key: 'course', width: 130 },
+      { title: 'Year', key: 'year', width: 60 },
+      { title: 'Sem', key: 'sem', width: 60 },
+      { title: 'Paper Name', key: 'paperName', width: tableWidth - 510 },
+    ];
+
+    // Helper function to format date from YYYY-MM-DD to DD-MM-YYYY
+    const formatDate = (dateStr) => {
+      if (!dateStr || dateStr.trim() === '') return '';
+      
+      // Try to parse different date formats
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        // If it's not a valid date, return as is (might be a range or other format)
+        return dateStr.trim();
+      }
+      
+      // Format as DD-MM-YYYY
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      
+      return `${day}-${month}-${year}`;
+    };
+
+    // Helper function to draw perfectly centered text in a cell
+    const drawCenteredTextInCell = (page, text, cellX, cellY, cellWidth, cellHeight, fontSize, fontObj) => {
+      const textStr = String(text);
+      const textWidth = fontObj.widthOfTextAtSize(textStr, fontSize);
+      
+      // Calculate perfect center
+      const xCenter = cellX + (cellWidth / 2) - (textWidth / 2);
+      const yCenter = cellY - (cellHeight / 2) - (fontSize / 2) + 3; // +4 for better visual centering
+      
+      page.drawText(textStr, {
+        x: xCenter,
+        y: yCenter,
+        size: fontSize,
+        font: fontObj,
+      });
+    };
+
+    // Draw table header with centered text
+    page.drawRectangle({
+      x: tableX,
+      y: y - rowHeight,
+      width: tableWidth,
+      height: rowHeight,
+      color: rgb(0.75, 0.85, 0.95),
+      borderWidth: 1,
+      borderColor: rgb(0, 0, 0),
+    });
+
+    // Draw column headers (centered horizontally and vertically)
+    let xPos = tableX;
+    columns.forEach(col => {
+      // Draw vertical line
+      page.drawLine({
+        start: { x: xPos, y },
+        end: { x: xPos, y: y - rowHeight },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      // Draw centered header text
+      drawCenteredTextInCell(page, col.title, xPos, y, col.width, rowHeight, 9, fontBold);
+
+      xPos += col.width;
+    });
+
+    // Draw right border
+    page.drawLine({
+      start: { x: tableX + tableWidth, y },
+      end: { x: tableX + tableWidth, y: y - rowHeight },
+      thickness: 1,
+    });
+
+    y -= rowHeight;
+
+    // =========================
+    // TABLE ROWS - FIXED: Split ALL comma-separated fields
+    // =========================
+    const subjects = timetable?.subjects || [];
+    
+    // Track row number
+    let rowNumber = 1;
+    
+    console.log(`📊 Processing ${subjects.length} subjects`);
+    
+    // Helper function to split comma-separated values
+    const splitCommaValues = (value) => {
+      if (!value && value !== 0) return [''];
+      const strValue = String(value).trim();
+      if (!strValue) return [''];
+      return strValue.split(',').map(v => v.trim()).filter(v => v !== '');
+    };
+    
+    // Process each subject
+    for (let i = 0; i < subjects.length; i++) {
+      const s = subjects[i];
+      
+      // Log the raw data for debugging
+      console.log(`📝 Subject ${i + 1} raw data:`, {
+        date: s.date,
+        time: s.time,
+        course: s.course,
+        year: s.year,
+        sem: s.sem,
+        paperName: s.paperName
+      });
+      
+      // Split ALL fields by commas
+      const dates = splitCommaValues(s.date);
+      const times = splitCommaValues(s.time);
+      const courses = splitCommaValues(s.course);
+      const years = splitCommaValues(s.year);
+      const sems = splitCommaValues(s.sem);
+      const paperNames = splitCommaValues(s.paperName);
+      
+      // Find maximum number of entries across all fields
+      const maxEntries = Math.max(
+        dates.length,
+        times.length,
+        courses.length,
+        years.length,
+        sems.length,
+        paperNames.length
+      );
+      
+      console.log(`📅 Subject ${i + 1} has ${maxEntries} entries to process`);
+      
+      // If no entries at all, skip
+      if (maxEntries === 0) continue;
+      
+      // Create rows for each entry
+      for (let entryIndex = 0; entryIndex < maxEntries; entryIndex++) {
+        // Check if we need new page
+        if (y < margin + rowHeight * 3) {
+          page = pdfDoc.addPage([842, 595]);
+          y = drawPageHeaderAndTable(page);
+          // Don't draw table header on new pages
+        }
+        
+        // Prepare row data - use entryIndex for each array, fallback to first item
+        // Format the date from YYYY-MM-DD to DD-MM-YYYY
+        const rawDate = dates[entryIndex] || dates[0] || '';
+        const formattedDate = formatDate(rawDate);
+        
+        const rowData = {
+          no: rowNumber,
+          date: formattedDate,
+          time: times[entryIndex] || times[0] || '',
+          course: courses[entryIndex] || courses[0] || '',
+          year: years[entryIndex] || years[0] || '',
+          sem: sems[entryIndex] || sems[0] || '',
+          paperName: paperNames[entryIndex] || paperNames[0] || '',
+        };
+        
+        // Log the row data for debugging
+        console.log(`   Row ${rowNumber}:`, {
+          ...rowData,
+          originalDate: rawDate,
+          formattedDate: formattedDate
+        });
+        
+        // Draw row border
+        page.drawRectangle({
+          x: tableX,
+          y: y - rowHeight,
+          width: tableWidth,
+          height: rowHeight,
+          borderWidth: 1,
+          borderColor: rgb(0, 0, 0),
+        });
+
+        // Draw row content (centered both horizontally and vertically)
+        let rowX = tableX;
+        columns.forEach(col => {
+          // Draw vertical line
+          page.drawLine({
+            start: { x: rowX, y },
+            end: { x: rowX, y: y - rowHeight },
+            thickness: 1,
+          });
+
+          // Draw centered cell text (both horizontally and vertically)
+          drawCenteredTextInCell(page, rowData[col.key], rowX, y, col.width, rowHeight, 9, font);
+
+          rowX += col.width;
+        });
+
+        // Draw right border for the row
+        page.drawLine({
+          start: { x: rowX, y },
+          end: { x: rowX, y: y - rowHeight },
+          thickness: 1,
+        });
+
+        y -= rowHeight;
+        rowNumber++;
+      }
+    }
+
+    // Draw bottom border for the last row
+    page.drawLine({
+      start: { x: tableX, y: y },
+      end: { x: tableX + tableWidth, y: y },
+      thickness: 1,
+    });
+
+    // =========================
+    // NOTES (only on last page)
+    // =========================
+    y -= 20;
+    const noteX = tableX;
+
+    page.drawText('NOTE :', {
+      x: noteX,
+      y,
+      size: 9,
+      font: fontBold,
+    });
+
+    y -= 14;
+
+    const notes = (timetable?.notes || '')
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+
+    notes.forEach(line => {
+      page.drawText(line, {
+        x: noteX + 10,
+        y,
+        size: 9,
+        font,
+      });
+      y -= 12;
+    });
+
+    // =========================
+    // FOOTER (on last page only)
+    // =========================
+    const footerText = `Generated on: ${new Date().toLocaleDateString()}`;
+    const footerWidth = font.widthOfTextAtSize(footerText, 8);
+
+    page.drawText(footerText, {
+      x: (width - footerWidth) / 2,
+      y: margin - 15,
+      size: 8,
+      font,
+    });
+
+    const pdfBytes = await pdfDoc.save();
+    
+    // ✅ CONVERT TO BASE64 (Like your marklist)
+    const base64 = Buffer.from(pdfBytes).toString("base64");
+
+    // ✅ SEND HTML WITH DOWNLOAD BUTTON (Exactly like your marklist)
+    res.send(`
+      <html>
+        <head>
+          <title>Timetable Preview</title>
+          <style>
+            body { 
+              margin: 0;
+              padding: 0;
+              font-family: Arial, sans-serif;
+              background: #f5f5f5;
+              overflow: hidden;
+            }
+
+            .header {
+              width: 100%;
+              background: #2a3d66;
+              color: white;
+              padding: 12px;
+              text-align: center;
+              font-size: 20px;
+              font-weight: bold;
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              z-index: 1000;
+              box-shadow: 0px 2px 6px rgba(0,0,0,0.3);
+            }
+
+            iframe {
+              position: fixed;
+              top: 60px;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              width: 100%;
+              height: calc(100vh - 60px);
+              border: none;
+            }
+
+            .download-btn {
+              position: fixed;
+              top: 70px;
+              right: 20px;
+              background: #2a3d66;
+              color: white;
+              padding: 12px 24px;
+              border-radius: 6px;
+              text-decoration: none;
+              font-weight: bold;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+              transition: 0.3s;
+              z-index: 1001;
+            }
+
+            .download-btn:hover {
+              background: #1d2a47;
+              transform: translateY(-2px);
+            }
+
+            /* Optional: Add print button */
+            .print-btn {
+              position: fixed;
+              top: 70px;
+              right: 180px;
+              background: #3498db;
+              color: white;
+              padding: 12px 24px;
+              border-radius: 6px;
+              text-decoration: none;
+              font-weight: bold;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+              transition: 0.3s;
+              z-index: 1001;
+              border: none;
+              cursor: pointer;
+            }
+
+            .print-btn:hover {
+              background: #2980b9;
+              transform: translateY(-2px);
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">Timetable Preview - ${batch?.batchName || "Batch"} (${timetable?.firstTitle || ""})</div>
+          
+          <button class="print-btn" onclick="window.print()">
+            🖨️ Print
+          </button>
+          
+          <a href="/admin/download-timetable/${batchId}" class="download-btn">
+            📥 Download Timetable
+          </a>
+          
+          <iframe src="data:application/pdf;base64,${base64}#toolbar=0"></iframe>
+          
+          <script>
+            // Auto-focus on PDF
+            window.onload = function() {
+              document.querySelector('iframe').focus();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    
+  } catch (err) {
+    console.error('❌ PDF ERROR:', err);
+    res.status(500).send('PDF generation failed');
+  }
+});
+// =========================
+// DOWNLOAD TIMETABLE ROUTE (Updated)
+// =========================
+router.get('/download-timetable/:batchId', verifyAdminLogin, async (req, res) => {
+  try {
+    const { batchId } = req.params;
+    console.log('📥 DOWNLOAD TIMETABLE PDF FOR BATCH:', batchId);
+
+    const batch = await batchHelpers.getBatchById(batchId);
+    const timetable = await batchHelpers.getTimetableByBatch(batchId);
+
+    if (!timetable) {
+      return res.status(404).send('Timetable not found for this batch');
+    }
+
+    const pdfDoc = await PDFDocument.create();
+
+    // A4 Landscape
+    let page = pdfDoc.addPage([842, 595]);
+    const { width, height } = page.getSize();
+
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    const margin = 30;
+
+    // =========================
+    // BACKGROUND IMAGE
+    // =========================
+    const bgPath = path.join(__dirname, '../public/images/time-table.jpg');
+    let bgImage = null;
+    if (fs.existsSync(bgPath)) {
+      bgImage = await pdfDoc.embedJpg(fs.readFileSync(bgPath));
+      page.drawImage(bgImage, { x: 0, y: 0, width, height });
+    }
+
+    // =========================
+    // FUNCTION TO DRAW HEADER AND TABLE ON A PAGE
+    // =========================
+    const drawPageHeaderAndTable = (currentPage) => {
+      // Draw background if exists
+      if (bgImage) {
+        currentPage.drawImage(bgImage, { x: 0, y: 0, width, height });
+      }
+      
+      // Outer border
+      currentPage.drawRectangle({
+        x: margin,
+        y: margin,
+        width: width - margin * 2,
+        height: height - margin * 2,
+        borderWidth: 1.5,
+        borderColor: rgb(0, 0, 0),
+      });
+
+      // Titles and separator lines
+      const line1Y = height - margin - 85;
+      const firstTitleY = line1Y - 20;
+      const line2Y = firstTitleY - 10;
+      const secondTitleY = line2Y - 20;
+      const line3Y = secondTitleY - 10;
+
+      // Line 1
+      currentPage.drawLine({
+        start: { x: margin, y: line1Y },
+        end: { x: width - margin, y: line1Y },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      // First title
+      if (timetable?.firstTitle) {
+        const t1 = String(timetable.firstTitle);
+        const t1Width = fontBold.widthOfTextAtSize(t1, 14);
+        currentPage.drawText(t1, {
+          x: (width - t1Width) / 2,
+          y: firstTitleY,
+          size: 14,
+          font: fontBold,
+        });
+      }
+
+      // Line 2
+      currentPage.drawLine({
+        start: { x: margin, y: line2Y },
+        end: { x: width - margin, y: line2Y },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      // Second title
+      if (timetable?.secondTitle) {
+        const t2 = String(timetable.secondTitle);
+        const t2Width = fontBold.widthOfTextAtSize(t2, 14);
+        currentPage.drawText(t2, {
+          x: (width - t2Width) / 2,
+          y: secondTitleY,
+          size: 14,
+          font: fontBold,
+        });
+      }
+
+      // Line 3
+      currentPage.drawLine({
+        start: { x: margin, y: line3Y },
+        end: { x: width - margin, y: line3Y },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      return line3Y - 10; // Return starting Y position for table
+    };
+
+    // Draw header on first page
+    let y = drawPageHeaderAndTable(page);
+
+    // =========================
+    // TABLE HEADER
+    // =========================
+    const tableX = margin + 10;
+    const tableWidth = width - (margin * 2) - 20;
+    const rowHeight = 22;
+
+    const columns = [
+      { title: 'Sr. No', key: 'no', width: 50 },
+      { title: 'Date', key: 'date', width: 90 },
+      { title: 'Time', key: 'time', width: 120 },
+      { title: 'Course', key: 'course', width: 130 },
+      { title: 'Year', key: 'year', width: 60 },
+      { title: 'Sem', key: 'sem', width: 60 },
+      { title: 'Paper Name', key: 'paperName', width: tableWidth - 510 },
+    ];
+
+    // Draw table header
+    page.drawRectangle({
+      x: tableX,
+      y: y - rowHeight,
+      width: tableWidth,
+      height: rowHeight,
+      color: rgb(0.75, 0.85, 0.95),
+      borderWidth: 1,
+      borderColor: rgb(0, 0, 0),
+    });
+
+    let xPos = tableX;
+    columns.forEach(col => {
+      page.drawLine({
+        start: { x: xPos, y },
+        end: { x: xPos, y: y - rowHeight },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      page.drawText(col.title, {
+        x: xPos + 5,
+        y: y - 15,
+        size: 9,
+        font: fontBold,
+      });
+
+      xPos += col.width;
+    });
+
+    page.drawLine({
+      start: { x: tableX + tableWidth, y },
+      end: { x: tableX + tableWidth, y: y - rowHeight },
+      thickness: 1,
+    });
+
+    y -= rowHeight;
+
+    // =========================
+    // TABLE ROWS - FIXED: Split ALL comma-separated fields
+    // =========================
+    const subjects = timetable?.subjects || [];
+    
+    // Track row number
+    let rowNumber = 1;
+    
+    console.log(`📊 Processing ${subjects.length} subjects for download`);
+    
+    // Helper function to split comma-separated values
+    const splitCommaValues = (value) => {
+      if (!value && value !== 0) return [''];
+      const strValue = String(value).trim();
+      if (!strValue) return [''];
+      return strValue.split(',').map(v => v.trim()).filter(v => v !== '');
+    };
+    
+    // Process each subject
+    for (let i = 0; i < subjects.length; i++) {
+      const s = subjects[i];
+      
+      // Split ALL fields by commas
+      const dates = splitCommaValues(s.date);
+      const times = splitCommaValues(s.time);
+      const courses = splitCommaValues(s.course);
+      const years = splitCommaValues(s.year);
+      const sems = splitCommaValues(s.sem);
+      const paperNames = splitCommaValues(s.paperName);
+      
+      // Find maximum number of entries across all fields
+      const maxEntries = Math.max(
+        dates.length,
+        times.length,
+        courses.length,
+        years.length,
+        sems.length,
+        paperNames.length
+      );
+      
+      // If no entries at all, skip
+      if (maxEntries === 0) continue;
+      
+      // Create rows for each entry
+      for (let entryIndex = 0; entryIndex < maxEntries; entryIndex++) {
+        // Check if we need new page
+        if (y < margin + rowHeight * 3) {
+          page = pdfDoc.addPage([842, 595]);
+          y = drawPageHeaderAndTable(page);
+          // Don't draw table header on new pages
+        }
+        
+        // Prepare row data - use entryIndex for each array, fallback to first item
+        const rowData = {
+          no: rowNumber,
+          date: dates[entryIndex] || dates[0] || '',
+          time: times[entryIndex] || times[0] || '',
+          course: courses[entryIndex] || courses[0] || '',
+          year: years[entryIndex] || years[0] || '',
+          sem: sems[entryIndex] || sems[0] || '',
+          paperName: paperNames[entryIndex] || paperNames[0] || '',
+        };
+        
+        // Draw row border
+        page.drawRectangle({
+          x: tableX,
+          y: y - rowHeight,
+          width: tableWidth,
+          height: rowHeight,
+          borderWidth: 1,
+          borderColor: rgb(0, 0, 0),
+        });
+
+        // Draw row content
+        let rowX = tableX;
+        columns.forEach(col => {
+          // Draw vertical line
+          page.drawLine({
+            start: { x: rowX, y },
+            end: { x: rowX, y: y - rowHeight },
+            thickness: 1,
+          });
+
+          // Draw cell text
+          page.drawText(String(rowData[col.key]), {
+            x: rowX + 5,
+            y: y - 15,
+            size: 9,
+            font,
+          });
+
+          rowX += col.width;
+        });
+
+        y -= rowHeight;
+        rowNumber++;
+      }
+    }
+
+    // =========================
+    // NOTES (only on last page)
+    // =========================
+    y -= 20;
+    const noteX = tableX;
+
+    page.drawText('NOTE :', {
+      x: noteX,
+      y,
+      size: 9,
+      font: fontBold,
+    });
+
+    y -= 14;
+
+    const notes = (timetable?.notes || '')
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+
+    notes.forEach(line => {
+      page.drawText(line, {
+        x: noteX + 10,
+        y,
+        size: 9,
+        font,
+      });
+      y -= 12;
+    });
+
+    // =========================
+    // FOOTER (on last page only)
+    // =========================
+    const footerText = `Generated on: ${new Date().toLocaleDateString()}`;
+    const footerWidth = font.widthOfTextAtSize(footerText, 8);
+
+    page.drawText(footerText, {
+      x: (width - footerWidth) / 2,
+      y: margin - 15,
+      size: 8,
+      font,
+    });
+
+    const pdfBytes = await pdfDoc.save();
+    
+    console.log("✅ Timetable PDF generated for download, size:", pdfBytes.length, "bytes");
+
+    // ✅ USE THE EXACT SAME PATTERN AS YOUR MARKLIST DOWNLOAD
+    const fileName = `timetable_${batch?.batchName || batchId}_${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    // ✅ Set headers exactly like marklist download route
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Length', pdfBytes.length);
+    
+    // ✅ Send exactly like marklist download route
+    res.send(Buffer.from(pdfBytes));
+
+  } catch (err) {
+    console.error("❌ Error downloading timetable PDF:", err);
+    console.error("🔍 Stack trace:", err.stack);
+    
+    res.status(500).json({
+      error: "Error generating timetable PDF for download",
+      message: err.message,
+      stack: err.stack
+    });
+  }
+});
 /* ======================
    APPLICATION FORM + AUTO HALL TICKET APPROVAL
    ====================== */
@@ -2287,6 +5216,18 @@ router.get("/hall-ticket/:id", verifyAdminLogin, async (req, res) => {
       const rightX = maxWidth ? x + maxWidth - textWidth : x - textWidth;
       page.drawText(text, { x: rightX, y, size, font });
     }
+// ✅ HELPER: Draw center-aligned text
+function drawCenterAlignedText(page, text, x, y, font, size, maxWidth = null) {
+  if (!text) return;
+
+  const textWidth = font.widthOfTextAtSize(text, size);
+
+  const centerX = maxWidth
+    ? x + (maxWidth / 2) - (textWidth / 2)
+    : x - (textWidth / 2);
+
+  page.drawText(text, { x: centerX, y, size, font });
+}
 
     // 5️⃣ Create Front Page
     const page = pdfDoc.addPage([595.28, 841.89]);
@@ -2294,43 +5235,62 @@ router.get("/hall-ticket/:id", verifyAdminLogin, async (req, res) => {
     page.drawImage(frontImg, { x: 0, y: 0, width: 595.28, height: 841.89 });
 
     // 🟢 Student Details (from form) - NORMAL (not centered)
-    page.drawText((form.candidateName || student.name || "").toUpperCase(), { x: 137, y: 737, size: 11, font: arial });
-    page.drawText((form.registerNumber || ""), { x: 410, y: 657, size: 11, font: arial });
-    page.drawText((form.courseName || ""), { x: 410, y: 736.5, size: 11, font: arial });
-    page.drawText((form.studyCentre || ""), { x: 145, y: 711, size: 11, font: arial });
-    page.drawText((form.examCentre || ""), { x: 410, y: 711, size: 11, font: arial });
+    page.drawText((form.candidateName || student.name || "").toUpperCase(), { x: 137, y: 737, size: 10, font: arial });
+    page.drawText((form.registerNumber || ""), { x: 410, y: 657, size: 10, font: arial });
+    page.drawText((form.courseName || ""), { x: 410, y: 736.5, size: 10, font: arial });
+    page.drawText((form.studyCentre || ""), { x: 145, y: 711, size: 10, font: arial });
+    page.drawText((form.examCentre || ""), { x: 410, y: 711, size: 10, font: arial });
 
     // First section date - NORMAL
     if (form.examDate) {
-      page.drawText(formatDate(form.examDate), { x: 141, y: 685.5, size: 11, font: arial });
+      page.drawText(formatDate(form.examDate), { x: 141, y: 685.5, size: 10, font: arial });
     }
 
     if (form.examTime) {
-      page.drawText(form.examTime, { x: 410, y: 683, size: 11, font: arial });
+      page.drawText(form.examTime, { x: 410, y: 683, size: 10, font: arial });
     }
 
     // Second section - NORMAL
-    page.drawText((form.registerNumber || ""), { x: 55, y: 176.5, size: 11, font: arial });
-    page.drawText((form.candidateName || student.name || "").toUpperCase(), { x: 55, y: 125, size: 11, font: arial });
-    page.drawText((form.courseName || ""), { x: 55, y: 74, size: 11, font: arial });
-    page.drawText((form.studyCentre || ""), { x: 320, y: 178, size: 11, font: arial });
+    page.drawText((form.registerNumber || ""), { x: 55, y: 176.5, size: 10, font: arial });
+    page.drawText((form.candidateName || student.name || "").toUpperCase(), { x: 55, y: 125, size: 10, font: arial });
+    page.drawText((form.courseName || ""), { x: 55, y: 74, size: 10, font: arial });
+    page.drawText((form.studyCentre || ""), { x: 320, y: 178, size: 10, font: arial });
     
     // Second date - NORMAL
     if (form.examDate) {
-      page.drawText(formatDate(form.examDate), { x: 320, y: 124, size: 11, font: arial });
+      page.drawText(formatDate(form.examDate), { x: 320, y: 124, size: 10, font: arial });
     }
     
-    page.drawText((form.examCentre || ""), { x: 320, y: 74, size: 11, font: arial });
+    page.drawText((form.examCentre || ""), { x: 320, y: 74, size: 10, font: arial });
 
     // Student section - NORMAL
     if (form.studentDate) {
-      page.drawText(formatDate(form.studentDate), { x:55, y: 543.2, size: 11, font: arial });
+      page.drawText(formatDate(form.studentDate), { x:55, y: 543.2, size: 10, font: arial });
     }
 
     // Keep right-aligned text as is
-    drawRightAlignedText(page, (form.candidateName || student.name || "").toUpperCase(), 121, 629, arial, 11, 200);
-    drawRightAlignedText(page, (form.candidateName || student.name || "").toUpperCase(), 160, 507.5, arial, 11, 200);
-
+    // drawRightAlignedText(page, (form.candidateName || student.name || "").toUpperCase(), 121, 629, arial, 10, 200);
+    // drawRightAlignedText(page, (form.candidateName || student.name || "").toUpperCase(), 160, 507.5, arial, 10, 200);
+    drawCenterAlignedText(
+      page,
+      (form.candidateName || student.name || "").toUpperCase(),
+      136,
+      629,
+      arial,
+      10,
+      200
+    );
+    
+    drawCenterAlignedText(
+      page,
+      (form.candidateName || student.name || "").toUpperCase(),
+      190,
+      507.5,
+      arial,
+      10,
+      200
+    );
+    
     // 🖼️ Student Photo
     const imageDir = path.join(__dirname, "../public/studentImages/");
     const possibleExtensions = [".jpg", ".jpeg", ".png"];
@@ -2365,7 +5325,7 @@ router.get("/hall-ticket/:id", verifyAdminLogin, async (req, res) => {
     }
 
     if (!photoFound) {
-      page.drawText("Photo Not Available", { x: 400, y: 650, size: 10, font: arial });
+      page.drawText("Photo Not Available", { x: 476.5, y: 214, size: 10, font: arial });
     }
 
     // BACK PAGE
@@ -2860,7 +5820,1640 @@ router.get("/batch-halltickets-download/:batchId", verifyAdminLogin, async (req,
     res.status(500).send("Error generating batch hall tickets");
   }
 });
+//add question paper
+router.get('/add-question-paper/:batchId', verifyAdminLogin, async (req, res) => {
+  try {
+    const batchId = req.params.batchId;
 
+    const batch = await db.get()
+      .collection(collection.BATCH_COLLECTION)
+      .findOne({ _id: new ObjectId(batchId) });
+
+    if (!batch) return res.status(404).send("Batch not found");
+
+    const centre = await db.get()
+      .collection(collection.CENTER_COLLECTION)
+      .findOne({ _id: new ObjectId(batch.centreId) });
+
+    if (!centre) return res.status(404).send("Centre not found");
+
+    // ✅ CORRECT COURSE SOURCE
+    const courseNames = Array.isArray(centre.courseName)
+      ? centre.courseName
+      : centre.courseName
+        ? [centre.courseName]
+        : [];
+
+    res.render('admin/add-question-paper', {
+      batch,
+      centre,
+      courseNames,
+      user: req.session.user,
+      hideNavbar: true
+    });
+
+  } catch (err) {
+    console.error("❌ Error loading add question paper:", err);
+    res.status(500).send("Error loading page");
+  }
+});
+
+
+
+router.post("/add-question-paper/:batchId", async (req, res) => {
+  console.log("========== ADD QUESTION PAPER ==========");
+  console.log("REQUEST BODY:", req.body);
+  console.log("INPUT METHOD:", req.body.inputMethod);
+  console.log("SECTIONS JSON RAW:", req.body.sectionsJson);
+  console.log("QUESTIONS JSON RAW:", req.body.questionsJson);
+  console.log("TOTAL MARKS:", req.body.totalMarks);
+
+  try {
+    const { batchId } = req.params;
+    const {
+      courseName,          // CHANGED: Was courseCode
+      subject,
+      examType,
+      inputMethod,
+      sectionsJson,        // NEW FIELD
+      questionsJson,
+      totalMarks,
+      duration,
+      instructions,
+      department ,
+      qtitle1,   // <-- ADD THIS
+      qtitle2,
+      qpCode
+                // NEW FIELD
+    } = req.body;
+
+    let pdfPath = "";
+    let savedSectionsJson = "";
+    let savedQuestionsJson = "";
+
+    // ==========================
+    // 🟢 MANUAL MODE
+    // ==========================
+    if (inputMethod === "manual") {
+      // Try new sections format first
+      if (sectionsJson && sectionsJson.trim() !== '') {
+        try {
+          const sections = JSON.parse(sectionsJson);
+          if (!sections.length) {
+            return res.status(400).send("No sections provided");
+          }
+          savedSectionsJson = sectionsJson;
+          console.log(`✅ Parsed ${sections.length} sections`);
+        } catch (parseError) {
+          console.error("❌ Error parsing sections JSON:", parseError);
+          return res.status(400).send("Invalid sections format");
+        }
+      }
+      // Fallback to old questions format
+      else if (questionsJson && questionsJson.trim() !== '') {
+        try {
+          const questions = JSON.parse(questionsJson);
+          if (!questions.length) {
+            return res.status(400).send("Questions empty");
+          }
+          savedQuestionsJson = questionsJson;
+          console.log(`✅ Parsed ${questions.length} questions (legacy format)`);
+          
+          // Convert old format to new sections format
+          const convertedSection = {
+            sectionNumber: 1,
+            sectionName: "SECTION A",
+            totalQuestions: questions.length,
+            marksPerQuestion: Math.round(totalMarks / questions.length),
+            attemptType: "ALL",
+            instructions: "",
+            questions: questions.map((q, index) => ({
+              questionNumber: index + 1,
+              text: q.text || "",
+              marks: parseInt(q.marks) || 0,
+              type: q.type || "SHORT_ANSWER",
+              options: q.options || []
+            }))
+          };
+          savedSectionsJson = JSON.stringify([convertedSection]);
+        } catch (parseError) {
+          console.error("❌ Error parsing questions JSON:", parseError);
+          return res.status(400).send("Invalid questions format");
+        }
+      }
+      else {
+        return res.status(400).send("No questions or sections provided");
+      }
+
+      // 📄 GENERATE PDF (Improved version that matches preview)
+      const pdfDoc = await PDFDocument.create();
+      let page = pdfDoc.addPage([595, 842]);
+      const { width, height } = page.getSize();
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+      // Background
+      const bgBytes = fs.readFileSync(
+        path.join(__dirname, "../public/images/question-bg.jpg")
+      );
+      const bg = await pdfDoc.embedJpg(bgBytes);
+
+      const drawBg = (pg) => {
+        pg.drawImage(bg, {
+          x: 0,
+          y: 0,
+          width: pg.getWidth(),
+          height: pg.getHeight()
+        });
+      };
+
+      drawBg(page);
+
+      // 🎯 START POSITION (Matching preview format)
+      let y = height - 120;
+      const leftMargin = 60;
+      const rightMargin = width - 60;
+      const contentWidth = rightMargin - leftMargin;
+
+      // ==========================
+      // 📋 HEADER (Matching preview)
+      // ==========================
+     
+
+     // Draw QTitle1
+if (qtitle1) {
+  const title1Width = fontBold.widthOfTextAtSize(qtitle1, 16); // smaller than main title
+  page.drawText(qtitle1, {
+    x: (width - title1Width) / 2,
+    y: y + 95,
+    size: 16,
+    font: fontBold,
+    color: rgb(0, 0, 0)
+  });
+}
+
+// Draw QTitle2 below QTitle1
+if (qtitle2) {
+  const title2Width = fontBold.widthOfTextAtSize(qtitle2, 14); // slightly smaller
+  page.drawText(qtitle2, {
+    x: (width - title2Width) / 2,
+    y: y + 75,  // adjust spacing as needed
+    size: 14,
+    font: fontBold,
+    color: rgb(0, 0, 0)
+  });
+}
+
+y += 5; // continue with the rest of PDF content
+
+
+      // Department
+      if (department) {
+        page.drawText(`Department: ${department}`, {
+          x: leftMargin + 10,
+          y: y + 55,
+          size: 13,
+          font: fontBold,
+          color: rgb(0, 0, 0)
+        });
+      }
+
+      // Subject
+      if (subject) {
+        const subjectText = `Subject: ${subject}`;
+        const subjectWidth = fontBold.widthOfTextAtSize(subjectText, 16);
+        page.drawText(subjectText, {
+          x: (width - subjectWidth) / 2,
+          y: y + 55,
+          size: 16,
+          font: fontBold,
+          color: rgb(0, 0, 0)
+        });
+      }
+
+     
+
+      y -= 80;
+
+      // Function to add new page
+      const checkAndAddPage = () => {
+        if (y < 100) {
+          page = pdfDoc.addPage([595, 842]);
+          drawBg(page);
+          y = height - 100;
+          return true;
+        }
+        return false;
+      };
+
+      // ==========================
+      // 📝 SECTIONS & QUESTIONS
+      // ==========================
+      let sectionsData = [];
+      if (savedSectionsJson) {
+        sectionsData = JSON.parse(savedSectionsJson);
+      } else if (savedQuestionsJson) {
+        sectionsData = [{
+          sectionNumber: 1,
+          sectionName: "SECTION A",
+          totalQuestions: 0,
+          marksPerQuestion: 0,
+          attemptType: "ALL",
+          instructions: "",
+          questions: JSON.parse(savedQuestionsJson)
+        }];
+      }
+
+      if (sectionsData.length > 0) {
+        sectionsData.forEach((section, sectionIndex) => {
+          checkAndAddPage();
+          
+          // SECTION HEADER
+          page.drawText(`${section.sectionName || `SECTION ${String.fromCharCode(65 + sectionIndex)}`}`, {
+            x: leftMargin,
+            y,
+            size: 16,
+            font: fontBold,
+            color: rgb(0, 0, 0)
+          });
+          y -= 25;
+
+          // QUESTIONS IN SECTION
+          if (section.questions && section.questions.length > 0) {
+            section.questions.forEach((question, qIndex) => {
+              checkAndAddPage();
+              
+              const questionNumber = question.questionNumber || qIndex + 1;
+              const questionText = `${questionNumber}. ${question.text}`;
+              
+              // Simple question display (you can enhance this later)
+              page.drawText(questionText, {
+                x: leftMargin,
+                y,
+                size: 12,
+                font: font,
+                maxWidth: contentWidth - 80,
+                lineHeight: 15
+              });
+
+              // Marks
+              if (question.marks) {
+                const marksText = `[${question.marks} Marks]`;
+                page.drawText(marksText, {
+                  x: rightMargin - font.widthOfTextAtSize(marksText, 10) - 10,
+                  y,
+                  size: 10,
+                  font: fontBold,
+                  color: rgb(0.3, 0.3, 0.3)
+                });
+              }
+
+              y -= 35;
+            });
+          }
+        });
+      }
+
+      const pdfBytes = await pdfDoc.save();
+      const pdfName = Date.now() + "-question-paper.pdf";
+      const savePath = path.join(
+        __dirname,
+        "../public/uploads/question-papers",
+        pdfName
+      );
+
+      // Ensure directory exists
+      const uploadDir = path.join(__dirname, "../public/uploads/question-papers");
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      fs.writeFileSync(savePath, pdfBytes);
+      pdfPath = "/uploads/question-papers/" + pdfName;
+    }
+
+    // ==========================
+    // 🔵 FILE MODE (DISABLED)
+    // ==========================
+    else {
+      return res.status(400).send("File upload feature is currently disabled. Please use manual input.");
+    }
+
+    // ==========================
+    // 💾 SAVE TO DB (UPDATED FIELDS)
+    // ==========================
+    await batchHelpers.addQuestionPaper(batchId, {
+      qtitle1,   // <-- ADD THIS
+  qtitle2,
+  qpCode,
+      courseName,          // CHANGED: courseCode → courseName
+      subject,
+      examType,
+      totalMarks,
+      duration,
+      instructions,
+      department,          // NEW FIELD
+      pdfPath,
+      inputMethod,
+      sectionsJson: savedSectionsJson,  // NEW FIELD
+      questionsJson: savedQuestionsJson // For backward compatibility
+    });
+
+    console.log("✅ Question paper saved successfully!");
+    res.redirect("/admin/view-question-papers/" + batchId + "?success=Question%20paper%20created%20successfully");
+
+  } catch (err) {
+    console.error("❌ Question paper error:", err);
+    console.error("Stack trace:", err.stack);
+    res.status(500).send("Server error: " + err.message);
+  }
+});
+
+
+// ===========================
+// GET: View Question Papers
+// ===========================
+router.get('/view-question-papers/:batchId', verifyAdminLogin, async (req, res) => {
+  try {
+    const batchId = req.params.batchId;
+
+    const batch = await batchHelpers.getBatchById(batchId);
+    if (!batch || !batch.questionPapers) {
+      return res.render('admin/view-question-papers', {
+        batch,
+        papers: []
+      });
+    }
+
+    res.render('admin/view-question-papers', {
+      batch,
+      papers: batch.questionPapers,
+      hideNavbar: true
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error loading question papers");
+  }
+});
+// DELETE question paper route
+router.delete('/delete-question-paper/:batchId/:paperId', verifyAdminLogin, async (req, res) => {
+  try {
+    const { batchId, paperId } = req.params;
+    
+    // Remove the question paper from the batch
+    const result = await db.get()
+      .collection(collection.BATCH_COLLECTION)
+      .updateOne(
+        { _id: new ObjectId(batchId) },
+        {
+          $pull: {
+            questionPapers: {
+              _id: new ObjectId(paperId)
+            }
+          }
+        }
+      );
+    
+    if (result.modifiedCount === 1) {
+      res.json({ success: true, message: 'Question paper deleted successfully' });
+    } else {
+      res.status(404).json({ success: false, message: 'Question paper not found' });
+    }
+    
+  } catch (err) {
+    console.error('❌ Error deleting question paper:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+//preview
+router.get('/preview-question-paper/:batchId/:paperId', verifyAdminLogin, async (req, res) => {
+  try {
+    const { batchId, paperId } = req.params;
+
+    const batch = await batchHelpers.getBatchById(batchId);
+    if (!batch) return res.status(404).send("Batch not found");
+
+    const paper = batch.questionPapers.find(
+      p => p._id.toString() === paperId
+    );
+    if (!paper) return res.status(404).send("Question paper not found");
+   
+
+    // Register fontkit instance
+    
+    
+    // 📄 Create PDF
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.registerFontkit(fontkit);
+    // 🖼️ Background image - Load FIRST before any functions
+    let bgImage = null;
+    try {
+      const bgPath = path.join(__dirname, '../public/images/question-bg.jpg');
+      const bgBytes = fs.readFileSync(bgPath);
+      bgImage = await pdfDoc.embedJpg(bgBytes);
+    } catch (bgError) {
+      console.warn("⚠️ Background image not found, using plain background");
+    }
+    
+    // Function to add new page
+    let pageNumber = 0;
+    const addNewPage = () => {
+      const newPage = pdfDoc.addPage([595, 842]); // A4 size
+      pageNumber++;
+      
+      // Add background only to first page
+      if (pageNumber === 1 && bgImage) {
+        newPage.drawImage(bgImage, {
+          x: 0,
+          y: 0,
+          width: newPage.getWidth(),
+          height: newPage.getHeight()
+        });
+      }
+      
+      return newPage;
+    };
+
+    let page = addNewPage();
+    const { width, height } = page.getSize();
+// Load Calibri Regular
+const calibriPath = path.join(__dirname, '../public/fonts/Arial.ttf');
+const calibriBytes = fs.readFileSync(calibriPath);
+const calibriFont = await pdfDoc.embedFont(calibriBytes);
+
+// Load Calibri Bold
+const calibriBoldPath = path.join(__dirname, '../public/fonts/Arial Bold.ttf');
+const calibriBoldBytes = fs.readFileSync(calibriBoldPath);
+const calibriBoldFont = await pdfDoc.embedFont(calibriBoldBytes);
+
+    // 🔤 Fonts
+    const font = calibriFont;       // Regular text
+const fontBold = calibriBoldFont; // Bold headers
+
+
+    // 🎯 START POSITION - Start from top of page
+    let y = height - 100; // Start from top with some margin
+    const leftMargin = 50;
+    const rightMargin = width - 50;
+    const contentWidth = rightMargin - leftMargin;
+
+    // =====================================================
+    // 📋 HEADER SECTION - ALL ELEMENTS CENTERED
+    // =====================================================
+
+    // 1. DEPARTMENT (first, centered)
+    if (paper.department) {
+      const deptWidth = fontBold.widthOfTextAtSize(paper.department, 12);
+      page.drawText(paper.department, {
+        x: (width - deptWidth) / 2+40,
+        y: y,
+        size: 10,
+        font: fontBold,
+        color: rgb(0, 0, 0)
+      });
+      y -= 25;
+    }
+
+    // 2. QTITLE1 (centered)
+    if (paper.qtitle1) {
+      const title1Width = fontBold.widthOfTextAtSize(paper.qtitle1, 11);
+      page.drawText(paper.qtitle1, {
+        x: (width - title1Width) / 2,
+        y: y,
+        size: 11,
+        font: fontBold,
+        color: rgb(0, 0, 0)
+      });
+      y -= 25;
+    }
+
+    // 3. QTITLE2 (centered)
+    if (paper.qtitle2) {
+      const title2Width = fontBold.widthOfTextAtSize(paper.qtitle2, 10);
+      page.drawText(paper.qtitle2, {
+        x: (width - title2Width) / 2,
+        y: y+10,
+        size: 10,
+        font: font,
+        color: rgb(0, 0, 0)
+      });
+      y -= 25;
+    }
+
+    // 4. SUBJECT (centered, larger)
+    if (paper.subject) {
+      const subjectText = paper.subject;
+      const subjectWidth = fontBold.widthOfTextAtSize(subjectText, 18);
+      page.drawText(subjectText, {
+        x: (width - subjectWidth) / 2,
+        y: y+20,
+        size: 12,
+        font: fontBold,
+        color: rgb(0, 0, 0)
+      });
+      y -= 30;
+    }
+
+    // 5. QUESTION PAPER CODE (centered)
+    if (paper.qpCode) {
+      const codeText = `Question Paper Code: ${paper.qpCode}`;
+      const codeWidth = font.widthOfTextAtSize(codeText, 12);
+      page.drawText(codeText, {
+        x: (width - codeWidth) / 2-15,
+        y: y+30,
+        size: 12,
+        font: font,
+        color: rgb(0.3, 0.3, 0.3)
+      });
+      y -= -15;
+    }
+
+    // 6. COURSE NAME (centered)
+    // if (paper.courseName) {
+    //   const courseText = `Course: ${paper.courseName}`;
+    //   const courseWidth = fontBold.widthOfTextAtSize(courseText, 12);
+    //   page.drawText(courseText, {
+    //     x: (width - courseWidth) / 2,
+    //     y: y,
+    //     size: 12,
+    //     font: fontBold,
+    //     color: rgb(0, 0, 0)
+    //   });
+    //   y -= 25;
+    // }
+
+    // 7. EXAM DETAILS - Two columns but still centered (ABOVE THE SEPARATOR LINE)
+    y -= 5; // Little space before details
+    
+    // Calculate positions for two centered columns
+    const totalDetailsWidth = 600; // Total width for both columns
+    const detailCol1X = (width / 2) - 240; // Left column
+    const detailCol2X = (width / 2) + 120; // Right column
+
+    // Column 1 - Total Marks
+    if (paper.totalMarks) {
+      const marksText = `Total Marks: ${paper.totalMarks}`;
+      page.drawText(marksText, {
+        x: detailCol1X,
+        y: y,
+        size: 11,
+        font: font,
+        color: rgb(0.2, 0.2, 0.2)
+      });
+    }
+
+    // Column 2 - Duration
+    if (paper.duration) {
+      const durationText = `Duration: ${paper.duration} minutes`;
+      page.drawText(durationText, {
+        x: detailCol2X,
+        y: y,
+        size: 11,
+        font: font,
+        color: rgb(0.2, 0.2, 0.2)
+      });
+    }
+
+    y -= 10; // Space before separator line
+
+    // 8. SEPARATOR LINE (centered, 90% of page width)
+    const linePercentage = 0.9; // 90%
+    const lineLength = width * linePercentage;
+    const lineX = (width - lineLength) / 2;
+    page.drawLine({
+      start: { x: lineX, y: y },
+      end: { x: lineX + lineLength, y: y },
+      thickness: 1,
+      color: rgb(0, 0, 0)
+    });
+    y -= 25;
+
+    // Function to check and add new page
+    const checkAndAddPage = () => {
+      if (y < 100) {
+        page = addNewPage();
+        y = height - 50;
+        return true;
+      }
+      return false;
+    };
+
+    // Helper function to wrap text
+    const wrapText = (text, font, fontSize, maxWidth) => {
+      const words = text.split(' ');
+      const lines = [];
+      let currentLine = '';
+
+      words.forEach(word => {
+        const testLine = currentLine ? currentLine + ' ' + word : word;
+        const testWidth = font.widthOfTextAtSize(testLine, fontSize);
+        
+        if (testWidth > maxWidth) {
+          if (currentLine) {
+            lines.push(currentLine);
+          }
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      });
+
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+
+      return lines;
+    };
+
+    // =====================================================
+    // 📝 INSTRUCTIONS SECTION
+    // =====================================================
+    if (paper.instructions) {
+      checkAndAddPage();
+      
+      // Instructions title (centered)
+      const instrTitle = 'INSTRUCTIONS:';
+      const instrWidth = fontBold.widthOfTextAtSize(instrTitle, 12);
+      page.drawText(instrTitle, {
+        x: (width - instrWidth) / 2,
+        y,
+        size: 12,
+        font: fontBold,
+        color: rgb(0, 0, 0)
+      });
+      y -= 20;
+
+      // Process instructions
+      const instructions = paper.instructions.split('\n').filter(line => line.trim());
+      instructions.forEach(instruction => {
+        checkAndAddPage();
+        
+        const wrappedLines = wrapText(`• ${instruction.trim()}`, font, 10, contentWidth);
+        wrappedLines.forEach(line => {
+          page.drawText(line, {
+            x: leftMargin, // Left aligned for instructions content
+            y,
+            size: 10,
+            font: font,
+            color: rgb(0, 0, 0)
+          });
+          y -= 14;
+        });
+        y -= 3;
+      });
+      
+      y -= 10;
+    }
+
+    // =====================================================
+    // ✅ SECTIONS & QUESTIONS
+    // =====================================================
+    let hasQuestions = false;
+    
+    // 1. New format (sectionsJson)
+    if (paper.sectionsJson) {
+      try {
+        const sections = JSON.parse(paper.sectionsJson);
+        
+        if (sections && sections.length > 0) {
+          hasQuestions = true;
+          
+          sections.forEach((section, sectionIndex) => {
+            checkAndAddPage();
+            
+            // SECTION HEADER (centered)
+            const sectionName = section.sectionName || `SECTION ${String.fromCharCode(65 + sectionIndex)}`;
+            const sectionNameWidth = fontBold.widthOfTextAtSize(sectionName, 16);
+            page.drawText(sectionName, {
+              x: (width - sectionNameWidth) / 2-120,
+              y,
+              size: 12,
+              font: fontBold,
+              color: rgb(0, 0, 0)
+            });
+            y -= 16;
+
+            // Section details in one line (centered)
+            let sectionDetails = [];
+            if (section.totalQuestions) {
+              sectionDetails.push(`Total Questions: ${section.totalQuestions}`);
+            }
+            if (section.marksPerQuestion) {
+              sectionDetails.push(`Marks per Question: ${section.marksPerQuestion}`);
+            }
+            if (section.attemptType) {
+              const attemptText = section.attemptType === 'ALL' ? 'Answer All' : 
+                                section.attemptType === 'ANY' ? 'Attempt Any' : 
+                                `Attempt: ${section.attemptType}`;
+              sectionDetails.push(attemptText);
+            }
+            
+            if (sectionDetails.length > 0) {
+              const detailsText = sectionDetails.join(' | ');
+              const detailsWidth = font.widthOfTextAtSize(detailsText, 11);
+              page.drawText(detailsText, {
+                x: (width - detailsWidth) / 2-120,
+                y,
+                size: 11,
+                font: font,
+                color: rgb(0.3, 0.3, 0.3)
+              });
+              y -= 20;
+            }
+
+            // Section instructions
+            if (section.instructions) {
+              const noteText = `Note: ${section.instructions}`;
+              const noteWidth = font.widthOfTextAtSize(noteText, 10);
+              page.drawText(noteText, {
+                x: (width - noteWidth) / 2,
+                y,
+                size: 10,
+                font: font,
+                color: rgb(0.4, 0.4, 0.4)
+              });
+              y -= 15;
+            }
+
+            // Questions in section
+            if (section.questions && section.questions.length > 0) {
+              section.questions.forEach((question, qIndex) => {
+                checkAndAddPage();
+                
+                const questionNumber = question.questionNumber || qIndex + 1;
+                const questionText = `${questionNumber}. ${question.text}`;
+                const wrappedLines = wrapText(questionText, font, 10, contentWidth);
+                
+                // Draw question (left aligned)
+                wrappedLines.forEach((line, lineIndex) => {
+                  page.drawText(line, {
+                    x: leftMargin+24,
+                    y,
+                    size: 10,
+                    font: font,
+                    color: rgb(0, 0, 0)
+                  });
+                  y -= 1;
+                });
+
+                // Marks (right-aligned)
+                if (question.marks) {
+                  const marksText = `[${question.marks} Marks]`;
+                  page.drawText(marksText, {
+                    x: rightMargin - font.widthOfTextAtSize(marksText, 10) - 10,
+                    y: y + (wrappedLines.length * 15) - 15,
+                    size: 10,
+                    font: fontBold,
+                    color: rgb(0.3, 0.3, 0.3)
+                  });
+                }
+
+                y -= 15; // Space after question
+
+                // MCQ options
+                if (question.type === 'MCQ' && question.options && question.options.length > 0) {
+                  question.options.forEach((option, optIndex) => {
+                    checkAndAddPage();
+                    
+                    const optionLetter = option.letter || String.fromCharCode(97 + optIndex);
+                    const optionText = `   ${optionLetter}) ${option.text}`;
+                    const optionLines = wrapText(optionText, font, 10, contentWidth - 40);
+                    
+                    optionLines.forEach(line => {
+                      page.drawText(line, {
+                        x: leftMargin + 20,
+                        y,
+                        size: 10,
+                        font: font,
+                        color: rgb(0.2, 0.2, 0.2)
+                      });
+                      y -= 13;
+                    });
+                  });
+                  y -= 5;
+                }
+              });
+            }
+            
+            y -= 16; // Space between sections
+          });
+        }
+      } catch (jsonError) {
+        console.error("Error parsing sections JSON:", jsonError);
+      }
+    }
+    // 2. Legacy format (questionsJson)
+    else if (paper.questionsJson) {
+      try {
+        const questions = JSON.parse(paper.questionsJson);
+        
+        if (questions && questions.length > 0) {
+          hasQuestions = true;
+          
+          checkAndAddPage();
+          const sectionTitle = 'SECTION A: ANSWER ALL QUESTIONS';
+          const sectionTitleWidth = fontBold.widthOfTextAtSize(sectionTitle, 16);
+          page.drawText(sectionTitle, {
+            x: (width - sectionTitleWidth) / 2,
+            y,
+            size: 16,
+            font: fontBold,
+            color: rgb(0, 0, 0)
+          });
+          y -= 25;
+
+          questions.forEach((q, index) => {
+            checkAndAddPage();
+            
+            const questionNumber = q.questionNumber || index + 1;
+            const questionText = `${questionNumber}. ${q.text}`;
+            const wrappedLines = wrapText(questionText, font, 12, contentWidth);
+            
+            wrappedLines.forEach(line => {
+              page.drawText(line, {
+                x: leftMargin,
+                y,
+                size: 12,
+                font: font,
+                color: rgb(0, 0, 0)
+              });
+              y -= 15;
+            });
+
+            if (q.marks) {
+              const marksText = `[${q.marks} Marks]`;
+              page.drawText(marksText, {
+                x: rightMargin - font.widthOfTextAtSize(marksText, 10) - 10,
+                y: y + (wrappedLines.length * 15) - 15,
+                size: 10,
+                font: fontBold,
+                color: rgb(0.3, 0.3, 0.3)
+              });
+            }
+
+            y -= 20;
+          });
+        }
+      } catch (jsonError) {
+        console.error("Error parsing legacy questions JSON:", jsonError);
+      }
+    }
+
+    // =====================================================
+    // 📝 FOOTER
+    // =====================================================
+    checkAndAddPage();
+    
+    // Footer separator (centered, 90% width)
+    const footerLinePercentage = 0.9;
+    const footerLineLength = width * footerLinePercentage;
+    const footerLineX = (width - footerLineLength) / 2;
+    page.drawLine({
+      start: { x: footerLineX, y: y + 20 },
+      end: { x: footerLineX + footerLineLength, y: y + 20 },
+      thickness: 0.5,
+      color: rgb(0.3, 0.3, 0.3)
+    });
+    y -= 15;
+
+    // Generated timestamp (centered)
+    const timestamp = new Date().toLocaleString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    const timestampText = `Generated on: ${timestamp}`;
+    const timestampWidth = font.widthOfTextAtSize(timestampText, 9);
+    page.drawText(timestampText, {
+      x: (width - timestampWidth) / 2,
+      y: 40,
+      size: 9,
+      font: font,
+      color: rgb(0.3, 0.3, 0.3)
+    });
+
+    // Page numbers (centered on each page)
+    const totalPages = pdfDoc.getPageCount();
+    for (let i = 0; i < totalPages; i++) {
+      const currentPage = pdfDoc.getPage(i);
+      const pageText = `Page ${i + 1} of ${totalPages}`;
+      const pageTextWidth = font.widthOfTextAtSize(pageText, 8);
+      currentPage.drawText(pageText, {
+        x: (width - pageTextWidth) / 2,
+        y: 25,
+        size: 8,
+        font: font,
+        color: rgb(0.4, 0.4, 0.4)
+      });
+    }
+
+    const pdfBytes = await pdfDoc.save();
+    const base64 = Buffer.from(pdfBytes).toString("base64");
+
+    // =====================================================
+    // 📄 HTML PREVIEW PAGE
+    // =====================================================
+    res.send(`
+      <html>
+        <head>
+          <title>Question Paper Preview - ${paper.subject || 'Question Paper'}</title>
+          <style>
+            body { 
+              margin: 0;
+              padding: 0;
+              font-family: Arial, sans-serif;
+              background: #f5f5f5;
+              overflow: hidden;
+            }
+
+            .header {
+              width: 100%;
+              background: linear-gradient(135deg, #004e89, #0066cc);
+              color: white;
+              padding: 15px;
+              text-align: center;
+              font-size: 22px;
+              font-weight: bold;
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              z-index: 1000;
+              box-shadow: 0px 3px 10px rgba(0,0,0,0.2);
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+
+            .header-content {
+              flex: 1;
+              text-align: center;
+            }
+
+            .controls {
+              display: flex;
+              gap: 12px;
+              margin-right: 20px;
+            }
+
+            .btn {
+              padding: 12px 24px;
+              border-radius: 6px;
+              text-decoration: none;
+              font-weight: bold;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+              transition: all 0.3s ease;
+              border: none;
+              cursor: pointer;
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+              font-size: 14px;
+              color: white;
+              min-width: 160px;
+              justify-content: center;
+            }
+
+            .download-btn {
+              background: linear-gradient(135deg, #28a745, #20c997);
+            }
+
+            .download-btn:hover {
+              background: linear-gradient(135deg, #20c997, #28a745);
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            }
+
+            .back-btn {
+              background: linear-gradient(135deg, #6c757d, #495057);
+            }
+
+            .back-btn:hover {
+              background: linear-gradient(135deg, #495057, #6c757d);
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+            }
+
+            iframe {
+              position: fixed;
+              top: 70px;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              width: 100%;
+              height: calc(100vh - 70px);
+              border: none;
+            }
+
+            .paper-info {
+              position: fixed;
+              bottom: 20px;
+              left: 20px;
+              background: rgba(255, 255, 255, 0.9);
+              padding: 10px 15px;
+              border-radius: 8px;
+              font-size: 12px;
+              color: #333;
+              box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+              max-width: 300px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div></div> <!-- Empty div for spacing -->
+            <div class="header-content">
+              📄 Question Paper Preview - ${paper.subject || 'Paper'}
+            </div>
+            <div class="controls">
+              <a href="/admin/view-question-papers/${batchId}" class="btn back-btn">
+                ← Back to List
+              </a>
+              <a href="/admin/download-question-paper/${batchId}/${paperId}" class="btn download-btn">
+                📥 Download PDF
+              </a>
+            </div>
+          </div>
+          
+          <iframe src="data:application/pdf;base64,${base64}#toolbar=0&navpanes=0&scrollbar=1"></iframe>
+          
+          <div class="paper-info">
+            <strong>Paper Details:</strong><br>
+            ${paper.subject ? `Subject: ${paper.subject}<br>` : ''}
+            ${paper.courseName ? `Course: ${paper.courseName}<br>` : ''}
+            ${paper.totalMarks ? `Marks: ${paper.totalMarks}<br>` : ''}
+            ${paper.duration ? `Duration: ${paper.duration} mins` : ''}
+          </div>
+          
+          <script>
+            window.onload = function() {
+              document.querySelector('iframe').focus();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+
+  } catch (err) {
+    console.error("❌ PDF preview error:", err);
+    console.error("Error stack:", err.stack);
+    res.status(500).send("Error generating PDF preview: " + err.message);
+  }
+});
+// ===========================
+// DOWNLOAD QUESTION PAPER PDF
+// ===========================
+router.get('/download-question-paper/:batchId/:paperId', verifyAdminLogin, async (req, res) => {
+  try {
+    const { batchId, paperId } = req.params;
+
+    const batch = await batchHelpers.getBatchById(batchId);
+    if (!batch) return res.status(404).send("Batch not found");
+
+    const paper = batch.questionPapers.find(
+      p => p._id.toString() === paperId
+    );
+    if (!paper) return res.status(404).send("Question paper not found");
+    
+    // Register fontkit instance
+    const { PDFDocument, rgb } = require('pdf-lib');
+    const fontkit = require('@pdf-lib/fontkit');
+    
+    // 📄 Create PDF
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.registerFontkit(fontkit);
+    
+    // 🖼️ Background image - Load FIRST before any functions
+    let bgImage = null;
+    try {
+      const bgPath = path.join(__dirname, '../public/images/question-bg.jpg');
+      const bgBytes = fs.readFileSync(bgPath);
+      bgImage = await pdfDoc.embedJpg(bgBytes);
+    } catch (bgError) {
+      console.warn("⚠️ Background image not found, using plain background");
+    }
+    
+    // Function to add new page
+    let pageNumber = 0;
+    const addNewPage = () => {
+      const newPage = pdfDoc.addPage([595, 842]); // A4 size
+      pageNumber++;
+      
+      // Add background only to first page
+      if (pageNumber === 1 && bgImage) {
+        newPage.drawImage(bgImage, {
+          x: 0,
+          y: 0,
+          width: newPage.getWidth(),
+          height: newPage.getHeight()
+        });
+      }
+      
+      return newPage;
+    };
+
+    let page = addNewPage();
+    const { width, height } = page.getSize();
+    
+    // Load Calibri Regular
+    const calibriPath = path.join(__dirname, '../public/fonts/Arial.ttf');
+    const calibriBytes = fs.readFileSync(calibriPath);
+    const calibriFont = await pdfDoc.embedFont(calibriBytes);
+
+    // Load Calibri Bold
+    const calibriBoldPath = path.join(__dirname, '../public/fonts/Arial Bold.ttf');
+    const calibriBoldBytes = fs.readFileSync(calibriBoldPath);
+    const calibriBoldFont = await pdfDoc.embedFont(calibriBoldBytes);
+
+    // 🔤 Fonts
+    const font = calibriFont;       // Regular text
+    const fontBold = calibriBoldFont; // Bold headers
+
+    // 🎯 START POSITION - Start from top of page
+    let y = height - 100; // Start from top with some margin
+    const leftMargin = 50;
+    const rightMargin = width - 50;
+    const contentWidth = rightMargin - leftMargin;
+
+    // =====================================================
+    // 📋 HEADER SECTION - ALL ELEMENTS CENTERED
+    // =====================================================
+
+    // 1. DEPARTMENT (first, centered)
+    if (paper.department) {
+      const deptWidth = fontBold.widthOfTextAtSize(paper.department, 12);
+      page.drawText(paper.department, {
+        x: (width - deptWidth) / 2+40,
+        y: y,
+        size: 10,
+        font: fontBold,
+        color: rgb(0, 0, 0)
+      });
+      y -= 25;
+    }
+
+    // 2. QTITLE1 (centered)
+    if (paper.qtitle1) {
+      const title1Width = fontBold.widthOfTextAtSize(paper.qtitle1, 11);
+      page.drawText(paper.qtitle1, {
+        x: (width - title1Width) / 2,
+        y: y,
+        size: 11,
+        font: fontBold,
+        color: rgb(0, 0, 0)
+      });
+      y -= 25;
+    }
+
+    // 3. QTITLE2 (centered)
+    if (paper.qtitle2) {
+      const title2Width = fontBold.widthOfTextAtSize(paper.qtitle2, 10);
+      page.drawText(paper.qtitle2, {
+        x: (width - title2Width) / 2,
+        y: y+10,
+        size: 10,
+        font: font,
+        color: rgb(0, 0, 0)
+      });
+      y -= 25;
+    }
+
+    // 4. SUBJECT (centered, larger)
+    if (paper.subject) {
+      const subjectText = paper.subject;
+      const subjectWidth = fontBold.widthOfTextAtSize(subjectText, 18);
+      page.drawText(subjectText, {
+        x: (width - subjectWidth) / 2,
+        y: y+20,
+        size: 12,
+        font: fontBold,
+        color: rgb(0, 0, 0)
+      });
+      y -= 30;
+    }
+
+    // 5. QUESTION PAPER CODE (centered)
+    if (paper.qpCode) {
+      const codeText = `Question Paper Code: ${paper.qpCode}`;
+      const codeWidth = font.widthOfTextAtSize(codeText, 12);
+      page.drawText(codeText, {
+        x: (width - codeWidth) / 2-15,
+        y: y+30,
+        size: 12,
+        font: font,
+        color: rgb(0.3, 0.3, 0.3)
+      });
+      y -= -15;
+    }
+
+    // 6. COURSE NAME (centered)
+    // if (paper.courseName) {
+    //   const courseText = `Course: ${paper.courseName}`;
+    //   const courseWidth = fontBold.widthOfTextAtSize(courseText, 12);
+    //   page.drawText(courseText, {
+    //     x: (width - courseWidth) / 2,
+    //     y: y,
+    //     size: 12,
+    //     font: fontBold,
+    //     color: rgb(0, 0, 0)
+    //   });
+    //   y -= 25;
+    // }
+
+    // 7. EXAM DETAILS - Two columns but still centered (ABOVE THE SEPARATOR LINE)
+    y -= 5; // Little space before details
+    
+    // Calculate positions for two centered columns
+    const totalDetailsWidth = 600; // Total width for both columns
+    const detailCol1X = (width / 2) - 240; // Left column
+    const detailCol2X = (width / 2) + 120; // Right column
+
+    // Column 1 - Total Marks
+    if (paper.totalMarks) {
+      const marksText = `Total Marks: ${paper.totalMarks}`;
+      page.drawText(marksText, {
+        x: detailCol1X,
+        y: y,
+        size: 11,
+        font: font,
+        color: rgb(0.2, 0.2, 0.2)
+      });
+    }
+
+    // Column 2 - Duration
+    if (paper.duration) {
+      const durationText = `Duration: ${paper.duration} minutes`;
+      page.drawText(durationText, {
+        x: detailCol2X,
+        y: y,
+        size: 11,
+        font: font,
+        color: rgb(0.2, 0.2, 0.2)
+      });
+    }
+
+    y -= 10; // Space before separator line
+
+    // 8. SEPARATOR LINE (centered, 90% of page width)
+    const linePercentage = 0.9; // 90%
+    const lineLength = width * linePercentage;
+    const lineX = (width - lineLength) / 2;
+    page.drawLine({
+      start: { x: lineX, y: y },
+      end: { x: lineX + lineLength, y: y },
+      thickness: 1,
+      color: rgb(0, 0, 0)
+    });
+    y -= 25;
+
+    // Function to check and add new page
+    const checkAndAddPage = () => {
+      if (y < 100) {
+        page = addNewPage();
+        y = height - 50;
+        return true;
+      }
+      return false;
+    };
+
+    // Helper function to wrap text
+    const wrapText = (text, font, fontSize, maxWidth) => {
+      const words = text.split(' ');
+      const lines = [];
+      let currentLine = '';
+
+      words.forEach(word => {
+        const testLine = currentLine ? currentLine + ' ' + word : word;
+        const testWidth = font.widthOfTextAtSize(testLine, fontSize);
+        
+        if (testWidth > maxWidth) {
+          if (currentLine) {
+            lines.push(currentLine);
+          }
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      });
+
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+
+      return lines;
+    };
+
+    // =====================================================
+    // 📝 INSTRUCTIONS SECTION
+    // =====================================================
+    if (paper.instructions) {
+      checkAndAddPage();
+      
+      // Instructions title (centered)
+      const instrTitle = 'INSTRUCTIONS:';
+      const instrWidth = fontBold.widthOfTextAtSize(instrTitle, 12);
+      page.drawText(instrTitle, {
+        x: (width - instrWidth) / 2,
+        y,
+        size: 12,
+        font: fontBold,
+        color: rgb(0, 0, 0)
+      });
+      y -= 20;
+
+      // Process instructions
+      const instructions = paper.instructions.split('\n').filter(line => line.trim());
+      instructions.forEach(instruction => {
+        checkAndAddPage();
+        
+        const wrappedLines = wrapText(`• ${instruction.trim()}`, font, 10, contentWidth);
+        wrappedLines.forEach(line => {
+          page.drawText(line, {
+            x: leftMargin, // Left aligned for instructions content
+            y,
+            size: 10,
+            font: font,
+            color: rgb(0, 0, 0)
+          });
+          y -= 14;
+        });
+        y -= 3;
+      });
+      
+      y -= 10;
+    }
+
+    // =====================================================
+    // ✅ SECTIONS & QUESTIONS
+    // =====================================================
+    let hasQuestions = false;
+    
+    // 1. New format (sectionsJson)
+    if (paper.sectionsJson) {
+      try {
+        const sections = JSON.parse(paper.sectionsJson);
+        
+        if (sections && sections.length > 0) {
+          hasQuestions = true;
+          
+          sections.forEach((section, sectionIndex) => {
+            checkAndAddPage();
+            
+            // SECTION HEADER (centered)
+            const sectionName = section.sectionName || `SECTION ${String.fromCharCode(65 + sectionIndex)}`;
+            const sectionNameWidth = fontBold.widthOfTextAtSize(sectionName, 16);
+            page.drawText(sectionName, {
+              x: (width - sectionNameWidth) / 2-120,
+              y,
+              size: 12,
+              font: fontBold,
+              color: rgb(0, 0, 0)
+            });
+            y -= 16;
+
+            // Section details in one line (centered)
+            let sectionDetails = [];
+            if (section.totalQuestions) {
+              sectionDetails.push(`Total Questions: ${section.totalQuestions}`);
+            }
+            if (section.marksPerQuestion) {
+              sectionDetails.push(`Marks per Question: ${section.marksPerQuestion}`);
+            }
+            if (section.attemptType) {
+              const attemptText = section.attemptType === 'ALL' ? 'Answer All' : 
+                                section.attemptType === 'ANY' ? 'Attempt Any' : 
+                                `Attempt: ${section.attemptType}`;
+              sectionDetails.push(attemptText);
+            }
+            
+            if (sectionDetails.length > 0) {
+              const detailsText = sectionDetails.join(' | ');
+              const detailsWidth = font.widthOfTextAtSize(detailsText, 11);
+              page.drawText(detailsText, {
+                x: (width - detailsWidth) / 2-120,
+                y,
+                size: 11,
+                font: font,
+                color: rgb(0.3, 0.3, 0.3)
+              });
+              y -= 20;
+            }
+
+            // Section instructions
+            if (section.instructions) {
+              const noteText = `Note: ${section.instructions}`;
+              const noteWidth = font.widthOfTextAtSize(noteText, 10);
+              page.drawText(noteText, {
+                x: (width - noteWidth) / 2,
+                y,
+                size: 10,
+                font: font,
+                color: rgb(0.4, 0.4, 0.4)
+              });
+              y -= 15;
+            }
+
+            // Questions in section
+            if (section.questions && section.questions.length > 0) {
+              section.questions.forEach((question, qIndex) => {
+                checkAndAddPage();
+                
+                const questionNumber = question.questionNumber || qIndex + 1;
+                const questionText = `${questionNumber}. ${question.text}`;
+                const wrappedLines = wrapText(questionText, font, 10, contentWidth);
+                
+                // Draw question (left aligned)
+                wrappedLines.forEach((line, lineIndex) => {
+                  page.drawText(line, {
+                    x: leftMargin+24,
+                    y,
+                    size: 10,
+                    font: font,
+                    color: rgb(0, 0, 0)
+                  });
+                  y -= 1;
+                });
+
+                // Marks (right-aligned)
+                if (question.marks) {
+                  const marksText = `[${question.marks} Marks]`;
+                  page.drawText(marksText, {
+                    x: rightMargin - font.widthOfTextAtSize(marksText, 10) - 10,
+                    y: y + (wrappedLines.length * 15) - 15,
+                    size: 10,
+                    font: fontBold,
+                    color: rgb(0.3, 0.3, 0.3)
+                  });
+                }
+
+                y -= 15; // Space after question
+
+                // MCQ options
+                if (question.type === 'MCQ' && question.options && question.options.length > 0) {
+                  question.options.forEach((option, optIndex) => {
+                    checkAndAddPage();
+                    
+                    const optionLetter = option.letter || String.fromCharCode(97 + optIndex);
+                    const optionText = `   ${optionLetter}) ${option.text}`;
+                    const optionLines = wrapText(optionText, font, 10, contentWidth - 40);
+                    
+                    optionLines.forEach(line => {
+                      page.drawText(line, {
+                        x: leftMargin + 20,
+                        y,
+                        size: 10,
+                        font: font,
+                        color: rgb(0.2, 0.2, 0.2)
+                      });
+                      y -= 13;
+                    });
+                  });
+                  y -= 5;
+                }
+              });
+            }
+            
+            y -= 16; // Space between sections
+          });
+        }
+      } catch (jsonError) {
+        console.error("Error parsing sections JSON:", jsonError);
+      }
+    }
+    // 2. Legacy format (questionsJson)
+    else if (paper.questionsJson) {
+      try {
+        const questions = JSON.parse(paper.questionsJson);
+        
+        if (questions && questions.length > 0) {
+          hasQuestions = true;
+          
+          checkAndAddPage();
+          const sectionTitle = 'SECTION A: ANSWER ALL QUESTIONS';
+          const sectionTitleWidth = fontBold.widthOfTextAtSize(sectionTitle, 16);
+          page.drawText(sectionTitle, {
+            x: (width - sectionTitleWidth) / 2,
+            y,
+            size: 16,
+            font: fontBold,
+            color: rgb(0, 0, 0)
+          });
+          y -= 25;
+
+          questions.forEach((q, index) => {
+            checkAndAddPage();
+            
+            const questionNumber = q.questionNumber || index + 1;
+            const questionText = `${questionNumber}. ${q.text}`;
+            const wrappedLines = wrapText(questionText, font, 12, contentWidth);
+            
+            wrappedLines.forEach(line => {
+              page.drawText(line, {
+                x: leftMargin,
+                y,
+                size: 12,
+                font: font,
+                color: rgb(0, 0, 0)
+              });
+              y -= 15;
+            });
+
+            if (q.marks) {
+              const marksText = `[${q.marks} Marks]`;
+              page.drawText(marksText, {
+                x: rightMargin - font.widthOfTextAtSize(marksText, 10) - 10,
+                y: y + (wrappedLines.length * 15) - 15,
+                size: 10,
+                font: fontBold,
+                color: rgb(0.3, 0.3, 0.3)
+              });
+            }
+
+            y -= 20;
+          });
+        }
+      } catch (jsonError) {
+        console.error("Error parsing legacy questions JSON:", jsonError);
+      }
+    }
+
+    // =====================================================
+    // 📝 FOOTER
+    // =====================================================
+    checkAndAddPage();
+    
+    // Footer separator (centered, 90% width)
+    const footerLinePercentage = 0.9;
+    const footerLineLength = width * footerLinePercentage;
+    const footerLineX = (width - footerLineLength) / 2;
+    page.drawLine({
+      start: { x: footerLineX, y: y + 20 },
+      end: { x: footerLineX + footerLineLength, y: y + 20 },
+      thickness: 0.5,
+      color: rgb(0.3, 0.3, 0.3)
+    });
+    y -= 15;
+
+    // Generated timestamp (centered)
+    const timestamp = new Date().toLocaleString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    const timestampText = `Generated on: ${timestamp}`;
+    const timestampWidth = font.widthOfTextAtSize(timestampText, 9);
+    page.drawText(timestampText, {
+      x: (width - timestampWidth) / 2,
+      y: 40,
+      size: 9,
+      font: font,
+      color: rgb(0.3, 0.3, 0.3)
+    });
+
+    // Page numbers (centered on each page)
+    const totalPages = pdfDoc.getPageCount();
+    for (let i = 0; i < totalPages; i++) {
+      const currentPage = pdfDoc.getPage(i);
+      const pageText = `Page ${i + 1} of ${totalPages}`;
+      const pageTextWidth = font.widthOfTextAtSize(pageText, 8);
+      currentPage.drawText(pageText, {
+        x: (width - pageTextWidth) / 2,
+        y: 25,
+        size: 8,
+        font: font,
+        color: rgb(0.4, 0.4, 0.4)
+      });
+    }
+
+    const pdfBytes = await pdfDoc.save();
+    
+    // =====================================================
+    // 📥 DOWNLOAD THE PDF (Only change from preview)
+    // =====================================================
+    const fileName = `${paper.subject || 'Question-Paper'}_${paper.qpCode || batch.batchId}.pdf`.replace(/[^a-zA-Z0-9.-]/g, '_');
+    
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${fileName}"`,
+      'Content-Length': pdfBytes.length
+    });
+    
+    res.send(pdfBytes);
+
+  } catch (err) {
+    console.error("❌ PDF download error:", err);
+    console.error("Error stack:", err.stack);
+    res.status(500).send("Error generating PDF download: " + err.message);
+  }
+});
 // ADD MARK PAGE
 router.get('/add-mark/:id', verifyAdminLogin, async (req, res) => {
   try {
@@ -2989,76 +7582,14 @@ router.post('/add-mark', verifyAdminLogin, async (req, res) => {
 
     console.log("💾 Database update result:", result.modifiedCount ? "Success" : "No changes");
 
-    res.redirect('/admin/mark-list/' + studentId);
+    res.redirect('/admin/preview-marklist/' + studentId);
   } catch (err) {
     console.error("❌ Error saving marks:", err);
     res.status(500).send("Error submitting marks");
   }
 });
 
-// // MARK LIST ROUTE (Fully Fixed)
-// router.get('/mark-list/:id', verifyAdminLogin, async (req, res) => {
-//   try {
-//     const studentId = new ObjectId(req.params.id);
 
-//     // 1️⃣ Get student data
-//     const student = await db.get()
-//       .collection(collection.STUDENT_COLLECTION)
-//       .findOne({ _id: studentId });
-
-//     if (!student) return res.status(404).send("Student not found");
-
-//     const centreId = student.centreId;
-//     const departmentName = student.department;
-
-//     // 2️⃣ Fetch center data
-//     const centerData = await centerHelpers.getCenterById(centreId);
-
-//     // 3️⃣ Extract logos
-//     const institutionLogo = centerData?.institutionLogo || null;
-
-//     // ✅ Find department logo safely
-//     let departmentLogo = null;
-
-//     if (centerData?.departmentLogos && departmentName) {
-//       const deptKeys = Object.keys(centerData.departmentLogos);
-//       const matchedKey = deptKeys.find(
-//         key => key.toLowerCase().trim() === departmentName.toLowerCase().trim()
-//       );
-
-//       if (matchedKey) {
-//         departmentLogo = centerData.departmentLogos[matchedKey];
-//         console.log("✅ Found department logo path:", departmentLogo);
-//       } else {
-//         console.log("⚠️ No matching department logo found. Available keys:", deptKeys);
-//       }
-//     }
-
-//     // 🧾 Debug info
-//     console.log("✅ Marklist Debug:", {
-//       centreId,
-//       departmentName,
-//       institutionLogo,
-//       departmentLogo
-//     });
-
-//     // 4️⃣ Render page
-//     res.render('admin/mark-list', {
-//       hideNavbar: true,
-//       studentId: req.params.id,
-//       student,
-//       logos: {
-//         institution: institutionLogo,
-//         department: departmentLogo
-//       },
-//       currentDate: new Date()
-//     });
-
-//   } catch (err) {
-//     console.error("❌ Error loading mark list:", err);
-//     res.status(500).send("Error loading mark list");
-//   }
-// });
 // ===========================
 // MARKLIST PREVIEW (with Download Button) - FIXED CENTERING
 // ===========================
@@ -4345,7 +8876,136 @@ router.get("/download-marklist/:id", verifyAdminLogin, async (req, res) => {
     });
   }
 });
+// GET - Add Supply Mark Page// GET - Add Supply Mark Page
+router.get('/add-supply-mark/:id', verifyAdminLogin, async (req, res) => {
+  try {
+    const studentId = new ObjectId(req.params.id);
+    const student = await db.get().collection(collection.STUDENT_COLLECTION).findOne({ _id: studentId });
 
+    if (!student) {
+      return res.status(404).send("Student not found");
+    }
+
+    if (!student.marks) {
+      return res.status(400).send("No regular marks found for this student");
+    }
+
+    // Identify failed subjects
+    const failedSubjects = student.marks.subjects.filter(subject => 
+      subject.result === 'FAILED'
+    );
+
+    if (failedSubjects.length === 0) {
+      return res.status(400).send("Student has no failed subjects");
+    }
+
+    res.render('admin/add-supply-mark', {
+      hideNavbar: true,
+      studentId: req.params.id,
+      student,
+      failedSubjects,
+      regularMarks: student.marks
+    });
+  } catch (err) {
+    console.error("❌ Error loading supply mark page:", err);
+    res.status(500).send("Error loading supply mark page");
+  }
+});
+
+// POST - Save Supply Marks - FIXED PATH
+router.post('/add-supply-mark', verifyAdminLogin, async (req, res) => {
+  try {
+    const studentId = req.body.studentId;
+    console.log("📝 Received supply marks for student:", studentId);
+
+    if (!ObjectId.isValid(studentId)) {
+      return res.status(400).send("Invalid Student ID");
+    }
+
+    // Get student data
+    const student = await db.get().collection(collection.STUDENT_COLLECTION).findOne({ 
+      _id: new ObjectId(studentId) 
+    });
+
+    if (!student || !student.marks) {
+      return res.status(400).send("Student or regular marks not found");
+    }
+
+    // Prepare supply marks data
+    const supplyMarksData = {
+      candidateName: student.marks.candidateName,
+      address: student.marks.address,
+      institute: student.marks.institute,
+      examination: "SUPPLY EXAMINATION",
+      course: student.marks.course,
+      courseDuration: student.marks.courseDuration,
+      registrationNo: student.marks.registrationNo,
+      department: student.marks.department,
+      examTitle: `SUPPLY - ${student.marks.examTitle}`,
+      
+      subjects: [],
+      isSupply: true,
+      originalMarksId: student.marks._id || studentId,
+      
+      totalWords: req.body.totalWords,
+      maxTotal: parseInt(req.body.maxTotal) || 0,
+      obtainedTotal: parseInt(req.body.obtainedTotal) || 0,
+      overallResult: req.body.overallResult,
+      grade: req.body.grade,
+      
+      createdAt: new Date()
+    };
+
+    // Process supply subjects
+    if (req.body.subjectName && Array.isArray(req.body.subjectName)) {
+      for (let i = 0; i < req.body.subjectName.length; i++) {
+        if (req.body.subjectName[i].trim() !== '') {
+          const subjectData = {
+            subject: req.body.subjectName[i],
+            theoryMax: parseInt(req.body.theoryMax[i]) || 0,
+            theoryMin: parseInt(req.body.theoryMin[i]) || 0,
+            theoryObt: parseInt(req.body.theoryObt[i]) || 0,
+            practicalMax: parseInt(req.body.practicalMax[i]) || 0,
+            practicalMin: parseInt(req.body.practicalMin[i]) || 0,
+            practicalObt: parseInt(req.body.practicalObt[i]) || 0,
+            totalMax: (parseInt(req.body.theoryMax[i]) || 0) + (parseInt(req.body.practicalMax[i]) || 0),
+            totalMin: (parseInt(req.body.theoryMin[i]) || 0) + (parseInt(req.body.practicalMin[i]) || 0),
+            totalObt: (parseInt(req.body.theoryObt[i]) || 0) + (parseInt(req.body.practicalObt[i]) || 0),
+            result: (parseInt(req.body.theoryObt[i]) >= parseInt(req.body.theoryMin[i]) && 
+                    parseInt(req.body.practicalObt[i]) >= parseInt(req.body.practicalMin[i])) ? 'PASSED' : 'FAILED',
+            isSupply: true,
+            originalResult: student.marks.subjects.find(s => s.subject === req.body.subjectName[i])?.result || 'FAILED'
+          };
+          
+          supplyMarksData.subjects.push(subjectData);
+        }
+      }
+    }
+
+    console.log("📊 Supply marks data to save:", JSON.stringify(supplyMarksData, null, 2));
+
+    // Update student with supply marks
+    const result = await db.get().collection(collection.STUDENT_COLLECTION).updateOne(
+      { _id: new ObjectId(studentId) },
+      { 
+        $set: { 
+          supplyMarks: supplyMarksData,
+          hasSupply: true,
+          updatedAt: new Date()
+        } 
+      }
+    );
+
+    console.log("💾 Supply marks saved successfully");
+    
+    // FIXED: Redirect to admin combined marklist
+    res.redirect('/admin/preview-combined-marklist/' + studentId);
+    
+  } catch (err) {
+    console.error("❌ Error saving supply marks:", err);
+    res.status(500).send("Error submitting supply marks");
+  }
+});
 // ===========================
 // COMBINED MARKLIST PREVIEW (PDF-Lib Version)
 // ===========================
@@ -7431,244 +12091,9 @@ router.post('/edit-schedule/:batchId', verifyAdminLogin, async (req, res) => {
     res.status(500).send('Error updating schedule: ' + err.message);
   }
 });
-// GET - Add Supply Mark Page// GET - Add Supply Mark Page
-router.get('/add-supply-mark/:id', verifyAdminLogin, async (req, res) => {
-  try {
-    const studentId = new ObjectId(req.params.id);
-    const student = await db.get().collection(collection.STUDENT_COLLECTION).findOne({ _id: studentId });
-
-    if (!student) {
-      return res.status(404).send("Student not found");
-    }
-
-    if (!student.marks) {
-      return res.status(400).send("No regular marks found for this student");
-    }
-
-    // Identify failed subjects
-    const failedSubjects = student.marks.subjects.filter(subject => 
-      subject.result === 'FAILED'
-    );
-
-    if (failedSubjects.length === 0) {
-      return res.status(400).send("Student has no failed subjects");
-    }
-
-    res.render('admin/add-supply-mark', {
-      hideNavbar: true,
-      studentId: req.params.id,
-      student,
-      failedSubjects,
-      regularMarks: student.marks
-    });
-  } catch (err) {
-    console.error("❌ Error loading supply mark page:", err);
-    res.status(500).send("Error loading supply mark page");
-  }
-});
-
-// POST - Save Supply Marks - FIXED PATH
-router.post('/add-supply-mark', verifyAdminLogin, async (req, res) => {
-  try {
-    const studentId = req.body.studentId;
-    console.log("📝 Received supply marks for student:", studentId);
-
-    if (!ObjectId.isValid(studentId)) {
-      return res.status(400).send("Invalid Student ID");
-    }
-
-    // Get student data
-    const student = await db.get().collection(collection.STUDENT_COLLECTION).findOne({ 
-      _id: new ObjectId(studentId) 
-    });
-
-    if (!student || !student.marks) {
-      return res.status(400).send("Student or regular marks not found");
-    }
-
-    // Prepare supply marks data
-    const supplyMarksData = {
-      candidateName: student.marks.candidateName,
-      address: student.marks.address,
-      institute: student.marks.institute,
-      examination: "SUPPLY EXAMINATION",
-      course: student.marks.course,
-      courseDuration: student.marks.courseDuration,
-      registrationNo: student.marks.registrationNo,
-      department: student.marks.department,
-      examTitle: `SUPPLY - ${student.marks.examTitle}`,
-      
-      subjects: [],
-      isSupply: true,
-      originalMarksId: student.marks._id || studentId,
-      
-      totalWords: req.body.totalWords,
-      maxTotal: parseInt(req.body.maxTotal) || 0,
-      obtainedTotal: parseInt(req.body.obtainedTotal) || 0,
-      overallResult: req.body.overallResult,
-      grade: req.body.grade,
-      
-      createdAt: new Date()
-    };
-
-    // Process supply subjects
-    if (req.body.subjectName && Array.isArray(req.body.subjectName)) {
-      for (let i = 0; i < req.body.subjectName.length; i++) {
-        if (req.body.subjectName[i].trim() !== '') {
-          const subjectData = {
-            subject: req.body.subjectName[i],
-            theoryMax: parseInt(req.body.theoryMax[i]) || 0,
-            theoryMin: parseInt(req.body.theoryMin[i]) || 0,
-            theoryObt: parseInt(req.body.theoryObt[i]) || 0,
-            practicalMax: parseInt(req.body.practicalMax[i]) || 0,
-            practicalMin: parseInt(req.body.practicalMin[i]) || 0,
-            practicalObt: parseInt(req.body.practicalObt[i]) || 0,
-            totalMax: (parseInt(req.body.theoryMax[i]) || 0) + (parseInt(req.body.practicalMax[i]) || 0),
-            totalMin: (parseInt(req.body.theoryMin[i]) || 0) + (parseInt(req.body.practicalMin[i]) || 0),
-            totalObt: (parseInt(req.body.theoryObt[i]) || 0) + (parseInt(req.body.practicalObt[i]) || 0),
-            result: (parseInt(req.body.theoryObt[i]) >= parseInt(req.body.theoryMin[i]) && 
-                    parseInt(req.body.practicalObt[i]) >= parseInt(req.body.practicalMin[i])) ? 'PASSED' : 'FAILED',
-            isSupply: true,
-            originalResult: student.marks.subjects.find(s => s.subject === req.body.subjectName[i])?.result || 'FAILED'
-          };
-          
-          supplyMarksData.subjects.push(subjectData);
-        }
-      }
-    }
-
-    console.log("📊 Supply marks data to save:", JSON.stringify(supplyMarksData, null, 2));
-
-    // Update student with supply marks
-    const result = await db.get().collection(collection.STUDENT_COLLECTION).updateOne(
-      { _id: new ObjectId(studentId) },
-      { 
-        $set: { 
-          supplyMarks: supplyMarksData,
-          hasSupply: true,
-          updatedAt: new Date()
-        } 
-      }
-    );
-
-    console.log("💾 Supply marks saved successfully");
-    
-    // FIXED: Redirect to admin combined marklist
-    res.redirect('/admin/combined-marklist/' + studentId);
-    
-  } catch (err) {
-    console.error("❌ Error saving supply marks:", err);
-    res.status(500).send("Error submitting supply marks");
-  }
-});
-
-// // // Combined Marklist Route - FIXED
-
-// router.get('/combined-marklist/:id', verifyAdminLogin, async (req, res) => {
-//   try {
-//     console.log("🔄 Combined marklist route accessed for:", req.params.id);
-    
-//     const studentId = new ObjectId(req.params.id);
-//     const student = await db.get()
-//       .collection(collection.STUDENT_COLLECTION)
-//       .findOne({ _id: studentId });
-
-//     if (!student) return res.status(404).send("Student not found");
-//     if (!student.marks) return res.status(400).send("No regular marks found");
-//     if (!student.supplyMarks) return res.status(400).send("No supply marks found");
-
-//     console.log("✅ Student data loaded successfully");
-
-//     // Combine regular and supply marks
-//     const combinedSubjects = [];
-//     let maxTotal = 0;
-//     let obtainedTotal = 0;
-//     let allPassed = true;
-
-//     // Regular subjects (only PASSED)
-//     if (Array.isArray(student.marks.subjects)) {
-//       student.marks.subjects.forEach(subject => {
-//         if (subject.result === 'PASSED') {
-//           combinedSubjects.push({ ...subject, source: 'regular' });
-//           maxTotal += subject.totalMax || 0;
-//           obtainedTotal += subject.totalObt || 0;
-//         }
-//       });
-//     }
-
-//     // Supply subjects (PASSED + FAILED)
-//     if (Array.isArray(student.supplyMarks.subjects)) {
-//       student.supplyMarks.subjects.forEach(supplySubject => {
-//         combinedSubjects.push({ ...supplySubject, source: 'supply' });
-//         maxTotal += supplySubject.totalMax || 0;
-//         obtainedTotal += supplySubject.totalObt || 0;
-//         if (supplySubject.result === 'FAILED') allPassed = false;
-//       });
-//     }
-
-//     // Calculate percentage & grade
-//     const percentage = maxTotal > 0 ? (obtainedTotal / maxTotal) * 100 : 0;
-//     let grade = 'FAILED';
-
-//     if (allPassed) {
-//       if (percentage >= 80) grade = 'PASSED WITH A+ GRADE (EXCELLENT)';
-//       else if (percentage >= 70) grade = 'PASSED WITH A GRADE (VERY GOOD)';
-//       else if (percentage >= 60) grade = 'PASSED WITH B+ GRADE (GOOD)';
-//       else if (percentage >= 50) grade = 'PASSED WITH B GRADE (SATISFACTORY)';
-//       else if (percentage >= 40) grade = 'PASSED WITH C GRADE';
-//       else allPassed = false;
-//     }
-
-//     // Prepare combined marks object
-//     const combinedMarks = {
-//       ...student.marks,
-//       subjects: combinedSubjects,
-//       maxTotal,
-//       obtainedTotal,
-//       overallResult: allPassed ? 'PASSED' : 'FAILED',
-//       grade,
-//       totalWords: numberToWords(obtainedTotal),
-//       isCombined: true,
-//       combinedDate: new Date()
-//     };
-
-//     // ✅ Fetch logos
-//     const centreId = student.centreId;
-//     const departmentName = student.department; // 🔹 correct field name
-//     const centerData = await centerHelpers.getCenterById(centreId);
-
-//     // ✅ Fetch department logo properly
-//     const departmentLogo = await centerHelpers.getDepartmentLogo(centreId, departmentName);
-
-//     console.log("✅ Combined Marklist Debug:", {
-//       centreId,
-//       departmentName,
-//       institutionLogo: centerData?.institutionLogo,
-//       departmentLogo
-//     });
-
-//     // ✅ Render with both logos
-//     res.render('admin/combined-marklist', {
-//       hideNavbar: true,
-//       studentId: req.params.id,
-//       student,
-//       combinedMarks,
-//       logoPath: centerData?.institutionLogo || '/images/default-institution-logo.png',
-//       departmentLogoPath: departmentLogo || '/images/default-department-logo.png',
-//       currentDate: new Date()
-//     });
-
-//   } catch (err) {
-//     console.error("❌ Error loading combined mark list:", err);
-//     res.status(500).send("Error loading combined mark list");
-//   }
-// });
 
 
 
-
-//supply marklist
-// Supply Mark List Route - Shows ONLY supply marks
 // ✅ FIXED Supply Marklist Route
 router.get('/supply-mark-list/:id', verifyAdminLogin, async (req, res) => {
   try {

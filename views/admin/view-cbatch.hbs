@@ -1,9 +1,11 @@
 <style>
-/* Professional Dark Blue & Golden Brown Theme */
+/* Professional Dark Blue & Golden Brown Theme - 60% Button Width */
 :root {
   --dark-blue: rgba(0,78,137,1);
+   --light-blue: rgb(31, 128, 202);
   --golden-brown: rgba(176,149,114,1);
   --white: #ffffff;
+  --light-blue: #f0f7ff;
   --dark-blue-hover: rgba(0,60,110,1);
   --golden-brown-hover: rgba(156,129,94,1);
   --transition: all 0.3s ease;
@@ -11,18 +13,15 @@
 
 /* ===== Section Styling ===== */
 section {
-  padding: 40px 20px;
+  padding: 30px 20px;
   background-color: #f2f6fa;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
 }
 
 /* ===== Container ===== */
 .container {
-  background: #fff;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-  max-width: 95%;    
+  max-width: 1400px;
   margin: auto;
 }
 
@@ -30,255 +29,888 @@ section {
 .container h2 {
   color: var(--dark-blue);
   font-weight: 700;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   text-align: center;
   border-bottom: 2px solid var(--golden-brown);
-  padding-bottom: 10px;
-  font-size: 26px;
+  padding-bottom: 12px;
+  font-size: 28px;
   letter-spacing: 1px;
+  position: relative;
 }
 
-/* ===== Add Button Top Right ===== */
-.container .btn-success {
-  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
-  border: none;
-  font-weight: 600;
-  padding: 8px 16px;
-  border-radius: 6px;
-  transition: var(--transition);
+.container h2::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--golden-brown), transparent);
 }
 
-.container .btn-success:hover {
-  background: linear-gradient(135deg, var(--dark-blue-hover), var(--dark-blue));
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,78,137,0.3);
+/* ===== Add Button ===== */
+.add-batch-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 30px;
 }
 
-/* ===== Table ===== */
-.table {
-  margin-top: 20px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #fff;
-  width: 100%;
-  border: 1px solid rgba(0,78,137,0.1);
-}
-
-.table thead th {
+.btn-add-batch {
   background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
   color: var(--white);
-  font-weight: 600;
-  text-align: center;
-  font-size: 15px;
-  padding: 14px;
   border: none;
-  position: relative;
-  overflow: hidden;
+  font-weight: 600;
+  padding: 12px 25px;
+  border-radius: 8px;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0,78,137,0.25);
+  font-size: 16px;
+  width: 20%; /* Changed to 60% */
+  justify-content: center;
 }
 
-.table thead th::before {
+.btn-add-batch:hover {
+  background: linear-gradient(135deg, var(--dark-blue-hover), var(--dark-blue));
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,78,137,0.35);
+  color: var(--white);
+  text-decoration: none;
+}
+
+/* ===== Batches Grid - Wide Cards ===== */
+.batches-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  margin-top: 20px;
+}
+
+/* ===== Individual Batch Card - Wide ===== */
+.batch-card {
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: var(--transition);
+  border: 1px solid rgba(0,78,137,0.12);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.batch-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== Card Header ===== */
+.card-header {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+  color: var(--white);
+  padding: 20px 30px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.card-header::before {
   content: '';
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, var(--golden-brown), transparent);
-  transition: left 0.6s ease;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.7s ease;
 }
 
-.table thead th:hover::before {
+.card-header:hover::before {
   left: 100%;
 }
 
-.table tbody td {
-  text-align: center;
-  vertical-align: middle;
-  padding: 14px;
-  font-size: 15px;
-  color: #333;
-  border-bottom: 2px solid rgba(176,149,114,0.3);
+.batch-id-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.table tbody tr:last-child td {
-  border-bottom: 1px solid #eee;
+.batch-id {
+  font-size: 24px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.table tbody tr:hover {
-  background-color: rgba(0,78,137,0.03);
+.batch-id span {
+  font-size: 26px;
+  letter-spacing: 0.5px;
+}
+
+.batch-name {
+  font-size: 18px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.download-id-btn {
+  background: rgba(255,255,255,0.2);
+  color: var(--white);
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 6px;
+  padding: 8px 15px;
+  font-size: 14px;
   transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  width: 60%; /* Changed to 60% */
+  justify-content: center;
 }
 
-/* ===== Action Buttons ===== */
-.btn-sm {
-  font-size: 13px;
-  padding: 6px 10px;
-  border-radius: 5px;
-  margin: 2px;
+.download-id-btn:hover {
+  background: rgba(255,255,255,0.3);
+  color: var(--white);
+  text-decoration: none;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* ===== Card Body - Horizontal Layout ===== */
+.card-body {
+  padding: 25px 30px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+}
+
+/* ===== Card Section Styling ===== */
+.card-section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--dark-blue);
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--golden-brown);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.section-title i {
+  color: var(--golden-brown);
+  font-size: 18px;
+}
+
+/* ===== Links Section ===== */
+.links-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-grow: 1;
+  align-items: center; /* Center buttons */
+}
+
+.link-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 15px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
   transition: var(--transition);
   border: none;
+  color: var(--white);
+  width: 60%; /* Changed to 60% */
+  min-width: 200px; /* Minimum width for readability */
 }
 
-/* Primary buttons */
-.btn-primary {
+.link-btn i {
+  font-size: 16px;
+}
+
+.payment-link {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
+}
+
+.course-link-1 {
+  background: linear-gradient(135deg, #17a2b8, #138496);
+}
+
+.course-link-2 {
+  background: linear-gradient(135deg, var(--golden-brown), var(--golden-brown-hover));
+}
+
+.link-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+  color: var(--white);
+  text-decoration: none;
+}
+
+.no-link {
+  color: #666;
+  font-size: 14px;
+  font-style: italic;
+  text-align: center;
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 6px;
+  border: 1px dashed #ddd;
+  width: 60%; /* Changed to 60% */
+}
+
+.edit-links-btn {
+  background: transparent;
+  border: 2px solid var(--dark-blue);
+  color: var(--dark-blue);
+  font-size: 15px;
+  padding: 10px;
+  border-radius: 6px;
+  transition: var(--transition);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-weight: 600;
+  width: 60%; /* Changed to 60% */
+}
+
+.edit-links-btn:hover {
+  background: var(--dark-blue);
+  color: var(--white);
+  text-decoration: none;
+  transform: translateY(-2px);
+}
+
+/* ===== Hall Ticket Section ===== */
+.hallticket-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  flex-grow: 1;
+  align-items: center; /* Center buttons */
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  gap: 10px;
+  text-align: center;
+  width: 60%; /* Changed to 60% */
+}
+
+.applied-badge {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: white;
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
+}
+
+.not-applied-badge {
+  background: linear-gradient(135deg, #6c757d, #5a6268);
+  color: white;
+}
+
+.download-hallticket-btn {
   background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
   color: var(--white);
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: var(--transition);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: auto;
+  width: 60%; /* Changed to 60% */
 }
 
-.btn-primary:hover {
+.download-hallticket-btn:hover {
   background: linear-gradient(135deg, var(--dark-blue-hover), var(--dark-blue));
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,78,137,0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0,78,137,0.3);
   color: var(--white);
+  text-decoration: none;
 }
 
-/* Warning buttons */
-.btn-warning {
+/* ===== Certificate Section ===== */
+.certificate-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  flex-grow: 1;
+  align-items: center; /* Center buttons */
+}
+
+.certificate-mode {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+  width: 100%;
+  justify-content: center;
+}
+
+.mode-toggle-form {
+  display: inline-block;
+  width: 60%; /* Changed to 60% */
+}
+
+.mode-toggle-btn {
   background: linear-gradient(135deg, var(--golden-brown), var(--golden-brown-hover));
   color: var(--white);
   border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(176,149,114,0.2);
+  width: 100%; /* Button takes full width of form */
+  justify-content: center;
 }
 
-.btn-warning:hover {
+.mode-toggle-btn:hover {
   background: linear-gradient(135deg, var(--golden-brown-hover), var(--golden-brown));
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(176,149,114,0.3);
-  color: var(--white);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(176,149,114,0.3);
 }
 
-/* Success buttons */
-.btn-success {
+.certificate-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+  width: 100%;
+  align-items: center; /* Center buttons */
+}
+
+.certificate-badge {
   background: linear-gradient(135deg, #28a745, #218838);
-  color: var(--white);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
+  width: 60%; /* Changed to 60% */
 }
 
-.btn-success:hover {
-  background: linear-gradient(135deg, #218838, #28a745);
-  transform: translateY(-2px);
-  color: var(--white);
+.certificate-action-btns {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+  justify-content: center;
 }
 
-/* Outline dark button */
-.btn-outline-dark {
-  border: 1px solid var(--dark-blue);
-  color: var(--dark-blue);
+.certificate-btn {
+  padding: 12px 15px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: var(--transition);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 140px;
+  width: 60%; /* Changed to 60% */
+  margin-bottom: 5px;
+}
+
+.edit-schedule-btn {
   background: transparent;
+  border: 2px solid var(--dark-blue);
+  color: var(--dark-blue);
 }
 
-.btn-outline-dark:hover {
+.edit-schedule-btn:hover {
   background: var(--dark-blue);
   color: var(--white);
+  text-decoration: none;
   transform: translateY(-2px);
 }
 
-/* Edit button */
-.btn-sm .fa-edit {
-  color: var(--dark-blue);
-}
-
-.btn-sm:hover .fa-edit {
+.download-certificate-btn {
+  background: linear-gradient(135deg, var(--dark-blue), var(--dark-blue-hover));
   color: var(--white);
-}
-
-/* Delete button */
-.btn-danger {
-  background: linear-gradient(135deg, #dc3545, #c82333) !important;
   border: none;
 }
 
-.btn-danger:hover {
-  background: linear-gradient(135deg, #c82333, #dc3545) !important;
+.download-certificate-btn:hover {
+  background: linear-gradient(135deg, var(--dark-blue-hover), var(--dark-blue));
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+  box-shadow: 0 6px 12px rgba(0,78,137,0.3);
+  color: var(--white);
+  text-decoration: none;
 }
 
-/* Icon spacing */
-.btn i {
-  margin-right: 4px;
+.apply-certificate-btn {
+  background: transparent;
+  border: 2px solid var(--dark-blue);
+  color: var(--dark-blue);
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: var(--transition);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: auto;
+  width: 60%; /* Changed to 60% */
+}
+
+.apply-certificate-btn:hover {
+  background: var(--dark-blue);
+  color: var(--white);
+  text-decoration: none;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0,78,137,0.2);
+}
+
+/* ===== Card Footer ===== */
+.card-footer {
+  padding: 20px 30px;
+  background: #f9fbfd;
+  border-top: 1px solid rgba(0,78,137,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.view-students-btn {
+  background: linear-gradient(135deg, #327fd1, #164d95); /* light blue */
+  border: none;
+  color: #ffffff;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: var(--transition);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 8px rgba(77,163,255,0.25);
+  width: 30%;
+  justify-content: center;
+}
+
+.view-students-btn:hover {
+  background: linear-gradient(135deg, #6bb6ff, #3a8ef6); /* lighter on hover */
+  color: #ffffff;
+  text-decoration: none;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(77,163,255,0.35);
+}
+
+
+.action-btns {
+  display: flex;
+  gap: 12px;
+}
+
+.action-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  text-decoration: none;
+  font-size: 18px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.edit-btn {
+  background: rgba(0,78,137,0.1);
+  color: var(--dark-blue);
+  border: 1px solid rgba(0,78,137,0.3);
+}
+
+.edit-btn:hover {
+  background: var(--dark-blue);
+  color: var(--white);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0,78,137,0.3);
+}
+
+.delete-btn {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.delete-btn:hover {
+  background: #dc3545;
+  color: var(--white);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(220, 53, 69, 0.3);
+}
+
+/* ===== Empty State ===== */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+.empty-state i {
+  font-size: 80px;
+  color: var(--dark-blue);
+  opacity: 0.7;
+  margin-bottom: 25px;
+}
+
+.empty-state h3 {
+  color: var(--dark-blue);
+  margin-bottom: 15px;
+  font-size: 28px;
+}
+
+.empty-state p {
+  color: #666;
+  margin-bottom: 30px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.empty-state .btn-add-batch {
+  width: 60%; /* Changed to 60% */
+  margin: 0 auto;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1200px) {
+  .card-body {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+  
+  .card-section {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .card-body {
+    padding: 20px;
+    gap: 20px;
+  }
+  
+  .card-footer {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .view-students-btn, .action-btns {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .certificate-action-btns {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .certificate-btn {
+    width: 80%; /* Slightly wider on mobile */
+  }
+  
+  /* Adjust button widths for mobile */
+  .btn-add-batch,
+  .download-id-btn,
+  .link-btn,
+  .edit-links-btn,
+  .status-badge,
+  .download-hallticket-btn,
+  .mode-toggle-form,
+  .certificate-badge,
+  .apply-certificate-btn,
+  .view-students-btn {
+    width: 80% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .container h2 {
+    font-size: 24px;
+  }
+  
+  .btn-add-batch {
+    padding: 10px 20px;
+    font-size: 15px;
+  }
+  
+  .batch-id {
+    font-size: 20px;
+  }
+  
+  .batch-name {
+    font-size: 16px;
+  }
+  
+  .link-btn, .download-hallticket-btn, .mode-toggle-btn, 
+  .certificate-btn, .apply-certificate-btn, .view-students-btn {
+    padding: 10px 15px;
+    font-size: 14px;
+  }
+  
+  /* Even wider buttons on very small screens */
+  .btn-add-batch,
+  .download-id-btn,
+  .link-btn,
+  .edit-links-btn,
+  .status-badge,
+  .download-hallticket-btn,
+  .mode-toggle-form,
+  .certificate-badge,
+  .apply-certificate-btn,
+  .view-students-btn {
+    width: 90% !important;
+  }
 }
 </style>
+
 <section>
     <div class="container">
-        <h2>BATCHES</h2>
-        <div class="d-flex justify-content-end">
-        <a href="/admin/add-batch/{{centreId}}" class="btn btn-success">Add Batch</a>
-
+        <h2>BATCH MANAGEMENT</h2>
+        
+        <div class="add-batch-container">
+            <a href="/admin/add-batch/{{centreId}}" class="btn-add-batch">
+                <i class="fas fa-plus-circle"></i> Add New Batch
+            </a>
         </div>
-        <table class="table">
-  <thead>
-    <tr>
-      <th scope="col">Batch No</th>
-      <th scope="col">BATCH ID</th>
-      <th scope="col">BATCH NAME</th>
-      <th scope="col">HALL TICKET</th>
-      <th scope="col">CERTIFICATE ISSUE</th>
-      
-      <th scope="col">ACTION</th>
-    </tr>
-  </thead>
-  <tbody>
-    {{#each batches }}
-    <tr>
-      
-      <td>{{this.batchNo}}</td>
-      <td>{{this.batchId}}
-        <a href="/admin/batch-idcards-download/{{this._id}}" class="btn btn-primary btn-sm ms-2">
-      <i class="fas fa-download"></i> 
-    </a>
-      </td>
-      <td>{{this.batchName}}</td>
-     <td>
- <a href="/admin/batch-halltickets-download/{{this._id}}" class="btn btn-primary">
-  <i class="fas fa-download"></i> Download All Hall Tickets
-</a>
-</td>
-
-   <td>
-  <form action="/admin/toggle-certificate-batch/{{this._id}}" method="POST" style="display: inline;">
-    <button type="submit" class="btn btn-warning">
-      <i class="fas fa-sync-alt"></i> Mode ({{this.certificateType}})
-    </button>
-  </form>
-
-  {{#if this.appliedForCertificate}}
-    <button class="btn btn-success btn-sm">
-      <i class="fas fa-check-circle"></i> Applied
-    </button>
-    <a href="/admin/edit-schedule/{{this._id}}" class="btn btn-sm">
-      <i class="fa fa-edit"></i> Edit Schedule
-    </a>
-    <a href="/admin/batch-certificates-download/{{this._id}}" class="btn btn-primary btn-sm ms-2">
-      <i class="fas fa-download"></i> Download
-    </a>
-  {{else}}
-    <a href="/admin/course-schedule/{{this._id}}" class="btn btn-outline-dark btn-sm">
-      Apply Certificate
-    </a>
-  {{/if}}
-</td>
-
-
-
-
-
-
-
-      <td>
-        <a href="/admin/view-bstudent/{{this._id}}" class="btn btn-outline-dark btn-sm">View Students</a>
-
-        <a href="/admin/edit-batch/{{this._id}}" class="btn btn-sm"> <i class="fa fa-edit"></i></a>
-        <a href="/admin/delete-batch/{{this._id}}" 
-     class="btn btn-danger btn-sm"
-     onclick="return confirm('Are you sure you want to delete this batch?');">
-     <i class="fas fa-trash"></i>
-
-  </a>
-
-      </td>
-    </tr>
-    {{/each}}
-  
-  </tbody>
-</table>
+        
+        {{#if batches.length}}
+        <div class="batches-grid">
+            {{#each batches}}
+            <div class="batch-card">
+                <!-- Card Header -->
+                <div class="card-header">
+                    <div class="batch-id-container">
+                        <div class="batch-id">
+                            <i class="fas fa-hashtag"></i>
+                            <span>BATCH ID: {{this.batchId}}</span>
+                        </div>
+                        <div class="batch-name">
+                            <i class="fas fa-layer-group"></i> {{this.batchName}}
+                        </div>
+                    </div>
+                    
+                    <div class="header-actions">
+                        <a href="/admin/batch-idcards-download/{{this._id}}" class="download-id-btn">
+                            <i class="fas fa-download"></i> Download ID Cards
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Card Body - Horizontal Layout -->
+                <div class="card-body">
+                    <!-- Links Section -->
+                    <div class="card-section">
+                        <div class="section-title">
+                            <i class="fas fa-external-link-alt"></i> LINKS & RESOURCES
+                        </div>
+                        <div class="links-container">
+                            {{#if this.paymentLink}}
+                            <a href="{{this.paymentLink}}" target="_blank" class="link-btn payment-link">
+                                <span><i class="fas fa-credit-card"></i> Payment Portal</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            {{else}}
+                            <div class="no-link">Payment Link Not Configured</div>
+                            {{/if}}
+                            
+                            {{#if this.courseLink1}}
+                            <a href="{{this.courseLink1}}" target="_blank" class="link-btn course-link-1">
+                                <span><i class="fas fa-graduation-cap"></i> {{#if this.courseName1}}{{this.courseName1}}{{else}}Course Resource 1{{/if}}</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            {{else}}
+                            <div class="no-link">Course Link 1 Not Set</div>
+                            {{/if}}
+                            
+                            {{#if this.courseLink2}}
+                            <a href="{{this.courseLink2}}" target="_blank" class="link-btn course-link-2">
+                                <span><i class="fas fa-book-open"></i> {{#if this.courseName2}}{{this.courseName2}}{{else}}Course Resource 2{{/if}}</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            {{else}}
+                            <div class="no-link">Course Link 2 Not Set</div>
+                            {{/if}}
+                            
+                            <a href="/admin/edit-batch-links/{{this._id}}" class="edit-links-btn">
+                                <i class="fas fa-edit"></i> Manage Links
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Hall Ticket Section -->
+                    <div class="card-section">
+                        <div class="section-title">
+                            <i class="fas fa-ticket-alt"></i> HALL TICKETS
+                        </div>
+                        <div class="hallticket-container">
+                            {{#if this.appliedForHallTicket}}
+                            <div class="status-badge applied-badge">
+                                <i class="fas fa-check-circle"></i> Hall Tickets Applied
+                            </div>
+                            {{else}}
+                            <div class="status-badge not-applied-badge">
+                                <i class="fas fa-clock"></i> Not Yet Applied
+                            </div>
+                            {{/if}}
+                            
+                            <a href="/admin/batch-halltickets-download/{{this._id}}" class="download-hallticket-btn">
+                                <i class="fas fa-file-download"></i> Download All Hall Tickets
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Certificate Section -->
+                    <div class="card-section">
+                        <div class="section-title">
+                            <i class="fas fa-award"></i> CERTIFICATES
+                        </div>
+                        <div class="certificate-container">
+                            <div class="certificate-mode">
+                                <form action="/admin/toggle-certificate-batch/{{this._id}}" method="POST" class="mode-toggle-form">
+                                    <button type="submit" class="mode-toggle-btn">
+                                        <i class="fas fa-cogs"></i> Mode: {{this.certificateType}}
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <div class="certificate-actions">
+                                {{#if this.appliedForCertificate}}
+                                <div class="certificate-badge">
+                                    <i class="fas fa-check-circle"></i> Certificate Issuance Applied
+                                </div>
+                                
+                                <div class="certificate-action-btns">
+                                    <a href="/admin/edit-schedule/{{this._id}}" class="certificate-btn edit-schedule-btn">
+                                        <i class="fas fa-calendar-edit"></i> Edit Schedule
+                                    </a>
+                                    <a href="/admin/batch-certificates-download/{{this._id}}" class="certificate-btn download-certificate-btn">
+                                        <i class="fas fa-file-certificate"></i> Download Certificates
+                                    </a>
+                                </div>
+                                {{else}}
+                                <a href="/admin/course-schedule/{{this._id}}" class="apply-certificate-btn">
+                                    <i class="fas fa-paper-plane"></i> Apply for Certificate Issuance
+                                </a>
+                                {{/if}}
+                            </div>
+                            
+                        </div>
+                    </div>
+                    
+                </div>
+                
+                <!-- Card Footer -->
+                <div class="card-footer">
+                    <a href="/admin/view-bstudent/{{this._id}}" class="view-students-btn">
+                        <i class="fas fa-users-viewfinder"></i> View All Students
+                    </a>
+                    
+                    <div class="action-btns">
+                        <a href="/admin/edit-batch/{{this._id}}" class="action-btn edit-btn" title="Edit Batch">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="/admin/delete-batch/{{this._id}}" 
+                           class="action-btn delete-btn"
+                           onclick="return confirm('Are you sure you want to delete this batch? This action cannot be undone.');"
+                           title="Delete Batch">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+        {{else}}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <i class="fas fa-clipboard-list"></i>
+            <h3>No Batches Created Yet</h3>
+            <p>Start by creating your first batch to organize students, manage resources, and track certifications. Click the button below to get started.</p>
+            <a href="/admin/add-batch/{{centreId}}" class="btn-add-batch">
+                <i class="fas fa-plus-circle"></i> Create Your First Batch
+            </a>
+        </div>
+        {{/if}}
     </div>
 </section>
+
+<!-- Font Awesome for Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">

@@ -1,2 +1,16 @@
 node_modules/
 .env
+config/netd-backup-4b34b5c068ca.json
+config/credentials.json
+config/token.json
+
+# Uploads & storage
+uploads/
+public/uploads/
+public/studentImages/
+storage/
+google/
+
+# CSV & generated files
+*.csv
+*.txt

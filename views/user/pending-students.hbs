@@ -1,102 +1,272 @@
 <style>
-/* ===== Students List Section ===== */
-.student-table {
-  width: 100%;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-  background: #fff;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* ===== Table Header ===== */
-.student-table thead th {
-  background: #1f3555;
-  color: #fff;
-  font-weight: 600;
-  font-size: 15px;
-  padding: 14px;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* ===== Table Body ===== */
-.student-table tbody td {
-  text-align: center;
-  vertical-align: middle;
-  padding: 12px;
-  font-size: 15px;
-  color: #333;
-  border-bottom: 1px solid #eee;
-  transition: background 0.3s ease;
-}
-
-.student-table tbody tr:hover {
-  background: #f9fbfd;
-}
-
-/* ===== Photo Column ===== */
-.student-photo {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 50%;
-  border: 2px solid #1f3555;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  transition: transform 0.3s ease;
-}
-
-.student-photo:hover {
-  transform: scale(1.1);
-}
-
-/* ===== Buttons ===== */
-.btn.btn-sm {
-  border: 2px solid #1f3555;
-  color: #1f3555;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 6px;
-  transition: 0.3s;
-}
-
-.btn.btn-sm:hover {
-  background: #1f3555;
-  color: #fff;
-}
-
-.btn-success.btn-sm {
-  background: #198754;
-  border: none;
-  color: #fff;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-}
-
-.btn-success.btn-sm:hover {
-  background: #146c43;
-  transform: scale(1.05);
-}
-
-.btn-danger.btn-sm {
-  background: #dc3545;
-  border: none;
-  color: #fff;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-}
-
-.btn-danger.btn-sm:hover {
-  background: #b02a37;
-  transform: scale(1.05);
-}
+    :root {
+        --dark-blue: rgba(0,78,137,1);
+        --golden-brown: rgba(176,149,114,1);
+        --white: #ffffff;
+        --dark-blue-hover: rgba(0,60,110,1);
+        --golden-brown-hover: rgba(156,129,94,1);
+        --transition: all 0.3s ease;
+        --light-gray: #f5f7fa;
+        --medium-gray: #e9ecef;
+        --text-dark: #333;
+        --text-medium: #666;
+        --text-light: #888;
+        --inactive-red: #dc3545;
+        --inactive-red-hover: #c82333;
+        --success-green: #28a745;
+        --success-green-hover: #218838;
+        --warning-orange: #fd7e14;
+        --warning-orange-hover: #e96c0c;
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --radius: 8px;
+    }
+    
+    body {
+        background-color: var(--light-gray);
+        color: var(--text-dark);
+        line-height: 1.6;
+        padding: 20px;
+        min-height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+    
+    .container.mt-4 {
+        background-color: var(--white);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 30px;
+        margin-top: 20px;
+    }
+    
+    /* Header Styles */
+    .d-flex.justify-content-between.align-items-center.mb-3 {
+        background: linear-gradient(135deg, var(--dark-blue) 0%, rgba(0,60,110,1) 100%);
+        color: var(--white);
+        padding: 20px 25px;
+        border-radius: var(--radius);
+        margin: -30px -30px 30px -30px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    h2.mb-0 {
+        color: var(--white);
+        font-size: 28px;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    h2.mb-0::before {
+        content: "\f017";
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        font-size: 24px;
+        color: var(--golden-brown);
+    }
+    
+    /* Pending Counter Badge */
+    .pending-counter {
+        background-color: var(--warning-orange);
+        color: var(--white);
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 16px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .pending-counter::before {
+        content: "\f017";
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+    }
+    
+    /* Table Styles */
+    .student-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: 0 0 0 1px var(--medium-gray);
+        background: var(--white);
+    }
+    
+    .student-table thead {
+        background: linear-gradient(135deg, var(--dark-blue) 0%, rgba(0,60,110,1) 100%);
+        color: var(--white);
+    }
+    
+    .student-table thead th {
+        padding: 18px 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 16px;
+        border-bottom: 2px solid var(--dark-blue);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .student-table tbody tr {
+        border-bottom: 1px solid var(--medium-gray);
+        transition: var(--transition);
+    }
+    
+    .student-table tbody tr:hover {
+        background-color: rgba(0, 78, 137, 0.05);
+    }
+    
+    .student-table tbody td {
+        padding: 16px 15px;
+        color: var(--text-medium);
+        vertical-align: middle;
+        text-align: left;
+    }
+    
+    /* Photo Styling */
+    .student-photo {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 3px solid var(--dark-blue);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: var(--transition);
+    }
+    
+    .student-photo:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        border-color: var(--golden-brown);
+    }
+    
+    /* Button Styles */
+    .btn.btn-sm {
+        border: none;
+        padding: 8px 16px;
+        border-radius: var(--radius);
+        font-weight: 600;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        font-size: 14px;
+        cursor: pointer;
+        margin: 2px;
+    }
+    
+    .btn-success.btn-sm {
+        background-color: var(--success-green);
+        color: var(--white);
+    }
+    
+    .btn-success.btn-sm:hover {
+        background-color: var(--success-green-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-success.btn-sm::before {
+        content: "\f00c";
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+    }
+    
+    .btn-danger.btn-sm {
+        background-color: var(--inactive-red);
+        color: var(--white);
+    }
+    
+    .btn-danger.btn-sm:hover {
+        background-color: var(--inactive-red-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-danger.btn-sm::before {
+        content: "\f2ed";
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+    }
+    
+    /* Alert Styles */
+    .alert.alert-info {
+        background-color: rgba(0, 78, 137, 0.1);
+        border: 2px dashed var(--medium-gray);
+        border-radius: var(--radius);
+        padding: 60px 20px;
+        text-align: center;
+        margin-top: 30px;
+    }
+    
+    .alert.alert-info::before {
+        content: "\f4c4";
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        font-size: 70px;
+        color: var(--success-green);
+        display: block;
+        margin-bottom: 20px;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .student-table {
+            display: block;
+            overflow-x: auto;
+        }
+        
+        h2.mb-0 {
+            font-size: 24px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .d-flex.justify-content-between.align-items-center.mb-3 {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .container.mt-4 {
+            padding: 20px 15px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        body {
+            padding: 10px;
+        }
+        
+        .student-table th, 
+        .student-table td {
+            padding: 12px 10px;
+            font-size: 14px;
+        }
+        
+        .student-photo {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .btn.btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+    }
 </style>
-
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Pending Activation - Students</h2>
@@ -121,7 +291,7 @@
         <td>{{inc @index}}</td>
         <td>{{this.regNo}}</td>
         <td>{{this.fullName}}</td>
-        <td>{{this.batchDetails.batchName}}</td>
+        <td>{{this.courseName}}</td>
         <td>{{this.admissionYear}}</td>
         <td>
           <img src="/studentImages/{{this._id}}.jpg" alt="photo" class="student-photo">
@@ -144,5 +314,38 @@
     No students pending activation.
   </div>
   {{/if}}
+  <script>
+    // Add Font Awesome to the head if not already present
+    if (!document.querySelector('link[href*="font-awesome"]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+        document.head.appendChild(link);
+    }
+    
+    // Add pending counter to header
+    document.addEventListener('DOMContentLoaded', function() {
+        const header = document.querySelector('.d-flex.justify-content-between.align-items-center.mb-3');
+        if (header) {
+            const pendingCount = document.querySelectorAll('.student-table tbody tr').length || 0;
+            const counterSpan = document.createElement('span');
+            counterSpan.className = 'pending-counter';
+            counterSpan.textContent = pendingCount + ' Pending';
+            header.appendChild(counterSpan);
+        }
+        
+        // Add icons to table headers
+        const thElements = document.querySelectorAll('.student-table thead th');
+        const icons = ['#', '\uf02b', '\uf007', '\uf19d', '', '\uf030', '\uf0ad'];
+        thElements.forEach((th, index) => {
+            if (icons[index]) {
+                th.innerHTML = `<i class="fas" style="margin-right: 8px;"></i>${th.textContent}`;
+                th.querySelector('i').className = 'fas';
+                th.querySelector('i').style.cssText = 'font-family: "Font Awesome 6 Free"; font-weight: 900; margin-right: 8px;';
+                th.querySelector('i').textContent = icons[index];
+            }
+        });
+    });
+</script>
 </div>
 

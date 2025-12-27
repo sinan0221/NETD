@@ -563,30 +563,35 @@ section {
           </a>
 
           <!-- Hall Ticket Button (only if approved) -->
-          {{#if this.approved}}
+          {{!-- {{#if this.approved}} --}}
           <a href="/admin/hall-ticket/{{_id}}" 
              class="btn btn-hallticket btn-sm mb-1">
              Hall Ticket
           </a>
-          {{/if}}
+          {{!-- {{/if}} --}}
         </td>
-        <td>
-          {{#if this.certificateType}}
-            {{#if (eq this.certificateType "two")}}
-              <a href="/admin/preview-certificate/{{this._id}}" class="btn btn-success btn-sm">
-                🎖️ Certificate 2
-              </a>
-            {{else}}
-              <a href="/admin/preview-certificate/{{this._id}}" class="btn btn-info btn-sm">
-                🪪 Certificate 1
-              </a>
-            {{/if}}
-          {{else}}
-            <a href="/admin/preview-certificate/{{this._id}}" class="btn btn-secondary btn-sm">
-              🪪 Default (Certificate 1)
-            </a>
-          {{/if}}
-        </td>
+       <td>
+  {{#if this.marks}}
+    {{#if this.certificateType}}
+      {{#if (eq this.certificateType "two")}}
+        <a href="/admin/preview-certificate/{{this._id}}" class="btn btn-success btn-sm">
+          🎖️ Certificate 2
+        </a>
+      {{else}}
+        <a href="/admin/preview-certificate/{{this._id}}" class="btn btn-info btn-sm">
+          🪪 Certificate 1
+        </a>
+      {{/if}}
+    {{else}}
+      <a href="/admin/preview-certificate/{{this._id}}" class="btn btn-secondary btn-sm">
+        🪪 Default (Certificate 1)
+      </a>
+    {{/if}}
+  {{else}}
+    <span class="text-muted">❌ Certificate Not Issued</span>
+  {{/if}}
+</td>
+
         <td>
           <a href="/admin/edit-student/{{this._id}}" class="btn btn-outline-info btn-sm">
             <i class="fa fa-edit"></i>
