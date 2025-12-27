@@ -10,7 +10,7 @@ const puppeteer = require('puppeteer');
 const fileUpload = require('express-fileupload');
 const hbs = require('hbs');
 const fs = require('fs').promises; 
-const uploadToDrive = require('./helpers/uploadToDrive');
+// const uploadToDrive = require('./helpers/uploadToDrive');
 
 
 var adminRouter = require('./routes/admin');
