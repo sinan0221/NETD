@@ -17,7 +17,7 @@ var adminRouter = require('./routes/admin');
 var userRouter = require('./routes/user');
 var studentRouter = require('./routes/student');
 const backupRouter = require('./routes/backup');
-const googleAuthRouter = require('./routes/googleAuth');
+// const googleAuthRouter = require('./routes/googleAuth');
 
 
 var app = express();
@@ -172,7 +172,7 @@ app.use('/admin', adminRouter);
 app.use('/user', userRouter);
 app.use('/student', studentRouter); // Student router must come AFTER body parser & session
 app.use('/backup', backupRouter);
-app.use('/', googleAuthRouter);
+// app.use('/', googleAuthRouter);
 
 
 
