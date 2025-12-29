@@ -7,6 +7,8 @@
 var app = require('../app');
 var debug = require('debug')('netd:server');
 var http = require('http');
+var db = require('../config/connection');
+
 
 /**
  * Get port from environment and store in Express.
@@ -25,9 +27,21 @@ var server = http.createServer(app);
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+// server.listen(port);
+// server.on('error', onError);
+// server.on('listening', onListening);
+db.connect((err) => {
+  if (err) {
+    console.error('❌ MongoDB connection failed');
+    process.exit(1);
+  }
+
+  console.log('✅ MongoDB connected, starting server');
+
+  server.listen(port);
+  server.on('error', onError);
+  server.on('listening', onListening);
+});
 
 /**
  * Normalize a port into a number, string, or false.

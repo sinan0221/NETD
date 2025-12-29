@@ -24,30 +24,50 @@
 // };
 const { MongoClient } = require("mongodb");
 
+let client;
 const state = {
   db: null,
 };
 
 module.exports.connect = async function (done) {
   try {
-    const url = process.env.MONGODB_URI; // ✅ FROM ENV
+    const url = process.env.MONGODB_URI;
     const dbname = process.env.DB_NAME || "centers";
 
     if (!url) {
       throw new Error("MONGODB_URI is not defined");
     }
 
-    const client = await MongoClient.connect(url);
-    state.db = client.db(dbname);
+    // Prevent reconnecting
+    if (state.db) {
+      console.log("MongoDB already connected");
+      return done(null);
+    }
 
-    console.log("MongoDB connected");
+    client = new MongoClient(url);
+    await client.connect();
+
+    state.db = client.db(dbname);
+    console.log("✅ MongoDB connected");
+
     done(null);
   } catch (err) {
-    console.error("MongoDB connection failed:", err);
+    console.error("❌ MongoDB connection failed:", err);
     done(err);
   }
 };
 
 module.exports.get = function () {
+  if (!state.db) {
+    throw new Error("❌ Database not connected yet");
+  }
   return state.db;
 };
+
+// Optional graceful shutdown (Render friendly)
+process.on("SIGTERM", async () => {
+  if (client) {
+    await client.close();
+    console.log("MongoDB connection closed");
+  }
+});
