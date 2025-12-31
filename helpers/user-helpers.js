@@ -40,12 +40,18 @@ module.exports = {
     return new Promise(async (resolve, reject) => {
       try {
         // Find user by name + centreId
-        let user = await db.get()
-          .collection(collection.USER_COLLECTION)
-          .findOne({
-            name: userData.name,
-            centreId: userData.centreId
-          });
+        // let user = await db.get()
+        //   .collection(collection.USER_COLLECTION)
+        //   .findOne({
+        //     name: userData.name,
+        //     centreId: userData.centreId
+        //   });
+       
+
+let user = await db.get()
+  .collection(collection.USER_COLLECTION)
+  .findOne({ centreId: new ObjectId(userData.centreId) });
+
   
         if (!user) {
           console.log("❌ login failed (user not found)");
