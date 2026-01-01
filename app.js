@@ -1,3 +1,4 @@
+require('dotenv').config();
 
 var createError = require('http-errors');
 var express = require('express');
@@ -157,13 +158,13 @@ app.use((req, res, next) => {
 // ======================
 // DATABASE CONNECTION
 // ======================
-// db.connect((err) => {
-//   if (err) {
-//     console.log('❌ Database connection error:', err);
-//   } else {
-//     console.log('✅ Database connection successful');
-//   }
-// });
+db.connect((err) => {
+  if (err) {
+    console.log('❌ Database connection error:', err);
+  } else {
+    console.log('✅ Database connection successful');
+  }
+});
 
 // ======================
 // ROUTES

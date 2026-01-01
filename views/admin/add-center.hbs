@@ -6,262 +6,318 @@
   <title>Add Training Centre</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/stylesheets/cform.css">
-
+  
   <style>
-    .container {
-      width: 80%;
-      margin: 40px auto;
-      background: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    .scheme-group,
+    .college-group,
+    .sector-group,
+    .department-group,
+    .course-group {
+      margin-top: 5px;
     }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
+    
+    /* Hide buttons for PDF generation */
+    .pdf-hide {
+      display: none !important;
     }
-
-    .header h2 {
-      color: #d00000;
-      margin: 0;
-    }
-
-    .content {
-      text-align: center;
-    }
-.content img {
+    .content img {
+  width: 520px;      /* adjust size here */
+  height: auto;      /* keep aspect ratio */
   display: block;
-  margin: 0 auto 15px auto;
-  width: 590px;     /* ↓ reduced from 740px */
-  height: 120px;    /* ↓ reduced from 150px */
-  object-fit: contain;  /* keeps full image visible */
+  margin: 0 auto 10px; /* center + space below */
 }
 
-
-    form {
-      text-align: left;
-      margin-top: 10px;
-    }
-
-    label {
-      display: block;
-      font-weight: 600;
-      margin-top: 15px;
-    }
-
-   input[type="text"],
-input[type="email"],
-select {
-  width: 100%;
-  padding: 10px 12px;
-  margin-top: 5px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 15px;
-  box-sizing: border-box;
-}
-
-
-    .inline-input {
-      display: flex;
+    /* Custom back button styling */
+    .back-btn {
+      background: #2a3d66;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      display: inline-flex;
       align-items: center;
-      gap: 5px;
-      width: 80%;
+      gap: 8px;
+      font-weight: 500;
+      transition: background 0.3s;
     }
-
-    .inline-input input {
-      flex: 1;
-    }
-
-    .inline-input button {
-      background-color: #000;
+    
+    .back-btn:hover {
+      background: #1d2a47;
+      text-decoration: none;
       color: white;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .inline-input button:hover {
-      background-color: #d00000;
-    }
-
-    .submit-btn, #downloadPdf {
-      width: 80%;
-      margin-top: 20px;
-      padding: 10px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .submit-btn {
-      background-color: #007bff;
-      color: white;
-    }
-
-    #downloadPdf {
-      background-color: #d00000;
-      color: white;
-    }
-
-    h1 {
-      font-size: 22px;
-      margin-bottom: 15px;
-      text-transform: uppercase;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <div class="left-head">
-        <h2>NETD</h2>
-      </div>
       <div class="right-head">
-        <a href="/admin" class="btn btn-dark">Back</a>
+        <a href="/admin" class="back-btn">
+          <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
       </div>
     </div>
 
     <div class="content">
       <img src="/images/title.jpg" alt="Title Image">
-      <h1>Add New Training Centre</h1>
+      <h1 class="tag">Add New Training Centre</h1>
 
       <form id="centreForm" action="/admin/add-center" method="post">
-        <label for="centreId">Centre Id</label>
-        <input type="text" id="centreId" name="centreId">
-
-        <label for="centreName">Centre Name</label>
-        <input type="text" id="centreName" name="centreName">
-
-        <label for="address">Address</label>
-        <input type="text" id="address" name="address">
-
-        <label for="centreDirector">Director Name</label>
-        <input type="text" id="centreDirector" name="centreDirector">
-
-        <label for="email">Email id</label>
-        <input type="email" id="email" name="email">
-
-        <!-- Scheme -->
-        <label for="newScheme">Add Scheme</label>
-        <div class="inline-input">
-          <input type="text" id="newScheme" placeholder="Enter scheme name">
-          <button type="button" onclick="addScheme()">+</button>
+        <!-- Basic Information -->
+        <div class="form-group">
+          <label for="centreId">Centre Id</label>
+          <input type="text" id="centreId" name="centreId">
         </div>
-        <label for="scheme">Scheme</label>
-        <select id="scheme" name="scheme">
-          <option value="select">Select</option>
-          <option value="netd">NETD Scheme</option>
-        </select>
-
-        <!-- College -->
-        <label for="newCollege">Add Type of College</label>
-        <div class="inline-input">
-          <input type="text" id="newCollege" placeholder="Enter type of college">
-          <button type="button" onclick="addCollege()">+</button>
+        
+        <div class="form-group">
+          <label for="centreName">Centre Name</label>
+          <input type="text" id="centreName" name="centreName">
         </div>
-        <label for="college">Type of College</label>
-        <select id="college" name="college">
-          <option value="select">Select</option>
-          <option value="Paramedical College">Paramedical College</option>
-          <option value="Skill Development">Skill Development</option>
-        </select>
-
-        <!-- Sector -->
-        <label for="newSector">Add Sector</label>
-        <div class="inline-input">
-          <input type="text" id="newSector" placeholder="Enter sector name">
-          <button type="button" onclick="addSector()">+</button>
+        
+        <div class="form-group">
+          <label for="address">Address</label>
+          <input type="text" id="address" name="address">
         </div>
-        <label for="sector">Sector</label>
-        <select id="sector" name="sector">
-          <option value="select">Select</option>
-          <option value="Medical Techniques">Medical Techniques</option>
-          <option value="Electronics">Electronics</option>
-        </select>
-
-        <!-- Department -->
-        <label for="newDepartment">Add Department</label>
-        <div class="inline-input">
-          <input type="text" id="newDepartment" placeholder="Enter department name">
-          <button type="button" onclick="addDepartment()">+</button>
+        
+        <div class="form-group">
+          <label for="centreDirector">Director Name</label>
+          <input type="text" id="centreDirector" name="centreDirector">
         </div>
-        <label for="department">Department</label>
-        <select id="department" name="department">
-          <option value="select">Select</option>
-          <option value="Department of Paramedical">Department of Paramedical</option>
-          <option value="Mobile Phone Technology">Mobile Phone Technology</option>
-        </select>
+        
+        <div class="form-group">
+          <label for="email">Email id</label>
+          <input type="email" id="email" name="email">
+        </div>
+        
+        <!-- Empty column to maintain grid balance -->
+        <div class="form-group"></div>
+
+        <!-- Scheme Section -->
+        <div class="form-group scheme-group">
+          <label for="scheme">Scheme</label>
+          <div class="inline-combo-container">
+            <div class="inline-input">
+              <input type="text" id="newScheme" placeholder="Enter scheme name">
+              <button type="button" onclick="addScheme()" class="add-btn">+ Add</button>
+            </div>
+            <select id="scheme" name="scheme">
+              <option value="select">Select</option>
+              <option value="netd">NETD Scheme</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- College Section -->
+        <div class="form-group college-group">
+          <label for="college">Type of College</label>
+          <div class="inline-combo-container">
+            <div class="inline-input">
+              <input type="text" id="newCollege" placeholder="Enter type of college">
+              <button type="button" onclick="addCollege()" class="add-btn">+ Add</button>
+            </div>
+            <select id="college" name="college">
+              <option value="select">Select</option>
+              <option value="Paramedical College">Paramedical College</option>
+              <option value="Skill Development">Skill Development</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Sector Section -->
+        <div class="form-group sector-group">
+          <label for="sector">Sector</label>
+          <div class="inline-combo-container">
+            <div class="inline-input">
+              <input type="text" id="newSector" placeholder="Enter sector name">
+              <button type="button" onclick="addSector()" class="add-btn">+ Add</button>
+            </div>
+            <select id="sector" name="sector">
+              <option value="select">Select</option>
+              <option value="Medical Techniques">Medical Techniques</option>
+              <option value="Electronics">Electronics</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Department Section -->
+        <div class="form-group department-group">
+          <label for="department">Department</label>
+          <div class="inline-combo-container">
+            <div class="inline-input">
+              <input type="text" id="newDepartment" placeholder="Enter department name">
+              <button type="button" onclick="addDepartment()" class="add-btn">+ Add</button>
+            </div>
+            <select id="department" name="department">
+              <option value="select">Select</option>
+              <option value="Department of Paramedical">Department of Paramedical</option>
+              <option value="Mobile Phone Technology">Mobile Phone Technology</option>
+            </select>
+          </div>
+        </div>
+
         <!-- Course Name -->
-<label>Add Course Name</label>
-<div id="courseContainer">
-  <div class="inline-input">
-    <input type="text" name="courseName[]" placeholder="Enter course name">
-    <button type="button" onclick="addCourse()">+</button>
-  </div>
-</div>
+        <div class="form-group course-group">
+          <label>Course Names</label>
+          <div id="courseContainer">
+            <div class="inline-input">
+              <input type="text" name="courseName[]" placeholder="Enter course name">
+              <button type="button" onclick="addCourse()" class="add-btn">+ Add Course</button>
+            </div>
+          </div>
+        </div>
 
-
+        <!-- Buttons -->
         <input class="submit-btn" type="submit" value="Save Centre">
         <button type="button" id="downloadPdf">Download as PDF</button>
       </form>
     </div>
   </div>
 
+  <!-- Updated JavaScript -->
   <script>
+    // Function to add options to dropdowns
     function addOption(inputId, selectId, message) {
       const input = document.getElementById(inputId);
       const select = document.getElementById(selectId);
       const value = input.value.trim();
+      
       if (!value) {
         alert(message);
         return;
       }
+      
+      // Check if option already exists
+      const existingOptions = Array.from(select.options).map(opt => opt.value);
+      if (existingOptions.includes(value)) {
+        alert("This option already exists!");
+        return;
+      }
+      
       const option = document.createElement("option");
       option.value = value;
       option.textContent = value;
       select.appendChild(option);
       select.value = value;
       input.value = "";
+      
+      // Show success message
+      input.placeholder = "Added! Enter another...";
+      setTimeout(() => {
+        input.placeholder = inputId === "newScheme" ? "Enter scheme name" :
+                          inputId === "newCollege" ? "Enter type of college" :
+                          inputId === "newSector" ? "Enter sector name" :
+                          "Enter department name";
+      }, 1000);
     }
 
+    // Individual add functions
     const addScheme = () => addOption("newScheme", "scheme", "Please enter a scheme name");
     const addCollege = () => addOption("newCollege", "college", "Please enter a college type");
     const addSector = () => addOption("newSector", "sector", "Please enter a sector name");
     const addDepartment = () => addOption("newDepartment", "department", "Please enter a department name");
 
+    // PDF Download with button hiding
     document.getElementById("downloadPdf").addEventListener("click", function () {
+      // Show loading message
+      const originalText = this.textContent;
+      this.textContent = "Generating PDF...";
+      this.disabled = true;
+      
+      // Add pdf-hide class to all interactive buttons
+      const interactiveButtons = document.querySelectorAll(
+        '.inline-input button, .back-btn, .submit-btn, #downloadPdf'
+      );
+      
+      interactiveButtons.forEach(button => {
+        button.classList.add('pdf-hide');
+      });
+      
+      // Create PDF
       const { jsPDF } = window.jspdf;
       const formElement = document.querySelector(".container");
-      html2canvas(formElement, { scale: 2 }).then(canvas => {
+      
+      html2canvas(formElement, { 
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        allowTaint: true
+      }).then(canvas => {
         const imgData = canvas.toDataURL("image/png");
         const pdf = new jsPDF("p", "mm", "a4");
         const pageWidth = pdf.internal.pageSize.getWidth();
         const imgHeight = (canvas.height * pageWidth) / canvas.width;
-        pdf.addImage(imgData, "PNG", 0, 0, pageWidth, imgHeight);
+        
+        // Calculate position to center the image
+        const xPos = 0;
+        const yPos = 0;
+        
+        // Add image to PDF
+        pdf.addImage(imgData, "PNG", xPos, yPos, pageWidth, imgHeight);
+        
+        // Save PDF
         pdf.save("training_centre_form.pdf");
+        
+        // Restore buttons and reset button text
+        interactiveButtons.forEach(button => {
+          button.classList.remove('pdf-hide');
+        });
+        
+        document.getElementById("downloadPdf").textContent = originalText;
+        document.getElementById("downloadPdf").disabled = false;
+        
+        // Show success message
+        alert("PDF downloaded successfully!");
+        
+      }).catch(error => {
+        console.error('Error generating PDF:', error);
+        
+        // Restore buttons even on error
+        interactiveButtons.forEach(button => {
+          button.classList.remove('pdf-hide');
+        });
+        
+        document.getElementById("downloadPdf").textContent = originalText;
+        document.getElementById("downloadPdf").disabled = false;
+        
+        alert('Error generating PDF. Please try again.');
       });
     });
+    
+    // Function to add more course fields
     function addCourse() {
-  const container = document.getElementById("courseContainer");
-
-  const div = document.createElement("div");
-  div.className = "inline-input";
-  div.style.marginTop = "8px";
-
-  div.innerHTML = `
-    <input type="text" name="courseName[]" placeholder="Enter course name">
-    <button type="button" onclick="this.parentNode.remove()">−</button>
-  `;
-
-  container.appendChild(div);
-}
-
+      const container = document.getElementById("courseContainer");
+      const div = document.createElement("div");
+      div.className = "inline-input";
+      div.style.marginTop = "10px";
+      div.innerHTML = `
+        <input type="text" name="courseName[]" placeholder="Enter another course name">
+        <button type="button" onclick="this.parentNode.remove()" class="remove-btn">− Remove</button>
+      `;
+      container.appendChild(div);
+    }
+    
+    // Form validation
+    document.getElementById("centreForm").addEventListener("submit", function(event) {
+      const centreId = document.getElementById("centreId").value.trim();
+      const centreName = document.getElementById("centreName").value.trim();
+      const email = document.getElementById("email").value.trim();
+      
+      if (!centreId || !centreName) {
+        event.preventDefault();
+        alert("Please fill in all required fields (Centre Id and Centre Name are required).");
+        return;
+      }
+      
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        event.preventDefault();
+        alert("Please enter a valid email address.");
+        return;
+      }
+      
+      // Optional: Show success message
+      alert("Training centre information saved successfully!");
+    });
   </script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

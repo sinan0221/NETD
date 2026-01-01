@@ -48,10 +48,10 @@ module.exports = {
         //   });
        
 
-let user = await db.get()
-  .collection(collection.USER_COLLECTION)
-  .findOne({ centreId: new ObjectId(userData.centreId) });
-
+        let user = await db.get()
+        .collection(collection.USER_COLLECTION)
+        .findOne({ centreId: userData.centreId }); // ✅ just a string
+      
   
         if (!user) {
           console.log("❌ login failed (user not found)");
