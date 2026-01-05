@@ -128,12 +128,19 @@ app.use(express.urlencoded({ extended: true }));
 
 // Cookie parser & session
 app.use(cookieParser());
+// app.use(session({
+//   secret: "key",
+//   resave: false,
+//   saveUninitialized: true,
+//   cookie: { maxAge: 6000000 } // 10 minutes
+// }));
 app.use(session({
-  secret: "key",
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
-  cookie: { maxAge: 6000000 } // 10 minutes
+  cookie: { maxAge: 6000000 }
 }));
+
 
 // File upload middleware
 app.use(fileUpload());
@@ -158,13 +165,16 @@ app.use((req, res, next) => {
 // ======================
 // DATABASE CONNECTION
 // ======================
-db.connect((err) => {
-  if (err) {
-    console.log('❌ Database connection error:', err);
-  } else {
-    console.log('✅ Database connection successful');
+(async () => {
+  try {
+    await db.connect();
+    console.log("✅ Database connected, starting app");
+  } catch (err) {
+    console.error("❌ Failed to connect to database", err);
+    process.exit(1);
   }
-});
+})();
+
 
 // ======================
 // ROUTES
