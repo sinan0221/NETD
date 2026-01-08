@@ -80,24 +80,20 @@ const MONGO_URL = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017";
 const DB_NAME = process.env.DB_NAME || "netd";
 
 async function connect() {
-  if (db) {
+  if (client) {
     console.log("MongoDB already connected");
     return db;
   }
 
-  try {
-    client = new MongoClient(MONGO_URL);
-    await client.connect();
+  client = new MongoClient(MONGO_URL);
+  await client.connect();
 
-    db = client.db(DB_NAME);
-    console.log("✅ MongoDB connected to", DB_NAME);
+  db = client.db(DB_NAME);
+  console.log("✅ MongoDB connected to", DB_NAME);
 
-    return db;
-  } catch (err) {
-    console.error("❌ MongoDB connection failed:", err);
-    process.exit(1);
-  }
+  return db;
 }
+
 
 function get() {
   if (!db) {
@@ -105,23 +101,6 @@ function get() {
   }
   return db;
 }
-
-// Graceful shutdown (VPS + PM2 safe)
-process.on("SIGINT", async () => {
-  if (client) {
-    await client.close();
-    console.log("MongoDB connection closed");
-  }
-  process.exit(0);
-});
-
-process.on("SIGTERM", async () => {
-  if (client) {
-    await client.close();
-    console.log("MongoDB connection closed");
-  }
-  process.exit(0);
-});
 
 module.exports = {
   connect,

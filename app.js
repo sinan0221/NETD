@@ -162,18 +162,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// ======================
-// DATABASE CONNECTION
-// ======================
-(async () => {
-  try {
-    await db.connect();
-    console.log("✅ Database connected, starting app");
-  } catch (err) {
-    console.error("❌ Failed to connect to database", err);
-    process.exit(1);
-  }
-})();
+
+
 
 
 // ======================
