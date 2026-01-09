@@ -14,3 +14,4 @@ google/
 # CSV & generated files
 *.csv
 *.txt
+config/google-service-account.json
