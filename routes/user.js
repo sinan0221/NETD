@@ -2299,8 +2299,8 @@ router.get('/view-bstudent/:batchId', verifyUserLogin, async (req, res) => {
 // });
 router.use(async (req, res, next) => {
   try {
-    // ✅ FIX: session or user may not exist (cron / backup / unauth)
-    if (!req.session || !req.session.user) {
+    // ✅ SAFETY CHECK
+    if (!req.session || !req.session.user || !req.session.user.centreId) {
       res.locals.pendingCount = 0;
       return next();
     }
@@ -2321,6 +2321,7 @@ router.use(async (req, res, next) => {
   }
   next();
 });
+
 
 // View PENDING Students (Only not activated, only user's centre)
 router.get('/pending-students', verifyUserLogin, async (req, res) => {
