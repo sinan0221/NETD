@@ -2279,18 +2279,42 @@ router.get('/view-bstudent/:batchId', verifyUserLogin, async (req, res) => {
   }
 });
 // Approval middleware to get pending count (only for the user's centre)
+// router.use(async (req, res, next) => {
+//   try {
+//     const userCentreId = req.session.user.centreId; // logged-in user's centre
+
+//     const pendingCount = await db.get()
+//       .collection(collection.STUDENT_COLLECTION)
+//       .countDocuments({ 
+//         activated: { $ne: true },
+//         centreId: userCentreId  // filter by centre
+//       });
+
+//     res.locals.pendingCount = pendingCount; // available in all views
+//   } catch (err) {
+//     console.error("❌ Error fetching pending count:", err);
+//     res.locals.pendingCount = 0;
+//   }
+//   next();
+// });
 router.use(async (req, res, next) => {
   try {
-    const userCentreId = req.session.user.centreId; // logged-in user's centre
+    // ✅ FIX: session or user may not exist (cron / backup / unauth)
+    if (!req.session || !req.session.user) {
+      res.locals.pendingCount = 0;
+      return next();
+    }
+
+    const userCentreId = req.session.user.centreId;
 
     const pendingCount = await db.get()
       .collection(collection.STUDENT_COLLECTION)
-      .countDocuments({ 
+      .countDocuments({
         activated: { $ne: true },
-        centreId: userCentreId  // filter by centre
+        centreId: userCentreId
       });
 
-    res.locals.pendingCount = pendingCount; // available in all views
+    res.locals.pendingCount = pendingCount;
   } catch (err) {
     console.error("❌ Error fetching pending count:", err);
     res.locals.pendingCount = 0;
