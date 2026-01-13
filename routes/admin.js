@@ -70,50 +70,16 @@ router.get('/login', (req, res) => {
 });
 
 // Admin login POST
-// router.post('/login', (req, res) => {
-//   const { username, password } = req.body;
+router.post('/login', (req, res) => {
+  const { username, password } = req.body;
 
-//   // ✅ Hardcoded check (replace with DB if needed)
-//   if (username === "admin" && password === "2025") {
-//     req.session.adminLoggedIn = true;
-//     req.session.admin = { username };
-//     res.redirect('/admin');
-//   } else {
-//     req.session.loginErr = "Invalid Credentials";
-//     res.redirect('/admin/login');
-//   }
-// });
-// Admin login POST
-router.post('/login', async (req, res) => {
-  try {
-    const { username, password } = req.body;
-
-    const admin = await db.get().collection('admin').findOne({ username });
-
-    if (!admin) {
-      req.session.loginErr = "Invalid Credentials";
-      return res.redirect('/admin/login');
-    }
-
-    const isMatch = await bcrypt.compare(password, admin.password);
-
-    if (!isMatch) {
-      req.session.loginErr = "Invalid Credentials";
-      return res.redirect('/admin/login');
-    }
-
-    // ✅ Login success
+  // ✅ Hardcoded check (replace with DB if needed)
+  if (username === "admin" && password === "2025") {
     req.session.adminLoggedIn = true;
-    req.session.admin = {
-      _id: admin._id,
-      username: admin.username
-    };
-
+    req.session.admin = { username };
     res.redirect('/admin');
-
-  } catch (err) {
-    console.error('Admin login error:', err);
-    req.session.loginErr = "Something went wrong";
+  } else {
+    req.session.loginErr = "Invalid Credentials";
     res.redirect('/admin/login');
   }
 });
