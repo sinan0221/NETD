@@ -35,13 +35,12 @@
         /* Global Styles */
         body {
             font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-           background: linear-gradient(
-  135deg,
-  #f8fafc 0%,
-  #eef2f7 50%,
-  #e5eaf2 100%
-);
-
+            background: linear-gradient(
+                135deg,
+                #f8fafc 0%,
+                #eef2f7 50%,
+                #e5eaf2 100%
+            );
             color: var(--dark-text);
             line-height: 1.6;
             min-height: 100vh;
@@ -49,6 +48,10 @@
             padding: 0;
             position: relative;
             overflow-x: hidden;
+            overflow: hidden; /* Disable scrolling */
+            position: fixed; /* Prevent scrolling */
+            width: 100%;
+            height: 100%;
         }
 
         /* Remove any default body padding */
@@ -74,11 +77,13 @@
         /* Row Layout */
         .row {
             min-height: 100vh;
+            height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0;
             padding: 2rem 1rem;
+            overflow: hidden;
         }
 
         /* Column centering */
@@ -102,6 +107,8 @@
             animation: slideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             opacity: 0;
             transform: translateY(30px);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         /* Gold Top Border */
@@ -151,7 +158,6 @@
             width: 90px;
             height: 90px;
             border-radius: 50%;
-            
             padding: 4px;
             background: var(--light-text);
             box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
@@ -362,6 +368,7 @@
             .container {
                 margin: 1rem;
                 padding: 2.5rem 2rem;
+                max-height: 85vh;
             }
             
             h2 {
@@ -388,11 +395,13 @@
         @media (max-width: 576px) {
             .row {
                 padding: 1rem;
+                height: 100vh;
             }
             
             .container {
                 padding: 2rem 1.5rem;
                 border-radius: 16px;
+                max-height: 80vh;
             }
             
             h2 {
@@ -444,6 +453,31 @@
         .form-group label i {
             margin-right: 8px;
             color: var(--light-blue);
+        }
+
+        /* Custom scrollbar for the container */
+        .container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 3px;
+        }
+
+        .container::-webkit-scrollbar-thumb {
+            background: var(--light-blue);
+            border-radius: 3px;
+        }
+
+        .container::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-blue);
+        }
+
+        /* Hide scrollbar for non-webkit browsers */
+        .container {
+            scrollbar-width: thin;
+            scrollbar-color: var(--light-blue) rgba(0, 0, 0, 0.05);
         }
     </style>
 </head>
