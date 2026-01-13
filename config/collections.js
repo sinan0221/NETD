@@ -4,5 +4,7 @@ module.exports={
     STUDENT_COLLECTION:'student',
     BATCH_COLLECTION:'batches',
     TIMETABLE_COLLECTION: "timetable",
+    ADMIN_COLLECTION: 'admin'
+
 
 }

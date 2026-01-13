@@ -9,6 +9,7 @@ const fontkit = require('fontkit');
 const jpegRotate = require('jpeg-autorotate');
 const archiver = require("archiver");
 const ExcelJS = require("exceljs");
+const bcrypt = require('bcrypt');
 
 
 // Node's File System module for cleanup
@@ -69,16 +70,50 @@ router.get('/login', (req, res) => {
 });
 
 // Admin login POST
-router.post('/login', (req, res) => {
-  const { username, password } = req.body;
+// router.post('/login', (req, res) => {
+//   const { username, password } = req.body;
 
-  // ✅ Hardcoded check (replace with DB if needed)
-  if (username === "admin" && password === "2025") {
+//   // ✅ Hardcoded check (replace with DB if needed)
+//   if (username === "admin" && password === "2025") {
+//     req.session.adminLoggedIn = true;
+//     req.session.admin = { username };
+//     res.redirect('/admin');
+//   } else {
+//     req.session.loginErr = "Invalid Credentials";
+//     res.redirect('/admin/login');
+//   }
+// });
+// Admin login POST
+router.post('/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    const admin = await db.get().collection('admin').findOne({ username });
+
+    if (!admin) {
+      req.session.loginErr = "Invalid Credentials";
+      return res.redirect('/admin/login');
+    }
+
+    const isMatch = await bcrypt.compare(password, admin.password);
+
+    if (!isMatch) {
+      req.session.loginErr = "Invalid Credentials";
+      return res.redirect('/admin/login');
+    }
+
+    // ✅ Login success
     req.session.adminLoggedIn = true;
-    req.session.admin = { username };
+    req.session.admin = {
+      _id: admin._id,
+      username: admin.username
+    };
+
     res.redirect('/admin');
-  } else {
-    req.session.loginErr = "Invalid Credentials";
+
+  } catch (err) {
+    console.error('Admin login error:', err);
+    req.session.loginErr = "Something went wrong";
     res.redirect('/admin/login');
   }
 });
