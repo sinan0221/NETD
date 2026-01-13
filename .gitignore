@@ -7,7 +7,7 @@ config/token.json
 # Uploads & storage
 uploads/
 public/uploads/
-public/studentImages/
+# public/studentImages/
 storage/
 google/
 
