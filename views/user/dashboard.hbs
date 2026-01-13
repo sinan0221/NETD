@@ -212,18 +212,15 @@
         }
 
         /* NETD Logo */
-        .netd-logo {
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid rgba(255,255,255,0.2);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-            margin-left: 30px;
-            position: relative;
-            z-index: 1;
-            transition: var(--transition);
-        }
+       .netd-logo {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: contain;      /* ✅ IMPORTANT */
+    background-color: #fff;   /* optional: clean background */
+    padding: 8px;             /* space so logo breathes */
+    border: 4px solid rgba(255,255,255,0.2);
+}
 
         .netd-logo:hover {
             transform: scale(1.05);
