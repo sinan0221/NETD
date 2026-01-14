@@ -9,13 +9,11 @@
 /* Container */
 .container {
   max-width: 900px;
-  margin: 20px auto; /* Reduced from 30px */
+  margin: 30px auto;
   background: #fff;
-  padding: 20px 25px; /* Reduced from 30px 35px */
+  padding: 30px 35px;
   border-radius: 12px;
   box-shadow: 0px 5px 20px rgba(0,0,0,0.12);
-  max-height: 95vh; /* Added to limit height */
-  overflow-y: auto; /* Added for scroll if needed */
 }
 
 /* Header */
@@ -23,19 +21,18 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  padding-bottom: 10px; /* Reduced from 15px */
+  padding-bottom: 15px;
   margin-bottom: 5px;
 }
 .tag{
-  font-size: 20px; /* Reduced from 23px */
+  font-size: 23px;
 }
-
 /* Form Grid */
 form {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px 20px; /* Reduced from 20px 30px */
-  margin-top: 10px; /* Reduced from 20px */
+  gap: 20px 30px;
+  margin-top: 20px;
 }
 
 /* Form Elements */
@@ -48,18 +45,18 @@ label {
   display: block;
   font-weight: 600;
   color: #444;
-  margin-bottom: 5px; /* Reduced from 8px */
-  font-size: 14px; /* Reduced from 15px */
+  margin-bottom: 8px;
+  font-size: 15px;
 }
 
 input[type="text"],
 input[type="email"],
 select {
   width: 100%;
-  padding: 10px 12px; /* Reduced from 12px 14px */
+  padding: 12px 14px;
   border: 1.5px solid #ccc;
   border-radius: 8px;
-  font-size: 14px; /* Reduced from 15px */
+  font-size: 15px;
   transition: all 0.3s;
   background-color: #fff;
 }
@@ -76,35 +73,34 @@ select:focus {
 .inline-combo-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px; /* Reduced from 15px */
+  gap: 15px;
   align-items: center;
 }
 
 .inline-input {
   display: flex;
-  gap: 6px; /* Reduced from 8px */
+  gap: 8px;
   align-items: center;
 }
 
 .inline-input input {
   flex: 1;
-  padding: 10px 12px; /* Reduced from 12px 14px */
+  padding: 12px 14px;
   border: 1.5px solid #ccc;
   border-radius: 8px;
-  font-size: 14px; /* Reduced from 15px */
+  font-size: 15px;
 }
 
 .add-btn, .remove-btn {
   background-color: #2a3d66;
   color: white;
   border: none;
-  padding: 10px 14px; /* Reduced from 12px 16px */
+  padding: 12px 16px;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
   white-space: nowrap;
   transition: background 0.3s;
-  font-size: 14px; /* Added */
 }
 
 .add-btn:hover {
@@ -124,49 +120,17 @@ select:focus {
   grid-column: 1 / -1;
 }
 
-/* Course item styling for edit-center */
-.course-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #f5f5f5;
-  padding: 4px 8px; /* Reduced padding */
-  margin-top: 3px; /* Reduced margin */
-  border-radius: 4px;
-  font-size: 14px; /* Smaller text */
-}
-
-.course-item button {
-  background: #dc3545;
-  color: #fff;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  padding: 2px 6px;
-  font-size: 12px; /* Smaller */
-}
-
-.course-item button:hover {
-  background: #b02a37;
-}
-
-#courseList {
-  margin-top: 5px;
-  max-height: 120px; /* Limit height */
-  overflow-y: auto;
-}
-
 /* Full-width form elements */
 .submit-btn,
 #downloadPdf {
   grid-column: 1 / -1;
-  padding: 12px; /* Reduced from 14px */
-  font-size: 15px; /* Reduced from 16px */
+  padding: 14px;
+  font-size: 16px;
   font-weight: 600;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  margin-top: 8px; /* Reduced from 10px */
+  margin-top: 10px;
   transition: all 0.3s;
 }
 
@@ -208,36 +172,31 @@ select:focus {
   grid-column: 1 / -1;
 }
 
-/* Compact form groups */
-.form-group-compact {
-  margin-bottom: 8px; /* Added for reduced spacing */
-}
-
 /* Responsive */
 @media (max-width: 768px) {
   .container {
     width: 95%;
-    padding: 15px; /* Reduced from 20px */
-    margin: 15px auto; /* Reduced from 20px */
+    padding: 20px;
+    margin: 20px auto;
   }
   
   form {
     grid-template-columns: 1fr;
-    gap: 12px; /* Reduced from 18px */
+    gap: 18px;
   }
   
   .inline-combo-container {
     grid-template-columns: 1fr;
-    gap: 10px; /* Reduced from 12px */
+    gap: 12px;
   }
   
   .content img {
-    height: 90px; /* Reduced from 100px */
+    height: 100px;
     max-width: 100%;
   }
   
   .content h1 {
-    font-size: 18px; /* Reduced from 20px */
+    font-size: 20px;
   }
   
   .header {
@@ -247,35 +206,5 @@ select:focus {
   .back-btn {
     width: 100%;
     justify-content: center;
-    font-size: 14px; /* Added */
-    padding: 8px 10px; /* Added */
-  }
-}
-
-/* Extra small devices */
-@media (max-width: 576px) {
-  .container {
-    padding: 12px 15px; /* Further reduced */
-  }
-  
-  form {
-    gap: 10px;
-  }
-  
-  input[type="text"],
-  input[type="email"],
-  select {
-    padding: 8px 10px;
-    font-size: 13px;
-  }
-  
-  label {
-    font-size: 13px;
-  }
-  
-  .submit-btn,
-  #downloadPdf {
-    padding: 10px;
-    font-size: 14px;
   }
 }

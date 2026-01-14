@@ -299,7 +299,7 @@ select {
     document.getElementById("downloadPdf").addEventListener("click", function () {
       const { jsPDF } = window.jspdf;
       const formElement = document.querySelector(".container");
-      html2canvas(formElement, { scale: 1 }).then(canvas => {
+      html2canvas(formElement, { scale: 2 }).then(canvas => {
         const imgData = canvas.toDataURL("image/png");
         const pdf = new jsPDF("p", "mm", "a4");
         const pageWidth = pdf.internal.pageSize.getWidth();
