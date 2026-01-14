@@ -43,12 +43,84 @@ module.exports = {
 // ===============================
 //  GET ALL BATCHES WITH LAST TIMETABLE
 // ===============================
+// getAllBatchesWithCentre: () => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       let batches = await db.get()
+//         .collection(collection.BATCH_COLLECTION)
+//         .aggregate([
+//           {
+//             $lookup: {
+//               from: collection.CENTER_COLLECTION,
+//               localField: "centreId",
+//               foreignField: "_id",
+//               as: "centre"
+//             }
+//           },
+//           { $unwind: "$centre" },
+
+//           // Student Count
+//           {
+//             $lookup: {
+//               from: collection.STUDENT_COLLECTION,
+//               localField: "_id",
+//               foreignField: "batchId",
+//               as: "students"
+//             }
+//           },
+//           {
+//             $addFields: {
+//               nostudents: { $size: "$students" }
+//             }
+//           },
+
+//           // 🔥 TIMETABLE (latest only)
+//           {
+//             $lookup: {
+//               from: collection.TIMETABLE_COLLECTION,
+//               let: { batchId: "$_id" },
+//               pipeline: [
+//                 { $match: { $expr: { $eq: ["$batchId", "$$batchId"] } } },
+//                 { $sort: { createdAt: -1, _id: -1 } },
+//                 { $limit: 1 }
+//               ],
+//               as: "timetable"
+//             }
+//           },
+//           {
+//             $addFields: {
+//               timetable: { $arrayElemAt: ["$timetable", 0] }
+//             }
+//           },
+//           // Ensure active field exists (set default if not)
+//           {
+//             $addFields: {
+//               active: { $ifNull: ["$active", false] }
+//             }
+//           }
+//         ])
+//         .toArray();
+
+//       resolve(batches);
+//     } catch (err) {
+//       reject(err);
+//     }
+//   });
+// },
 getAllBatchesWithCentre: () => {
   return new Promise(async (resolve, reject) => {
     try {
       let batches = await db.get()
         .collection(collection.BATCH_COLLECTION)
         .aggregate([
+
+          // ✅ ONLY ADDITION (soft delete)
+          {
+            $match: {
+              isDeleted: { $ne: true }
+            }
+          },
+
           {
             $lookup: {
               from: collection.CENTER_COLLECTION,
@@ -59,7 +131,6 @@ getAllBatchesWithCentre: () => {
           },
           { $unwind: "$centre" },
 
-          // Student Count
           {
             $lookup: {
               from: collection.STUDENT_COLLECTION,
@@ -74,7 +145,6 @@ getAllBatchesWithCentre: () => {
             }
           },
 
-          // 🔥 TIMETABLE (latest only)
           {
             $lookup: {
               from: collection.TIMETABLE_COLLECTION,
@@ -92,12 +162,13 @@ getAllBatchesWithCentre: () => {
               timetable: { $arrayElemAt: ["$timetable", 0] }
             }
           },
-          // Ensure active field exists (set default if not)
+
           {
             $addFields: {
               active: { $ifNull: ["$active", false] }
             }
           }
+
         ])
         .toArray();
 
@@ -107,6 +178,7 @@ getAllBatchesWithCentre: () => {
     }
   });
 },
+
 getBatchesByStatusAndCentre: (status, centreId) => {
   return new Promise(async (resolve, reject) => {
     try {
