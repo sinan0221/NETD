@@ -2,7 +2,8 @@
 console.log('🔥 CORRECT www.js FILE LOADED');
 
 require('dotenv').config();
-
+const connectMongoose = require('../config/mongoose');
+connectMongoose();
 var app = require('../app');
 var http = require('http');
 var db = require('../config/connection');
