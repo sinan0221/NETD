@@ -251,6 +251,51 @@ getBatchById: async (batchId) => {
   }
 },
 // Get batches by status (active/inactive)
+// getBatchesByStatus: (status) => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       let batches = await db.get()
+//         .collection(collection.BATCH_COLLECTION)
+//         .aggregate([
+//           {
+//             $addFields: {
+//               active: { $ifNull: ["$active", false] }
+//             }
+//           },
+//           {
+//             $match: { active: status }
+//           },
+//           {
+//             $lookup: {
+//               from: collection.CENTER_COLLECTION,
+//               localField: "centreId",
+//               foreignField: "_id",
+//               as: "centre"
+//             }
+//           },
+//           { $unwind: { path: "$centre", preserveNullAndEmptyArrays: true } },
+//           {
+//             $lookup: {
+//               from: collection.STUDENT_COLLECTION,
+//               localField: "_id",
+//               foreignField: "batchId",
+//               as: "students"
+//             }
+//           },
+//           {
+//             $addFields: {
+//               nostudents: { $size: "$students" }
+//             }
+//           }
+//         ])
+//         .toArray();
+
+//       resolve(batches);
+//     } catch (err) {
+//       reject(err);
+//     }
+//   });
+// },
 getBatchesByStatus: (status) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -263,7 +308,10 @@ getBatchesByStatus: (status) => {
             }
           },
           {
-            $match: { active: status }
+            $match: {
+              active: status,
+              isDeleted: { $ne: true }
+            }
           },
           {
             $lookup: {
