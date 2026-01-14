@@ -161,24 +161,31 @@ router.get('/verify-otp/:id', (req, res) => {
   res.render('user/verify-otp', { id: req.params.id });
 });
 router.post('/verify-otp/:id', async (req, res) => {
-  const { otp } = req.body;
+  try {
+    const { otp } = req.body;
 
-  const centre = await db.get().collection(collection.CENTER_COLLECTION)
-    .findOne({ _id: ObjectId(req.params.id) });
+    const centre = await db.get()
+      .collection(collection.CENTER_COLLECTION)
+      .findOne({ _id: new ObjectId(req.params.id) });
 
-  if (
-    !centre ||
-    centre.resetOtp !== otp ||
-    centre.resetOtpExpires < new Date()
-  ) {
-    return res.render('user/verify-otp', {
-      id: req.params.id,
-      err: "Invalid or expired OTP"
-    });
+    if (
+      !centre ||
+      centre.resetOtp !== otp ||
+      centre.resetOtpExpires < new Date()
+    ) {
+      return res.render('user/verify-otp', {
+        id: req.params.id,
+        err: "Invalid or expired OTP"
+      });
+    }
+
+    res.redirect(`/user/reset-password/${centre._id}`);
+  } catch (err) {
+    console.error("❌ Verify OTP error:", err);
+    res.status(500).send("Internal error");
   }
-
-  res.redirect(`/user/reset-password/${centre._id}`);
 });
+
 router.get('/reset-password/:id', async (req, res) => {
   res.render('user/reset-password', { id: req.params.id });
 });
@@ -186,16 +193,14 @@ router.post('/reset-password/:id', async (req, res) => {
   try {
     const hashed = await bcrypt.hash(req.body.password, 10);
 
-    // 1️⃣ Get centre to read centreId
     const centre = await db.get()
       .collection(collection.CENTER_COLLECTION)
-      .findOne({ _id: ObjectId(req.params.id) });
+      .findOne({ _id: new ObjectId(req.params.id) });
 
     if (!centre) {
       return res.status(400).send("Invalid centre");
     }
 
-    // 2️⃣ Update USER password using centreId
     await db.get()
       .collection(collection.USER_COLLECTION)
       .updateOne(
@@ -203,17 +208,11 @@ router.post('/reset-password/:id', async (req, res) => {
         { $set: { password: hashed } }
       );
 
-    // 3️⃣ Clear OTP
     await db.get()
       .collection(collection.CENTER_COLLECTION)
       .updateOne(
         { _id: centre._id },
-        {
-          $unset: {
-            resetOtp: "",
-            resetOtpExpires: ""
-          }
-        }
+        { $unset: { resetOtp: "", resetOtpExpires: "" } }
       );
 
     res.redirect('/user/login');
