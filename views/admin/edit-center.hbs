@@ -150,7 +150,7 @@ select {
 
     <div class="content">
       <img src="/images/title.jpg" alt="Title Image">
-      <h1>Edit Training Centre</h1>
+      
 
       <form id="centreForm" action="/admin/edit-center/{{center._id}}" method="post">
         <label for="centreId">Centre Id</label>
@@ -299,7 +299,7 @@ select {
     document.getElementById("downloadPdf").addEventListener("click", function () {
       const { jsPDF } = window.jspdf;
       const formElement = document.querySelector(".container");
-      html2canvas(formElement, { scale: 2 }).then(canvas => {
+      html2canvas(formElement, { scale: 1 }).then(canvas => {
         const imgData = canvas.toDataURL("image/png");
         const pdf = new jsPDF("p", "mm", "a4");
         const pageWidth = pdf.internal.pageSize.getWidth();
