@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{{!-- <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -273,6 +273,450 @@ select {
         pdf.addImage(imgData, "PNG", 0, 0, pageWidth, imgHeight);
         pdf.save("edit_training_centre.pdf");
       });
+    });
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</body>
+</html> --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Training Centre</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/stylesheets/cform.css">
+
+  <style>
+    .container {
+      width: 80%;
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .header h2 {
+      color: #d00000;
+      margin: 0;
+    }
+
+    .content {
+      text-align: center;
+    }
+
+    .content img {
+      display: block;
+      margin: 0 auto 15px auto;
+      width: 590px;
+      height: 120px;
+      object-fit: contain;
+    }
+
+    form {
+      text-align: left;
+      margin-top: 10px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+
+    .inline-input {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      width: 80%;
+    }
+
+    .inline-input input {
+      flex: 1;
+    }
+
+    .inline-input button {
+      background-color: #000;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .inline-input button:hover {
+      background-color: #d00000;
+    }
+
+    .submit-btn, #downloadPdf {
+      width: 80%;
+      margin-top: 20px;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .submit-btn {
+      background-color: #007bff;
+      color: white;
+    }
+
+    #downloadPdf {
+      background-color: #d00000;
+      color: white;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+    }
+
+    /* New styles for course items with delete buttons */
+    .course-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      margin: 5px 0;
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      border: 1px solid #dee2e6;
+    }
+
+    .course-item span {
+      flex-grow: 1;
+    }
+
+    .course-item .delete-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+
+    .course-item .delete-btn:hover {
+      background-color: #c82333;
+    }
+
+    #courseList {
+      margin-top: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .course-select-container {
+      position: relative;
+    }
+
+    .delete-course-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 2px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      display: none;
+    }
+
+    .course-option:hover .delete-course-btn {
+      display: inline-block;
+    }
+
+    /* Style for select with delete buttons */
+    select option {
+      position: relative;
+      padding-right: 30px;
+    }
+
+    /* Alternative: Using a separate list display */
+    .selected-courses-list {
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 10px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .selected-course {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 10px;
+      margin: 3px 0;
+      background-color: #e9ecef;
+      border-radius: 4px;
+    }
+
+    .remove-course-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 2px 6px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .remove-course-btn:hover {
+      background-color: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="left-head">
+        <h2>NETD</h2>
+      </div>
+      <div class="right-head">
+        <a href="/admin" class="btn btn-dark">Back</a>
+      </div>
+    </div>
+
+    <div class="content">
+      <img src="/images/title.jpg" alt="Title Image">
+      <h1>Edit Training Centre</h1>
+
+      <form id="centreForm" action="/admin/edit-center/{{center._id}}" method="post">
+        <label for="centreId">Centre Id</label>
+        <input type="text" id="centreId" name="centreId" value="{{center.centreId}}">
+
+        <label for="centreName">Centre Name</label>
+        <input type="text" id="centreName" name="centreName" value="{{center.centreName}}">
+
+        <label for="address">Address</label>
+        <input type="text" id="address" name="address" value="{{center.address}}">
+
+        <label for="centreDirector">Director Name</label>
+        <input type="text" id="centreDirector" name="centreDirector" value="{{center.centreDirector}}">
+
+        <label for="email">Email id</label>
+        <input type="email" id="email" name="email" value="{{center.email}}">
+
+        <!-- Scheme -->
+        <label for="newScheme">Add Scheme</label>
+        <div class="inline-input">
+          <input type="text" id="newScheme" placeholder="Enter scheme name">
+          <button type="button" onclick="addScheme()">+</button>
+        </div>
+        <label for="scheme">Scheme</label>
+        <select id="scheme" name="scheme">
+          <option value="select" {{#if (eq center.scheme "select")}}selected{{/if}}>Select</option>
+          <option value="netd" {{#if (eq center.scheme "netd")}}selected{{/if}}>NETD Scheme</option>
+        </select>
+
+        <!-- College -->
+        <label for="newCollege">Add Type of College</label>
+        <div class="inline-input">
+          <input type="text" id="newCollege" placeholder="Enter type of college">
+          <button type="button" onclick="addCollege()">+</button>
+        </div>
+        <label for="college">Type of College</label>
+        <select id="college" name="college">
+          <option value="select" {{#if (eq center.college "select")}}selected{{/if}}>Select</option>
+          <option value="Paramedical College" {{#if (eq center.college "Paramedical College")}}selected{{/if}}>Paramedical College</option>
+          <option value="Skill Development" {{#if (eq center.college "Skill Development")}}selected{{/if}}>Skill Development</option>
+        </select>
+
+        <!-- Sector -->
+        <label for="newSector">Add Sector</label>
+        <div class="inline-input">
+          <input type="text" id="newSector" placeholder="Enter sector name">
+          <button type="button" onclick="addSector()">+</button>
+        </div>
+        <label for="sector">Sector</label>
+        <select id="sector" name="sector">
+          <option value="select" {{#if (eq center.sector "select")}}selected{{/if}}>Select</option>
+          <option value="Medical Techniques" {{#if (eq center.sector "Medical Techniques")}}selected{{/if}}>Medical Techniques</option>
+          <option value="Electronics" {{#if (eq center.sector "Electronics")}}selected{{/if}}>Electronics</option>
+        </select>
+
+        <!-- Department -->
+        <label for="newDepartment">Add Department</label>
+        <div class="inline-input">
+          <input type="text" id="newDepartment" placeholder="Enter department name">
+          <button type="button" onclick="addDepartment()">+</button>
+        </div>
+        <label for="department">Department</label>
+        <select id="department" name="department">
+          {{#if center.department}}
+            <option value="{{center.department}}" selected>{{center.department}}</option>
+          {{/if}}
+          <option value="Department of Paramedical">Department of Paramedical</option>
+          <option value="Mobile Phone Technology">Mobile Phone Technology</option>
+        </select>
+
+        <!-- Course Name - Updated with delete functionality -->
+        <label for="newCourse">Add Course Name</label>
+        <div class="inline-input">
+          <input type="text" id="newCourse" placeholder="Enter course name">
+          <button type="button" onclick="addCourse()">+</button>
+        </div>
+
+        <label for="courseName">Course Names</label>
+        <div class="selected-courses-list" id="coursesListContainer">
+          {{#each center.courseName}}
+            <div class="selected-course" data-value="{{this}}">
+              <span>{{this}}</span>
+              <button type="button" class="remove-course-btn" onclick="removeCourse(this)">×</button>
+            </div>
+          {{/each}}
+        </div>
+        
+        <!-- Hidden input to store course names -->
+        <input type="hidden" name="courseName" id="courseNameInput" value="{{center.courseName}}">
+
+        <input class="submit-btn" type="submit" value="Update Centre">
+        <button type="button" id="downloadPdf">Download as PDF</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Function to update the hidden input with all course names
+    function updateCourseNameInput() {
+      const courseItems = document.querySelectorAll('#coursesListContainer .selected-course');
+      const courseNames = Array.from(courseItems).map(item => item.getAttribute('data-value'));
+      document.getElementById('courseNameInput').value = JSON.stringify(courseNames);
+    }
+
+    function addOption(inputId, selectId, message) {
+      const input = document.getElementById(inputId);
+      const select = document.getElementById(selectId);
+      const value = input.value.trim();
+      if (!value) {
+        alert(message);
+        return;
+      }
+
+      // Check if option already exists
+      let exists = false;
+      for (let opt of select.options) {
+        if (opt.value === value) {
+          exists = true;
+          break;
+        }
+      }
+      if (!exists) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        option.selected = true;
+        select.appendChild(option);
+      }
+
+      input.value = "";
+    }
+
+    // Course management functions
+    function addCourse() {
+      const input = document.getElementById('newCourse');
+      const courseName = input.value.trim();
+      
+      if (!courseName) {
+        alert("Please enter a course name");
+        return;
+      }
+
+      // Check if course already exists in the list
+      const existingCourses = document.querySelectorAll('#coursesListContainer .selected-course');
+      let exists = false;
+      existingCourses.forEach(course => {
+        if (course.getAttribute('data-value') === courseName) {
+          exists = true;
+        }
+      });
+
+      if (!exists) {
+        // Create new course item
+        const courseItem = document.createElement('div');
+        courseItem.className = 'selected-course';
+        courseItem.setAttribute('data-value', courseName);
+        
+        courseItem.innerHTML = `
+          <span>${courseName}</span>
+          <button type="button" class="remove-course-btn" onclick="removeCourse(this)">×</button>
+        `;
+        
+        document.getElementById('coursesListContainer').appendChild(courseItem);
+        
+        // Update the hidden input
+        updateCourseNameInput();
+      } else {
+        alert("This course already exists in the list");
+      }
+
+      input.value = "";
+    }
+
+    function removeCourse(button) {
+      const courseItem = button.closest('.selected-course');
+      courseItem.remove();
+      updateCourseNameInput();
+    }
+
+    // Initialize hidden input on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      updateCourseNameInput();
+    });
+
+    const addScheme = () => addOption("newScheme", "scheme", "Please enter a scheme name");
+    const addCollege = () => addOption("newCollege", "college", "Please enter a college type");
+    const addSector = () => addOption("newSector", "sector", "Please enter a sector name");
+    const addDepartment = () => addOption("newDepartment", "department", "Please enter a department name");
+
+    document.getElementById("downloadPdf").addEventListener("click", function () {
+      const { jsPDF } = window.jspdf;
+      const formElement = document.querySelector(".container");
+      html2canvas(formElement, { scale: 2 }).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const imgHeight = (canvas.height * pageWidth) / canvas.width;
+        pdf.addImage(imgData, "PNG", 0, 0, pageWidth, imgHeight);
+        pdf.save("edit_training_centre.pdf");
+      });
+    });
+
+    // Handle form submission
+    document.getElementById('centreForm').addEventListener('submit', function(e) {
+      // Make sure the course names are updated before submission
+      updateCourseNameInput();
     });
   </script>
 
