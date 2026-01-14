@@ -11,6 +11,7 @@ const archiver = require("archiver");
 const ExcelJS = require("exceljs");
 const bcrypt = require('bcrypt');
 const transporter = require('../config/mailer');
+const Admin = require('../models/Admin');
 
 
 
@@ -100,11 +101,12 @@ router.get('/forgot-password', (req, res) => {
 
 // Forgot password POST
 router.post('/forgot-password', async (req, res) => {
-  const { mobile } = req.body;
+  const { email } = req.body;
 
-  if (mobile !== process.env.ADMIN_MOBILE) {
+  // 🔐 Allow only admin email
+  if (email !== process.env.ADMIN_EMAIL) {
     return res.render('admin/forgot-password', {
-      error: 'Mobile number not registered'
+      error: 'Email not registered'
     });
   }
 
@@ -116,7 +118,7 @@ router.post('/forgot-password', async (req, res) => {
   try {
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER,
+      to: process.env.ADMIN_EMAIL,
       subject: 'NETD Admin Password Reset OTP',
       html: `
         <h2>NETD Admin Password Reset</h2>
@@ -134,6 +136,7 @@ router.post('/forgot-password', async (req, res) => {
     });
   }
 });
+
 
 // Middleware
 function requireOTP(req, res, next) {
