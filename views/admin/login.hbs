@@ -40,23 +40,16 @@
         /* Global Styles */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(
-  135deg,
-  #f8fafc 0%,
-  #eef2f7 50%,
-  #e5eaf2 100%
-);
+            background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 50%, #e5eaf2 100%);
             color: var(--dark-text);
             line-height: 1.6;
             min-height: 100vh;
             margin: 0;
             padding: 0;
-            position: relative;
-            overflow-x: hidden;
-            overflow: hidden; /* Disables scrolling */
-            position: fixed; /* Prevents scrolling */
+            position: fixed; /* Prevent scrolling */
             width: 100%;
             height: 100%;
+            overflow: hidden; /* Disable scrolling */
         }
 
         /* Remove any default body padding that might push content down */
@@ -112,8 +105,7 @@
             animation: slideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             opacity: 0;
             transform: translateY(30px);
-            max-height: 90vh;
-            overflow-y: auto;
+            max-height: calc(100vh - 4rem); /* Adjusted to fit without scrolling */
         }
 
         /* Gold Top Border */
@@ -182,7 +174,7 @@
 
         /* Form Groups */
         .form-group {
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem; /* Reduced from 2rem for better spacing */
             position: relative;
         }
 
@@ -191,7 +183,7 @@
             display: block;
             color: var(--primary-blue);
             font-weight: 600;
-            margin-bottom: 0.8rem;
+            margin-bottom: 0.5rem; /* Reduced from 0.8rem */
             font-size: 0.95rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -226,9 +218,10 @@
 
         /* Checkbox Styling */
         .form-check {
-            margin: 2rem 0;
+            margin: 1rem 0; /* Reduced from 2rem 0 */
             display: flex;
             align-items: center;
+            padding-bottom: 0.5rem;
         }
 
         .form-check-input {
@@ -254,48 +247,55 @@
             font-weight: 500;
         }
 
-        /* Error Message */
-        .err {
-            background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
-            color: #c53030;
-            padding: 12px 16px;
-            border-radius: 8px;
-            border-left: 4px solid #e53e3e;
-            margin: 1.5rem 0;
-            font-weight: 500;
-            text-align: center;
+        /* Forgot Password Link */
+        .forgot-password {
+            display: block;
+            text-align: right;
+            margin-top: 0.5rem;
+            margin-bottom: 1.5rem; /* Added margin bottom for spacing */
         }
 
-        /* Link Styling */
-        a {
+        .forgot-password a {
             color: var(--light-blue);
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 500; /* Reduced from 600 */
+            font-size: 0.85rem; /* Smaller font size */
             transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            margin-bottom: 2rem;
             position: relative;
+            display: inline-block;
         }
 
-        a::after {
+        .forgot-password a::after {
             content: '';
             position: absolute;
             bottom: -2px;
             left: 0;
             width: 0;
-            height: 2px;
+            height: 1px; /* Thinner underline */
             background: var(--light-blue);
             transition: var(--transition);
         }
 
-        a:hover {
+        .forgot-password a:hover {
             color: var(--primary-blue);
-            transform: translateX(5px);
+            transform: translateX(2px); /* Smaller hover movement */
         }
 
-        a:hover::after {
+        .forgot-password a:hover::after {
             width: 100%;
+        }
+
+        /* Error Message */
+        .err {
+            background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+            color: #c53030;
+            padding: 10px 14px; /* Reduced padding */
+            border-radius: 8px;
+            border-left: 4px solid #e53e3e;
+            margin: 1rem 0; /* Reduced from 1.5rem 0 */
+            font-weight: 500;
+            text-align: center;
+            font-size: 0.9rem;
         }
 
         /* Button Styling */
@@ -365,28 +365,30 @@
         @media (max-width: 768px) {
             .container {
                 margin: 1rem;
-                padding: 2.5rem 2rem;
-                max-height: 85vh;
+                padding: 2rem 1.5rem; /* Reduced padding */
+                max-height: calc(100vh - 2rem); /* Adjusted for mobile */
             }
             
             h2 {
                 font-size: 2rem;
+                margin-bottom: 2rem; /* Reduced */
             }
             
             .btn {
                 width: 100%;
-                margin-top: 1rem;
+                margin-top: 0.5rem; /* Reduced */
             }
             
             .float-right {
                 float: none;
             }
             
-            a {
-                display: block;
-                text-align: center;
-                margin-bottom: 2rem;
-                justify-content: center;
+            .form-group {
+                margin-bottom: 1.25rem; /* Reduced for mobile */
+            }
+            
+            .form-check {
+                margin: 0.75rem 0; /* Reduced for mobile */
             }
         }
 
@@ -397,18 +399,26 @@
             }
             
             .container {
-                padding: 2rem 1.5rem;
+                padding: 1.5rem 1.25rem; /* Reduced padding */
                 border-radius: 16px;
-                max-height: 80vh;
+                max-height: calc(100vh - 2rem);
             }
             
             h2 {
                 font-size: 1.8rem;
-                margin-bottom: 2rem;
+                margin-bottom: 1.5rem; /* Reduced */
             }
             
             .form-control {
                 padding: 12px 14px;
+            }
+            
+            .forgot-password {
+                margin-bottom: 1rem; /* Reduced for mobile */
+            }
+            
+            .forgot-password a {
+                font-size: 0.8rem; /* Smaller on mobile */
             }
         }
 
@@ -437,25 +447,6 @@
         * {
             box-sizing: border-box;
         }
-
-        /* Custom scrollbar for the container */
-        .container::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .container::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 3px;
-        }
-
-        .container::-webkit-scrollbar-thumb {
-            background: var(--light-blue);
-            border-radius: 3px;
-        }
-
-        .container::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-blue);
-        }
     </style>
 </head>
 <body>
@@ -483,6 +474,16 @@
                     }
                 }
             });
+            
+            // Prevent scrolling on touch devices
+            document.body.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+            }, { passive: false });
+            
+            // Prevent scrolling with mouse wheel
+            document.body.addEventListener('wheel', function(e) {
+                e.preventDefault();
+            }, { passive: false });
         });
     </script>
 
@@ -506,11 +507,13 @@
                     <div class="form-group form-check">
                         <input type="checkbox" class="form-check-input" id="showPassword" onclick="showPass()">
                         <label class="form-check-label" for="showPassword">Reveal Password</label>
-                        <div style="text-align:right;margin-bottom:20px">
-  <a href="/admin/forgot-password">Forgot password?</a>
-</div>
-
                     </div>
+                    
+                    <!-- Forgot Password with smaller size and proper spacing -->
+                    <div class="forgot-password">
+                        <a href="/admin/forgot-password">Forgot password?</a>
+                    </div>
+                    
                     {{#if loginErr}}
                     <p class="err">Authentication Failed: Invalid Credentials</p>
                     {{/if}}
@@ -532,6 +535,18 @@
                 passwordInput.type = "password";
             }
         }
+        
+        // Additional scrolling prevention
+        window.addEventListener('scroll', function() {
+            window.scrollTo(0, 0);
+        });
+        
+        // Prevent keyboard scrolling
+        window.addEventListener('keydown', function(e) {
+            if ([32, 33, 34, 35, 36, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+                e.preventDefault();
+            }
+        }, false);
     </script>
 </body>
 </html>
