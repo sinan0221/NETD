@@ -12,7 +12,7 @@ const ExcelJS = require("exceljs");
 const bcrypt = require('bcrypt');
 const transporter = require('../config/mailer');
 const Admin = require('../models/Admin');
-
+const nodemailer = require('nodemailer');
 
 
 // Node's File System module for cleanup
@@ -249,16 +249,16 @@ async function fixImageOrientation(imageBuffer) {
 
 
 
-/* ================================
-   EMAIL TRANSPORTER
-================================ */
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+// /* ================================
+//    EMAIL TRANSPORTER
+// ================================ */
+// const transporter = nodemailer.createTransport({
+//   service: 'gmail',
+//   auth: {
+//     user: process.env.EMAIL_USER,
+//     pass: process.env.EMAIL_PASS
+//   }
+// });
 
 /* ================================
    LOGIN
