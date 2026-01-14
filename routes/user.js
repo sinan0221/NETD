@@ -15,6 +15,8 @@ const mammoth = require("mammoth")
 const multer = require('multer');
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const bcrypt = require('bcrypt');
+
 
 
 const templatePath = path.join(__dirname, '../public/pdf-templates/hall_ticket_template.pdf');
