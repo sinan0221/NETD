@@ -203,6 +203,23 @@ router.get('/reset-password', requireOTP, (req, res) => {
 });
 
 // Reset password POST
+// router.post('/reset-password', requireOTP, (req, res) => {
+//   const { newPassword, confirmPassword } = req.body;
+
+//   if (newPassword !== confirmPassword) {
+//     return res.render('admin/reset-password', {
+//       error: 'Passwords do not match'
+//     });
+//   }
+
+//   // TEMP: env-based password update
+//   process.env.ADMIN_PASSWORD = newPassword;
+
+//   delete req.session.otpVerified;
+
+//   req.session.loginErr = 'Password updated. Please login';
+//   res.redirect('/admin/login');
+// });
 router.post('/reset-password', requireOTP, (req, res) => {
   const { newPassword, confirmPassword } = req.body;
 
@@ -212,14 +229,31 @@ router.post('/reset-password', requireOTP, (req, res) => {
     });
   }
 
-  // TEMP: env-based password update
+  // 1️⃣ Update runtime env
   process.env.ADMIN_PASSWORD = newPassword;
 
+  // 2️⃣ Persist to .env file
+  const envPath = path.join(process.cwd(), '.env');
+  let envContent = fs.readFileSync(envPath, 'utf8');
+
+  if (envContent.match(/^ADMIN_PASSWORD=/m)) {
+    envContent = envContent.replace(
+      /^ADMIN_PASSWORD=.*/m,
+      `ADMIN_PASSWORD=${newPassword}`
+    );
+  } else {
+    envContent += `\nADMIN_PASSWORD=${newPassword}`;
+  }
+
+  fs.writeFileSync(envPath, envContent);
+
+  // 3️⃣ Cleanup session
   delete req.session.otpVerified;
 
   req.session.loginErr = 'Password updated. Please login';
   res.redirect('/admin/login');
 });
+
 // router.post('/reset-password', requireOTP, async (req, res) => {
 //   const { newPassword, confirmPassword } = req.body;
 
