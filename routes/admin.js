@@ -58,54 +58,262 @@ async function fixImageOrientation(imageBuffer) {
   }
 }
 
-/* ================================
-   AUTH ROUTES
-   ================================ */
+// /* ================================
+//    AUTH ROUTES
+//    ================================ */
 
-// Admin login page
-router.get('/login', (req, res) => {
-  if (req.session.adminLoggedIn) {
-    res.redirect('/admin');
-  } else {
-    res.render('admin/login', { loginErr: req.session.loginErr });
-    req.session.loginErr = false;
-  }
-});
-
-// Admin login POST
-// router.post('/login', (req, res) => {
-//   const { username, password } = req.body;
-
-//   if (
-//     username === process.env.ADMIN_USERNAME &&
-//     password === process.env.ADMIN_PASSWORD
-//   ) {
-//     req.session.adminLoggedIn = true;
-//     req.session.admin = { username };
+// // Admin login page
+// router.get('/login', (req, res) => {
+//   if (req.session.adminLoggedIn) {
 //     res.redirect('/admin');
 //   } else {
-//     req.session.loginErr = "Invalid Credentials";
-//     res.redirect('/admin/login');
+//     res.render('admin/login', { loginErr: req.session.loginErr });
+//     req.session.loginErr = false;
 //   }
 // });
-router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
 
-  const admin = await Admin.findOne({ email: username });
-  if (!admin) {
-    req.session.loginErr = 'Invalid credentials';
-    return res.redirect('/admin/login');
+// // Admin login POST
+// // router.post('/login', (req, res) => {
+// //   const { username, password } = req.body;
+
+// //   if (
+// //     username === process.env.ADMIN_USERNAME &&
+// //     password === process.env.ADMIN_PASSWORD
+// //   ) {
+// //     req.session.adminLoggedIn = true;
+// //     req.session.admin = { username };
+// //     res.redirect('/admin');
+// //   } else {
+// //     req.session.loginErr = "Invalid Credentials";
+// //     res.redirect('/admin/login');
+// //   }
+// // });
+// router.post('/login', async (req, res) => {
+//   const { username, password } = req.body;
+
+//   const admin = await Admin.findOne({ email: username });
+//   if (!admin) {
+//     req.session.loginErr = 'Invalid credentials';
+//     return res.redirect('/admin/login');
+//   }
+
+//   const match = await bcrypt.compare(password, admin.password);
+//   if (!match) {
+//     req.session.loginErr = 'Invalid credentials';
+//     return res.redirect('/admin/login');
+//   }
+
+//   req.session.adminLoggedIn = true;
+//   res.redirect('/admin');
+// });
+// // OTP generator
+// function generateOTP() {
+//   return Math.floor(100000 + Math.random() * 900000).toString();
+// }
+
+// // Forgot password page
+// router.get('/forgot-password', (req, res) => {
+//   res.render('admin/forgot-password');
+// });
+
+// // Forgot password POST
+// router.post('/forgot-password', async (req, res) => {
+//   const { email } = req.body;
+
+//   // 🔐 Allow only admin email
+//   if (email !== process.env.ADMIN_EMAIL) {
+//     return res.render('admin/forgot-password', {
+//       error: 'Email not registered'
+//     });
+//   }
+
+//   const otp = generateOTP();
+
+//   req.session.adminOTP = otp;
+//   req.session.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes
+
+//   try {
+//     await transporter.sendMail({
+//       from: process.env.EMAIL_USER,
+//       to: process.env.ADMIN_EMAIL,
+//       subject: 'NETD Admin Password Reset OTP',
+//       html: `
+//         <h2>NETD Admin Password Reset</h2>
+//         <p>Your OTP is:</p>
+//         <h1>${otp}</h1>
+//         <p>This OTP is valid for 5 minutes.</p>
+//       `
+//     });
+
+//     res.redirect('/admin/verify-otp');
+//   } catch (err) {
+//     console.error('Email send error:', err);
+//     res.render('admin/forgot-password', {
+//       error: 'Failed to send OTP. Try again later.'
+//     });
+//   }
+// });
+
+
+// // Middleware
+// function requireOTP(req, res, next) {
+//   if (!req.session.otpVerified) {
+//     return res.redirect('/admin/login');
+//   }
+//   next();
+// }
+
+// // Verify OTP page
+// router.get('/verify-otp', (req, res) => {
+//   res.render('admin/verify-otp');
+// });
+
+// // Verify OTP POST
+// router.post('/verify-otp', (req, res) => {
+//   const { otp } = req.body;
+
+//   if (!req.session.adminOTP || !req.session.otpExpiry) {
+//     return res.render('admin/verify-otp', {
+//       error: 'OTP expired. Please try again'
+//     });
+//   }
+
+//   if (Date.now() > req.session.otpExpiry) {
+//     return res.render('admin/verify-otp', {
+//       error: 'OTP expired. Please try again'
+//     });
+//   }
+
+//   if (otp !== req.session.adminOTP) {
+//     return res.render('admin/verify-otp', {
+//       error: 'Invalid OTP'
+//     });
+//   }
+
+//   req.session.otpVerified = true;
+//   delete req.session.adminOTP;
+//   delete req.session.otpExpiry;
+
+//   res.redirect('/admin/reset-password');
+// });
+
+// // Reset password page
+// router.get('/reset-password', requireOTP, (req, res) => {
+//   res.render('admin/reset-password');
+// });
+
+// // Reset password POST
+// // router.post('/reset-password', requireOTP, (req, res) => {
+// //   const { newPassword, confirmPassword } = req.body;
+
+// //   if (newPassword !== confirmPassword) {
+// //     return res.render('admin/reset-password', {
+// //       error: 'Passwords do not match'
+// //     });
+// //   }
+
+// //   // TEMP: env-based password update
+// //   process.env.ADMIN_PASSWORD = newPassword;
+
+// //   delete req.session.otpVerified;
+
+// //   req.session.loginErr = 'Password updated. Please login';
+// //   res.redirect('/admin/login');
+// // });
+// router.post('/reset-password', requireOTP, async (req, res) => {
+//   const { newPassword, confirmPassword } = req.body;
+
+//   if (newPassword !== confirmPassword) {
+//     return res.render('admin/reset-password', {
+//       error: 'Passwords do not match'
+//     });
+//   }
+
+//   const hashed = await bcrypt.hash(newPassword, 10);
+
+//   await Admin.updateOne(
+//     { email: process.env.ADMIN_EMAIL },
+//     { $set: { password: hashed } }
+//   );
+
+//   req.session.otpVerified = false;
+//   req.session.loginErr = 'Password updated. Please login';
+//   res.redirect('/admin/login');
+// });
+// // Logout
+// router.get('/logout', (req, res) => {
+//   req.session.destroy(() => {
+//     res.redirect('/admin/login');
+//   });
+// });
+
+
+
+/* ================================
+   EMAIL TRANSPORTER
+================================ */
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
-
-  const match = await bcrypt.compare(password, admin.password);
-  if (!match) {
-    req.session.loginErr = 'Invalid credentials';
-    return res.redirect('/admin/login');
-  }
-
-  req.session.adminLoggedIn = true;
-  res.redirect('/admin');
 });
+
+/* ================================
+   LOGIN
+================================ */
+
+// Login page
+router.get('/login', (req, res) => {
+  if (req.session.adminLoggedIn) {
+    return res.redirect('/admin');
+  }
+  res.render('admin/login', { loginErr: req.session.loginErr });
+  req.session.loginErr = null;
+});
+
+// Login POST (DB ONLY)
+router.post('/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    const admin = await Admin.findOne({ email: username });
+    if (!admin) {
+      req.session.loginErr = 'Invalid credentials';
+      return res.redirect('/admin/login');
+    }
+
+    const match = await admin.comparePassword(password);
+    if (!match) {
+      req.session.loginErr = 'Invalid credentials';
+      return res.redirect('/admin/login');
+    }
+
+    req.session.adminLoggedIn = true;
+    req.session.adminId = admin._id;
+
+    res.redirect('/admin');
+  } catch (err) {
+    console.error(err);
+    req.session.loginErr = 'Something went wrong';
+    res.redirect('/admin/login');
+  }
+});
+
+/* ================================
+   LOGOUT
+================================ */
+router.get('/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.redirect('/admin/login');
+  });
+});
+
+/* ================================
+   FORGOT PASSWORD
+================================ */
+
 // OTP generator
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -118,133 +326,122 @@ router.get('/forgot-password', (req, res) => {
 
 // Forgot password POST
 router.post('/forgot-password', async (req, res) => {
-  const { email } = req.body;
-
-  // 🔐 Allow only admin email
-  if (email !== process.env.ADMIN_EMAIL) {
-    return res.render('admin/forgot-password', {
-      error: 'Email not registered'
-    });
-  }
-
-  const otp = generateOTP();
-
-  req.session.adminOTP = otp;
-  req.session.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes
-
   try {
+    const { email } = req.body;
+
+    // 🔐 Allow ONLY fixed admin email
+    if (email !== process.env.ADMIN_EMAIL) {
+      return res.render('admin/forgot-password', {
+        error: 'Unauthorized email'
+      });
+    }
+
+    const admin = await Admin.findOne({ email: process.env.ADMIN_EMAIL });
+    if (!admin) {
+      return res.render('admin/forgot-password', {
+        error: 'Admin not found'
+      });
+    }
+
+    const otp = generateOTP();
+
+    admin.resetOTP = otp;
+    admin.resetOTPExpiry = Date.now() + 5 * 60 * 1000;
+    await admin.save();
+
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: process.env.ADMIN_EMAIL,
+      to: process.env.EMAIL_USER, // OTP always goes to you
       subject: 'NETD Admin Password Reset OTP',
       html: `
         <h2>NETD Admin Password Reset</h2>
-        <p>Your OTP is:</p>
+        <p>Your OTP:</p>
         <h1>${otp}</h1>
-        <p>This OTP is valid for 5 minutes.</p>
+        <p>Valid for 5 minutes</p>
       `
     });
 
+    req.session.resetEmail = process.env.ADMIN_EMAIL;
     res.redirect('/admin/verify-otp');
   } catch (err) {
-    console.error('Email send error:', err);
+    console.error(err);
     res.render('admin/forgot-password', {
-      error: 'Failed to send OTP. Try again later.'
+      error: 'Failed to send OTP'
     });
   }
 });
 
 
-// Middleware
-function requireOTP(req, res, next) {
-  if (!req.session.otpVerified) {
-    return res.redirect('/admin/login');
-  }
-  next();
-}
+/* ================================
+   VERIFY OTP
+================================ */
 
-// Verify OTP page
 router.get('/verify-otp', (req, res) => {
   res.render('admin/verify-otp');
 });
 
-// Verify OTP POST
-router.post('/verify-otp', (req, res) => {
-  const { otp } = req.body;
+router.post('/verify-otp', async (req, res) => {
+  try {
+    const { otp } = req.body;
 
-  if (!req.session.adminOTP || !req.session.otpExpiry) {
-    return res.render('admin/verify-otp', {
-      error: 'OTP expired. Please try again'
+    const admin = await Admin.findOne({
+      resetOTP: otp,
+      resetOTPExpiry: { $gt: Date.now() }
+    });
+
+    if (!admin) {
+      return res.render('admin/verify-otp', {
+        error: 'Invalid or expired OTP'
+      });
+    }
+
+    req.session.resetAdminId = admin._id;
+    res.redirect('/admin/reset-password');
+  } catch (err) {
+    console.error(err);
+    res.render('admin/verify-otp', {
+      error: 'Something went wrong'
     });
   }
-
-  if (Date.now() > req.session.otpExpiry) {
-    return res.render('admin/verify-otp', {
-      error: 'OTP expired. Please try again'
-    });
-  }
-
-  if (otp !== req.session.adminOTP) {
-    return res.render('admin/verify-otp', {
-      error: 'Invalid OTP'
-    });
-  }
-
-  req.session.otpVerified = true;
-  delete req.session.adminOTP;
-  delete req.session.otpExpiry;
-
-  res.redirect('/admin/reset-password');
 });
 
-// Reset password page
-router.get('/reset-password', requireOTP, (req, res) => {
+/* ================================
+   RESET PASSWORD
+================================ */
+
+router.get('/reset-password', (req, res) => {
+  if (!req.session.resetAdminId) {
+    return res.redirect('/admin/login');
+  }
   res.render('admin/reset-password');
 });
 
-// Reset password POST
-// router.post('/reset-password', requireOTP, (req, res) => {
-//   const { newPassword, confirmPassword } = req.body;
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { newPassword, confirmPassword } = req.body;
 
-//   if (newPassword !== confirmPassword) {
-//     return res.render('admin/reset-password', {
-//       error: 'Passwords do not match'
-//     });
-//   }
+    if (newPassword !== confirmPassword) {
+      return res.render('admin/reset-password', {
+        error: 'Passwords do not match'
+      });
+    }
 
-//   // TEMP: env-based password update
-//   process.env.ADMIN_PASSWORD = newPassword;
+    const admin = await Admin.findById(req.session.resetAdminId);
+    admin.password = newPassword; // auto-hashed
+    admin.resetOTP = null;
+    admin.resetOTPExpiry = null;
 
-//   delete req.session.otpVerified;
+    await admin.save();
 
-//   req.session.loginErr = 'Password updated. Please login';
-//   res.redirect('/admin/login');
-// });
-router.post('/reset-password', requireOTP, async (req, res) => {
-  const { newPassword, confirmPassword } = req.body;
-
-  if (newPassword !== confirmPassword) {
-    return res.render('admin/reset-password', {
-      error: 'Passwords do not match'
+    req.session.destroy(() => {
+      res.redirect('/admin/login');
+    });
+  } catch (err) {
+    console.error(err);
+    res.render('admin/reset-password', {
+      error: 'Failed to reset password'
     });
   }
-
-  const hashed = await bcrypt.hash(newPassword, 10);
-
-  await Admin.updateOne(
-    { email: process.env.ADMIN_EMAIL },
-    { $set: { password: hashed } }
-  );
-
-  req.session.otpVerified = false;
-  req.session.loginErr = 'Password updated. Please login';
-  res.redirect('/admin/login');
-});
-// Logout
-router.get('/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.redirect('/admin/login');
-  });
 });
 
 
