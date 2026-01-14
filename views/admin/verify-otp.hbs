@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Verify OTP</title>
+</head>
+<body>
+
+<h2>Verify OTP</h2>
+
+<form action="/admin/verify-otp" method="post">
+  <input type="text" name="otp" placeholder="Enter OTP" required><br><br>
+
+  {{#if error}}
+    <p style="color:red">{{error}}</p>
+  {{/if}}
+
+  <button type="submit">Verify OTP</button>
+</form>
+
+</body>
+</html>

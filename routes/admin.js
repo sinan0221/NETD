@@ -10,6 +10,8 @@ const jpegRotate = require('jpeg-autorotate');
 const archiver = require("archiver");
 const ExcelJS = require("exceljs");
 const bcrypt = require('bcrypt');
+const transporter = require('../config/mailer');
+
 
 
 // Node's File System module for cleanup
@@ -73,8 +75,10 @@ router.get('/login', (req, res) => {
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
 
-  // ✅ Hardcoded check (replace with DB if needed)
-  if (username === "admin" && password === "2025") {
+  if (
+    username === process.env.ADMIN_USERNAME &&
+    password === process.env.ADMIN_PASSWORD
+  ) {
     req.session.adminLoggedIn = true;
     req.session.admin = { username };
     res.redirect('/admin');
@@ -84,12 +88,126 @@ router.post('/login', (req, res) => {
   }
 });
 
+// OTP generator
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Forgot password page
+router.get('/forgot-password', (req, res) => {
+  res.render('admin/forgot-password');
+});
+
+// Forgot password POST
+router.post('/forgot-password', async (req, res) => {
+  const { mobile } = req.body;
+
+  if (mobile !== process.env.ADMIN_MOBILE) {
+    return res.render('admin/forgot-password', {
+      error: 'Mobile number not registered'
+    });
+  }
+
+  const otp = generateOTP();
+
+  req.session.adminOTP = otp;
+  req.session.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes
+
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER,
+      subject: 'NETD Admin Password Reset OTP',
+      html: `
+        <h2>NETD Admin Password Reset</h2>
+        <p>Your OTP is:</p>
+        <h1>${otp}</h1>
+        <p>This OTP is valid for 5 minutes.</p>
+      `
+    });
+
+    res.redirect('/admin/verify-otp');
+  } catch (err) {
+    console.error('Email send error:', err);
+    res.render('admin/forgot-password', {
+      error: 'Failed to send OTP. Try again later.'
+    });
+  }
+});
+
+// Middleware
+function requireOTP(req, res, next) {
+  if (!req.session.otpVerified) {
+    return res.redirect('/admin/login');
+  }
+  next();
+}
+
+// Verify OTP page
+router.get('/verify-otp', (req, res) => {
+  res.render('admin/verify-otp');
+});
+
+// Verify OTP POST
+router.post('/verify-otp', (req, res) => {
+  const { otp } = req.body;
+
+  if (!req.session.adminOTP || !req.session.otpExpiry) {
+    return res.render('admin/verify-otp', {
+      error: 'OTP expired. Please try again'
+    });
+  }
+
+  if (Date.now() > req.session.otpExpiry) {
+    return res.render('admin/verify-otp', {
+      error: 'OTP expired. Please try again'
+    });
+  }
+
+  if (otp !== req.session.adminOTP) {
+    return res.render('admin/verify-otp', {
+      error: 'Invalid OTP'
+    });
+  }
+
+  req.session.otpVerified = true;
+  delete req.session.adminOTP;
+  delete req.session.otpExpiry;
+
+  res.redirect('/admin/reset-password');
+});
+
+// Reset password page
+router.get('/reset-password', requireOTP, (req, res) => {
+  res.render('admin/reset-password');
+});
+
+// Reset password POST
+router.post('/reset-password', requireOTP, (req, res) => {
+  const { newPassword, confirmPassword } = req.body;
+
+  if (newPassword !== confirmPassword) {
+    return res.render('admin/reset-password', {
+      error: 'Passwords do not match'
+    });
+  }
+
+  // TEMP: env-based password update
+  process.env.ADMIN_PASSWORD = newPassword;
+
+  delete req.session.otpVerified;
+
+  req.session.loginErr = 'Password updated. Please login';
+  res.redirect('/admin/login');
+});
+
 // Logout
 router.get('/logout', (req, res) => {
   req.session.destroy(() => {
     res.redirect('/admin/login');
   });
 });
+
 
 /* ================================
    ADMIN DASHBOARD + CENTERS
