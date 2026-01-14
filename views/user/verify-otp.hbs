@@ -1,0 +1,11 @@
+<h2>Verify OTP</h2>
+
+<form action="/user/verify-otp/{{id}}" method="post">
+  <input type="text" name="otp" class="form-control" placeholder="Enter OTP" required>
+
+  <button type="submit" class="btn btn-primary">Verify</button>
+
+  {{#if err}}
+    <p class="err">{{err}}</p>
+  {{/if}}
+</form>

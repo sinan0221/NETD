@@ -13,6 +13,8 @@ const path = require('path');
 const fontkit = require('fontkit');
 const mammoth = require("mammoth")
 const multer = require('multer');
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 
 
 const templatePath = path.join(__dirname, '../public/pdf-templates/hall_ticket_template.pdf');
@@ -99,6 +101,126 @@ router.post('/signup', async (req, res) => {
     console.error("❌ Signup error:", err);
     req.session.signupErr = "Something went wrong";
     res.redirect('/user/signup');
+  }
+});
+router.get('/forgot-password', (req, res) => {
+  res.render('user/forgot-password');
+});
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { centreId } = req.body;
+
+    const centre = await db.get()
+      .collection(collection.CENTER_COLLECTION)
+      .findOne({ centreId });
+
+    if (!centre || !centre.email) {
+      return res.render('user/forgot-password', {
+        err: "Centre not found or email not set"
+      });
+    }
+
+    // Generate 6 digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Save OTP + expiry (10 mins)
+    await db.get().collection(collection.CENTER_COLLECTION).updateOne(
+      { _id: centre._id },
+      {
+        $set: {
+          resetOtp: otp,
+          resetOtpExpires: new Date(Date.now() + 10 * 60 * 1000)
+        }
+      }
+    );
+
+    // Send email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+    
+
+    await transporter.sendMail({
+      to: centre.email,
+      subject: "NETD Password Reset OTP",
+      html: `<h3>Your OTP: ${otp}</h3><p>Valid for 10 minutes</p>`
+    });
+
+    res.redirect(`/user/verify-otp/${centre._id}`);
+
+  } catch (err) {
+    console.error(err);
+    res.render('user/forgot-password', { err: "Something went wrong" });
+  }
+});
+router.get('/verify-otp/:id', (req, res) => {
+  res.render('user/verify-otp', { id: req.params.id });
+});
+router.post('/verify-otp/:id', async (req, res) => {
+  const { otp } = req.body;
+
+  const centre = await db.get().collection(collection.CENTER_COLLECTION)
+    .findOne({ _id: ObjectId(req.params.id) });
+
+  if (
+    !centre ||
+    centre.resetOtp !== otp ||
+    centre.resetOtpExpires < new Date()
+  ) {
+    return res.render('user/verify-otp', {
+      id: req.params.id,
+      err: "Invalid or expired OTP"
+    });
+  }
+
+  res.redirect(`/user/reset-password/${centre._id}`);
+});
+router.get('/reset-password/:id', async (req, res) => {
+  res.render('user/reset-password', { id: req.params.id });
+});
+router.post('/reset-password/:id', async (req, res) => {
+  try {
+    const hashed = await bcrypt.hash(req.body.password, 10);
+
+    // 1️⃣ Get centre to read centreId
+    const centre = await db.get()
+      .collection(collection.CENTER_COLLECTION)
+      .findOne({ _id: ObjectId(req.params.id) });
+
+    if (!centre) {
+      return res.status(400).send("Invalid centre");
+    }
+
+    // 2️⃣ Update USER password using centreId
+    await db.get()
+      .collection(collection.USER_COLLECTION)
+      .updateOne(
+        { centreId: centre.centreId },
+        { $set: { password: hashed } }
+      );
+
+    // 3️⃣ Clear OTP
+    await db.get()
+      .collection(collection.CENTER_COLLECTION)
+      .updateOne(
+        { _id: centre._id },
+        {
+          $unset: {
+            resetOtp: "",
+            resetOtpExpires: ""
+          }
+        }
+      );
+
+    res.redirect('/user/login');
+
+  } catch (err) {
+    console.error("❌ Reset password error:", err);
+    res.status(500).send("Error resetting password");
   }
 });
 
