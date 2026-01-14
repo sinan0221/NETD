@@ -73,22 +73,39 @@ router.get('/login', (req, res) => {
 });
 
 // Admin login POST
-router.post('/login', (req, res) => {
+// router.post('/login', (req, res) => {
+//   const { username, password } = req.body;
+
+//   if (
+//     username === process.env.ADMIN_USERNAME &&
+//     password === process.env.ADMIN_PASSWORD
+//   ) {
+//     req.session.adminLoggedIn = true;
+//     req.session.admin = { username };
+//     res.redirect('/admin');
+//   } else {
+//     req.session.loginErr = "Invalid Credentials";
+//     res.redirect('/admin/login');
+//   }
+// });
+router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
-  if (
-    username === process.env.ADMIN_USERNAME &&
-    password === process.env.ADMIN_PASSWORD
-  ) {
-    req.session.adminLoggedIn = true;
-    req.session.admin = { username };
-    res.redirect('/admin');
-  } else {
-    req.session.loginErr = "Invalid Credentials";
-    res.redirect('/admin/login');
+  const admin = await Admin.findOne({ email: username });
+  if (!admin) {
+    req.session.loginErr = 'Invalid credentials';
+    return res.redirect('/admin/login');
   }
-});
 
+  const match = await bcrypt.compare(password, admin.password);
+  if (!match) {
+    req.session.loginErr = 'Invalid credentials';
+    return res.redirect('/admin/login');
+  }
+
+  req.session.adminLoggedIn = true;
+  res.redirect('/admin');
+});
 // OTP generator
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -186,7 +203,24 @@ router.get('/reset-password', requireOTP, (req, res) => {
 });
 
 // Reset password POST
-router.post('/reset-password', requireOTP, (req, res) => {
+// router.post('/reset-password', requireOTP, (req, res) => {
+//   const { newPassword, confirmPassword } = req.body;
+
+//   if (newPassword !== confirmPassword) {
+//     return res.render('admin/reset-password', {
+//       error: 'Passwords do not match'
+//     });
+//   }
+
+//   // TEMP: env-based password update
+//   process.env.ADMIN_PASSWORD = newPassword;
+
+//   delete req.session.otpVerified;
+
+//   req.session.loginErr = 'Password updated. Please login';
+//   res.redirect('/admin/login');
+// });
+router.post('/reset-password', requireOTP, async (req, res) => {
   const { newPassword, confirmPassword } = req.body;
 
   if (newPassword !== confirmPassword) {
@@ -195,15 +229,17 @@ router.post('/reset-password', requireOTP, (req, res) => {
     });
   }
 
-  // TEMP: env-based password update
-  process.env.ADMIN_PASSWORD = newPassword;
+  const hashed = await bcrypt.hash(newPassword, 10);
 
-  delete req.session.otpVerified;
+  await Admin.updateOne(
+    { email: process.env.ADMIN_EMAIL },
+    { $set: { password: hashed } }
+  );
 
+  req.session.otpVerified = false;
   req.session.loginErr = 'Password updated. Please login';
   res.redirect('/admin/login');
 });
-
 // Logout
 router.get('/logout', (req, res) => {
   req.session.destroy(() => {
