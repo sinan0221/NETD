@@ -555,55 +555,131 @@ getTimetablesByCentre: async (centreId) => {
     throw err;
   }
 },
+// // ===============================
+// // DASHBOARD STATS (BY CENTRE) – FINAL FIX
+// // ===============================
+// getDashboardStatsByCentre: async (centreId) => {
+//   try {
+//     const centreObjectId = new ObjectId(centreId);
+
+//     // ✅ TOTAL STUDENTS (THIS CENTRE ONLY)
+//     const totalStudents = await db.get()
+//       .collection(collection.STUDENT_COLLECTION)
+//       .countDocuments({
+//         centreId: centreObjectId
+//       });
+
+//     // ✅ PENDING STUDENTS (activated = false OR missing)
+//     const pendingStudents = await db.get()
+//       .collection(collection.STUDENT_COLLECTION)
+//       .countDocuments({
+//         centreId: centreObjectId,
+//         $or: [
+//           { activated: false },
+//           { activated: { $exists: false } }
+//         ]
+//       });
+
+//     // ✅ ACTIVE BATCHES
+//     const activeBatches = await db.get()
+//       .collection(collection.BATCH_COLLECTION)
+//       .countDocuments({
+//         centreId: centreObjectId,
+//         active: true
+//       });
+
+//     // ✅ INACTIVE BATCHES
+//     const inactiveBatches = await db.get()
+//       .collection(collection.BATCH_COLLECTION)
+//       .countDocuments({
+//         centreId: centreObjectId,
+//         $or: [
+//           { active: false },
+//           { active: { $exists: false } }
+//         ]
+//       });
+
+//     // ✅ EXAMS
+//     const examsScheduled = await db.get()
+//       .collection(collection.TIMETABLE_COLLECTION)
+//       .countDocuments({
+//         centreId: centreObjectId
+//       });
+
+//     return {
+//       totalStudents,
+//       pendingStudents,
+//       activeBatches,
+//       inactiveBatches,
+//       examsScheduled
+//     };
+
+//   } catch (err) {
+//     console.error("❌ Dashboard stats error:", err);
+//     return {
+//       totalStudents: 0,
+//       pendingStudents: 0,
+//       activeBatches: 0,
+//       inactiveBatches: 0,
+//       examsScheduled: 0
+//     };
+//   }
+// },
+
 // ===============================
-// DASHBOARD STATS (BY CENTRE) – FINAL FIX
+// DASHBOARD STATS (BY CENTRE) – FIXED
 // ===============================
 getDashboardStatsByCentre: async (centreId) => {
   try {
     const centreObjectId = new ObjectId(centreId);
 
-    // ✅ TOTAL STUDENTS (THIS CENTRE ONLY)
+    // ✅ TOTAL STUDENTS (EXCLUDE DELETED)
     const totalStudents = await db.get()
       .collection(collection.STUDENT_COLLECTION)
       .countDocuments({
-        centreId: centreObjectId
+        centreId: centreObjectId,
+        isDeleted: { $ne: true }
       });
 
-    // ✅ PENDING STUDENTS (activated = false OR missing)
+    // ✅ PENDING STUDENTS (activated = false OR missing, EXCLUDE DELETED)
     const pendingStudents = await db.get()
       .collection(collection.STUDENT_COLLECTION)
       .countDocuments({
         centreId: centreObjectId,
+        isDeleted: { $ne: true },
         $or: [
           { activated: false },
           { activated: { $exists: false } }
         ]
       });
 
-    // ✅ ACTIVE BATCHES
+    // ✅ ACTIVE BATCHES (EXCLUDE DELETED)
     const activeBatches = await db.get()
       .collection(collection.BATCH_COLLECTION)
       .countDocuments({
         centreId: centreObjectId,
-        active: true
+        active: true,
+        isDeleted: { $ne: true }
       });
 
-    // ✅ INACTIVE BATCHES
+    // ✅ INACTIVE BATCHES (EXCLUDE DELETED)
     const inactiveBatches = await db.get()
       .collection(collection.BATCH_COLLECTION)
       .countDocuments({
         centreId: centreObjectId,
+        isDeleted: { $ne: true },
         $or: [
           { active: false },
           { active: { $exists: false } }
         ]
       });
 
-    // ✅ EXAMS
+    // ✅ EXAMS (OPTIONAL BUT SAFE TO EXCLUDE DELETED)
     const examsScheduled = await db.get()
       .collection(collection.TIMETABLE_COLLECTION)
       .countDocuments({
-        centreId: centreObjectId
+        centreId: centreObjectId,
+        isDeleted: { $ne: true }
       });
 
     return {
@@ -625,7 +701,6 @@ getDashboardStatsByCentre: async (centreId) => {
     };
   }
 },
-
 
 
 // ===============================
