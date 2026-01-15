@@ -8773,11 +8773,11 @@ router.get("/preview-combined-marklist/:id", verifyUserLogin, async (req, res) =
     pdfDoc.registerFontkit(fontkit);
 
     // 5️⃣ Load fonts
-    const arialPath = path.join(__dirname, "../public/fonts/arial.ttf");
+    const arialPath = path.join(__dirname, "../public/fonts/Arial.ttf");
     const arialBytes = fs.readFileSync(arialPath);
     const arial = await pdfDoc.embedFont(arialBytes);
 
-    const arialBoldPath = path.join(__dirname, "../public/fonts/arialbd.ttf");
+    const arialBoldPath = path.join(__dirname, "../public/fonts/Arialbd.ttf");
     let arialBold = arial;
     if (fs.existsSync(arialBoldPath)) {
       const arialBoldBytes = fs.readFileSync(arialBoldPath);

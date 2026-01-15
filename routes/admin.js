@@ -1337,11 +1337,11 @@ router.get("/preview-registration/:id", verifyAdminLogin, async (req, res) => {
     pdfDoc.registerFontkit(fontkit);
 
     // 4️⃣ Load fonts
-    const arialPath = path.join(__dirname, "../public/fonts/Arial.ttf");
+    const arialPath = path.join(__dirname, "../public/fonts/arial.ttf");
     const arialBytes = fs.readFileSync(arialPath);
     const arial = await pdfDoc.embedFont(arialBytes);
 
-    const arialBoldPath = path.join(__dirname, "../public/fonts/Arialbd.ttf");
+    const arialBoldPath = path.join(__dirname, "../public/fonts/arialbd.ttf");
     let arialBold = arial;
     if (fs.existsSync(arialBoldPath)) {
       const arialBoldBytes = fs.readFileSync(arialBoldPath);
@@ -2112,11 +2112,11 @@ router.get("/download-registration/:id", verifyAdminLogin, async (req, res) => {
     pdfDoc.registerFontkit(fontkit);
 
     // 4️⃣ Load fonts
-    const arialPath = path.join(__dirname, "../public/fonts/Arial.ttf");
+    const arialPath = path.join(__dirname, "../public/fonts/arial.ttf");
     const arialBytes = fs.readFileSync(arialPath);
     const arial = await pdfDoc.embedFont(arialBytes);
 
-    const arialBoldPath = path.join(__dirname, "../public/fonts/Arialbd.ttf");
+    const arialBoldPath = path.join(__dirname, "../public/fonts/arialbd.ttf");
     let arialBold = arial;
     if (fs.existsSync(arialBoldPath)) {
       const arialBoldBytes = fs.readFileSync(arialBoldPath);
