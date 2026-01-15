@@ -22,7 +22,7 @@
         }
 
         /* NUCLEAR OPTION - HIDE ALL NAVBARS */
-        nav, .navbar, [class*="navbar"], [class*="nav"] {
+        nav, .navbar, [class*="navbar"], [class*="nav"], header, .header, [class*="header"] {
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
@@ -30,11 +30,6 @@
             width: 0 !important;
             position: absolute !important;
             left: -9999px !important;
-        }
-
-        /* Hide header elements that might contain navigation */
-        header, .header, [class*="header"] {
-            display: none !important;
         }
 
         /* Global Styles */
@@ -50,9 +45,12 @@
             width: 100%;
             height: 100%;
             overflow: hidden; /* Disable scrolling */
+            display: flex; /* Added for vertical centering */
+            align-items: center; /* Added for vertical centering */
+            justify-content: center; /* Added for vertical centering */
         }
 
-        /* Remove any default body padding that might push content down */
+        /* Remove any default body padding */
         body {
             padding-top: 0 !important;
             margin-top: 0 !important;
@@ -72,16 +70,14 @@
             z-index: -1;
         }
 
-        /* Row Layout */
-        .row {
-            min-height: 100vh;
-            height: 100vh;
+        /* Main Container Wrapper */
+        .page-wrapper {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0;
-            padding: 2rem 1rem;
-            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
         }
 
         /* Column centering */
@@ -97,7 +93,7 @@
             backdrop-filter: blur(20px);
             border-radius: 20px;
             box-shadow: var(--shadow);
-            padding: 3rem 2.5rem;
+            padding: 2.5rem 2rem; /* Reduced padding */
             margin: 0;
             position: relative;
             overflow: hidden;
@@ -105,7 +101,7 @@
             animation: slideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             opacity: 0;
             transform: translateY(30px);
-            max-height: calc(100vh - 4rem); /* Adjusted to fit without scrolling */
+            width: 100%;
         }
 
         /* Gold Top Border */
@@ -122,9 +118,9 @@
         /* Header Styling */
         h2 {
             color: var(--primary-blue);
-            font-size: 2.5rem;
+            font-size: 2rem; /* Reduced size */
             font-weight: 700;
-            margin-bottom: 2.5rem;
+            margin-bottom: 1.5rem; /* Reduced margin */
             text-align: center;
             position: relative;
             background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
@@ -136,7 +132,7 @@
         h2::after {
             content: '';
             position: absolute;
-            bottom: -10px;
+            bottom: -8px; /* Reduced */
             left: 50%;
             transform: translateX(-50%);
             width: 60px;
@@ -148,7 +144,7 @@
         /* Logo/Image Styling */
         .image {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem; /* Reduced */
         }
 
         .image img {
@@ -170,11 +166,13 @@
         /* Form Styling */
         form {
             width: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         /* Form Groups */
         .form-group {
-            margin-bottom: 1.5rem; /* Reduced from 2rem for better spacing */
+            margin-bottom: 1.2rem;
             position: relative;
         }
 
@@ -183,8 +181,8 @@
             display: block;
             color: var(--primary-blue);
             font-weight: 600;
-            margin-bottom: 0.5rem; /* Reduced from 0.8rem */
-            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -192,10 +190,10 @@
         /* Input Fields */
         .form-control {
             width: 100%;
-            padding: 14px 16px;
+            padding: 12px 14px; /* Reduced padding */
             border: 2px solid var(--gray-border);
             border-radius: 12px;
-            font-size: 1rem;
+            font-size: 0.95rem; /* Slightly smaller */
             color: var(--dark-text);
             background-color: var(--gray-light);
             transition: var(--transition);
@@ -216,18 +214,24 @@
             font-weight: 400;
         }
 
-        /* Checkbox Styling */
+        /* Checkbox and Forgot Password Container */
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0.5rem 0 1.5rem 0; /* Adjusted spacing */
+        }
+
         .form-check {
-            margin: 1rem 0; /* Reduced from 2rem 0 */
             display: flex;
             align-items: center;
-            padding-bottom: 0.5rem;
+            margin: 0;
         }
 
         .form-check-input {
             width: 18px;
             height: 18px;
-            margin-right: 12px;
+            margin-right: 8px;
             border: 2px solid var(--gray-border);
             border-radius: 4px;
             cursor: pointer;
@@ -245,24 +249,26 @@
             cursor: pointer;
             user-select: none;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         /* Forgot Password Link */
         .forgot-password {
-            display: block;
-            text-align: right;
-            margin-top: 0.5rem;
-            margin-bottom: 1.5rem; /* Added margin bottom for spacing */
+            margin: 0;
         }
 
         .forgot-password a {
             color: var(--light-blue);
             text-decoration: none;
-            font-weight: 500; /* Reduced from 600 */
-            font-size: 0.85rem; /* Smaller font size */
+            font-weight: 500;
+            font-size: 0.85rem;
             transition: var(--transition);
-            position: relative;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
         }
 
         .forgot-password a::after {
@@ -271,14 +277,14 @@
             bottom: -2px;
             left: 0;
             width: 0;
-            height: 1px; /* Thinner underline */
+            height: 1px;
             background: var(--light-blue);
             transition: var(--transition);
         }
 
         .forgot-password a:hover {
             color: var(--primary-blue);
-            transform: translateX(2px); /* Smaller hover movement */
+            transform: translateX(2px);
         }
 
         .forgot-password a:hover::after {
@@ -289,13 +295,14 @@
         .err {
             background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
             color: #c53030;
-            padding: 10px 14px; /* Reduced padding */
+            padding: 10px 14px;
             border-radius: 8px;
             border-left: 4px solid #e53e3e;
-            margin: 1rem 0; /* Reduced from 1.5rem 0 */
+            margin: 0.5rem 0 1rem 0; /* Adjusted spacing */
             font-weight: 500;
             text-align: center;
             font-size: 0.9rem;
+            animation: shake 0.5s ease-in-out;
         }
 
         /* Button Styling */
@@ -311,6 +318,11 @@
             letter-spacing: 0.5px;
             position: relative;
             overflow: hidden;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .btn-primary {
@@ -344,10 +356,6 @@
             transform: translateY(-1px);
         }
 
-        .float-right {
-            float: right;
-        }
-
         /* Animations */
         @keyframes slideUp {
             to {
@@ -358,67 +366,77 @@
 
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
         /* Responsive Design */
         @media (max-width: 768px) {
             .container {
-                margin: 1rem;
-                padding: 2rem 1.5rem; /* Reduced padding */
-                max-height: calc(100vh - 2rem); /* Adjusted for mobile */
-            }
-            
-            h2 {
-                font-size: 2rem;
-                margin-bottom: 2rem; /* Reduced */
-            }
-            
-            .btn {
-                width: 100%;
-                margin-top: 0.5rem; /* Reduced */
-            }
-            
-            .float-right {
-                float: none;
-            }
-            
-            .form-group {
-                margin-bottom: 1.25rem; /* Reduced for mobile */
-            }
-            
-            .form-check {
-                margin: 0.75rem 0; /* Reduced for mobile */
-            }
-        }
-
-        @media (max-width: 576px) {
-            .row {
-                padding: 1rem;
-                height: 100vh;
-            }
-            
-            .container {
-                padding: 1.5rem 1.25rem; /* Reduced padding */
-                border-radius: 16px;
-                max-height: calc(100vh - 2rem);
+                padding: 2rem 1.5rem;
             }
             
             h2 {
                 font-size: 1.8rem;
-                margin-bottom: 1.5rem; /* Reduced */
             }
             
-            .form-control {
-                padding: 12px 14px;
+            .form-options {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                margin: 0.5rem 0 1rem 0;
             }
             
             .forgot-password {
-                margin-bottom: 1rem; /* Reduced for mobile */
+                align-self: flex-end;
+            }
+            
+            .btn {
+                padding: 12px 24px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .page-wrapper {
+                padding: 15px;
+            }
+            
+            .container {
+                padding: 1.5rem 1.25rem;
+                border-radius: 16px;
+            }
+            
+            h2 {
+                font-size: 1.6rem;
+                margin-bottom: 1.2rem;
+            }
+            
+            .form-control {
+                padding: 10px 12px;
+            }
+            
+            .image img {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .form-options {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .forgot-password {
+                align-self: flex-end;
             }
             
             .forgot-password a {
-                font-size: 0.8rem; /* Smaller on mobile */
+                font-size: 0.8rem;
             }
         }
 
@@ -427,11 +445,6 @@
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
-        }
-
-        /* Success State Animation */
-        .form-control:valid {
-            border-color: #48bb78;
         }
 
         /* Floating Elements Animation */
@@ -447,12 +460,19 @@
         * {
             box-sizing: border-box;
         }
+
+        /* Prevent scrolling scripts */
+        .no-scroll {
+            overflow: hidden !important;
+            position: fixed !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
     </style>
 </head>
 <body>
     <!-- Add this JavaScript to remove any nav elements that might still appear -->
     <script>
-        // Remove any navbar elements on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Remove nav elements
             const navElements = document.querySelectorAll('nav, .navbar, header, .header, [class*="navbar"], [class*="nav"]');
@@ -484,12 +504,15 @@
             document.body.addEventListener('wheel', function(e) {
                 e.preventDefault();
             }, { passive: false });
+            
+            // Add no-scroll class to body
+            document.body.classList.add('no-scroll');
         });
     </script>
 
-    <div class="row">
+    <div class="page-wrapper">
         <div class="col-md-6 m-auto">
-            <div class="container mt-5">
+            <div class="container">
                 <h2 class="text-center">Admin Login</h2>
                 <form action="/admin/login" method="post">
                     <div class="image">
@@ -500,26 +523,34 @@
                         <label for="username">Administrator Name</label>
                         <input type="text" class="form-control" name="username" id="username" placeholder="Enter administrator name" required>
                     </div>
+                    
                     <div class="form-group">
                         <label for="password">Security Password</label>
                         <input type="password" class="form-control" name="password" id="password" placeholder="Enter secure password" required>
                     </div>
-                    <div class="form-group form-check">
-                        <input type="checkbox" class="form-check-input" id="showPassword" onclick="showPass()">
-                        <label class="form-check-label" for="showPassword">Reveal Password</label>
+
+                    <!-- Checkbox and Forgot Password in one row -->
+                    <div class="form-options">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="showPassword" onclick="showPass()">
+                            <label class="form-check-label" for="showPassword">
+                                <i class="fas fa-eye"></i>Reveal Password
+                            </label>
+                        </div>
+                        
+                        <div class="forgot-password">
+                            <a href="/admin/forgot-password">
+                                <i class="fas fa-unlock-alt"></i> Forgot password?
+                            </a>
+                        </div>
                     </div>
-                    
-                    <!-- Forgot Password with smaller size and proper spacing -->
-                    <div class="forgot-password">
-                        <a href="/admin/forgot-password">Forgot password?</a>
-                    </div>
-                    
+
                     {{#if loginErr}}
                     <p class="err">Authentication Failed: Invalid Credentials</p>
                     {{/if}}
                    
-                    <button type="submit" class="btn btn-primary float-right">
-                        <i class="fas fa-lock me-2"></i>Secure Login
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-lock"></i>Secure Login
                     </button>
                 </form>
             </div>
@@ -535,6 +566,22 @@
                 passwordInput.type = "password";
             }
         }
+        
+        // Add input animations
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('.form-control');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'translateY(-2px)';
+                });
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'translateY(0)';
+                });
+            });
+            
+            // Focus on username input
+            document.getElementById('username').focus();
+        });
         
         // Additional scrolling prevention
         window.addEventListener('scroll', function() {
