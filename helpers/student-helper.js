@@ -81,10 +81,6 @@ module.exports = {
       }
     });
   },
-
-  // ===============================
-  // Get Student Profile with Batch Details
-  // ===============================
   getStudentProfile: (studentId) => {
     return new Promise(async (resolve, reject) => {
       try {
@@ -92,6 +88,7 @@ module.exports = {
           .collection(collection.STUDENT_COLLECTION)
           .aggregate([
             { $match: { _id: new ObjectId(studentId) } },
+  
             {
               $lookup: {
                 from: collection.BATCH_COLLECTION,
@@ -100,41 +97,88 @@ module.exports = {
                 as: "batchDetails"
               }
             },
+            { $unwind: { path: "$batchDetails", preserveNullAndEmptyArrays: true } },
+  
+            // ✅ FIX: ObjectId → ObjectId join
             {
               $lookup: {
                 from: collection.CENTER_COLLECTION,
-                let: { centreId: "$centreId" },
-                pipeline: [
-                  { 
-                    $match: { 
-                      $expr: { 
-                        $eq: ["$centreId", "$$centreId"] 
-                      } 
-                    } 
-                  }
-                ],
+                localField: "centreObjectId",
+                foreignField: "_id",
                 as: "centreDetails"
               }
             },
-            { $unwind: { path: "$batchDetails", preserveNullAndEmptyArrays: true } },
             { $unwind: { path: "$centreDetails", preserveNullAndEmptyArrays: true } }
           ])
           .toArray();
   
-        if (student.length === 0) {
+        if (!student.length) {
           resolve({ status: false, message: "Student not found" });
           return;
         }
   
-       
-  
         resolve({ status: true, student: student[0] });
+  
       } catch (err) {
         console.error("❌ Error fetching student profile:", err);
         reject(err);
       }
     });
   },
+  
+  // // ===============================
+  // // Get Student Profile with Batch Details
+  // // ===============================
+  // getStudentProfile: (studentId) => {
+  //   return new Promise(async (resolve, reject) => {
+  //     try {
+  //       const student = await db.get()
+  //         .collection(collection.STUDENT_COLLECTION)
+  //         .aggregate([
+  //           { $match: { _id: new ObjectId(studentId) } },
+  //           {
+  //             $lookup: {
+  //               from: collection.BATCH_COLLECTION,
+  //               localField: "batchId",
+  //               foreignField: "_id",
+  //               as: "batchDetails"
+  //             }
+  //           },
+  //           {
+  //             $lookup: {
+  //               from: collection.CENTER_COLLECTION,
+  //               let: { centreId: "$centreId" },
+  //               pipeline: [
+  //                 { 
+  //                   $match: { 
+  //                     $expr: { 
+  //                       $eq: ["$centreId", "$$centreId"] 
+  //                     } 
+  //                   } 
+  //                 }
+  //               ],
+  //               as: "centreDetails"
+  //             }
+  //           },
+  //           { $unwind: { path: "$batchDetails", preserveNullAndEmptyArrays: true } },
+  //           { $unwind: { path: "$centreDetails", preserveNullAndEmptyArrays: true } }
+  //         ])
+  //         .toArray();
+  
+  //       if (student.length === 0) {
+  //         resolve({ status: false, message: "Student not found" });
+  //         return;
+  //       }
+  
+       
+  
+  //       resolve({ status: true, student: student[0] });
+  //     } catch (err) {
+  //       console.error("❌ Error fetching student profile:", err);
+  //       reject(err);
+  //     }
+  //   });
+  // },
 
   // ===============================
   // Add Student (your existing function)
@@ -232,10 +276,54 @@ module.exports = {
   //     callback(null);
   //   }
   // },
+  // addStudent: (studentData, callback) => {
+  //   try {
+  
+  //     // ✅ FIX 1: Normalize centreId
+  //     if (Array.isArray(studentData.centreId)) {
+  //       studentData.centreId = studentData.centreId[0];
+  //     }
+  
+  //     studentData.centreId = String(studentData.centreId).trim();
+  
+  //     // ✅ Keep qualifications safe
+  //     if (!Array.isArray(studentData.qualifications)) {
+  //       studentData.qualifications = [];
+  //     }
+  
+  //     studentData.createdAt = new Date();
+  //     studentData.appliedForHallTicket = false;
+  
+  //     // ✅ Convert batchId to ObjectId (this part was already correct)
+  //     if (studentData.batchId) {
+  //       try {
+  //         studentData.batchId = new ObjectId(studentData.batchId);
+  //       } catch (err) {
+  //         console.warn("⚠️ Invalid batchId:", studentData.batchId);
+  //       }
+  //     }
+  
+  //     db.get()
+  //       .collection(collection.STUDENT_COLLECTION)
+  //       .insertOne(studentData)
+  //       .then((data) => {
+  //         console.log("✅ Student inserted with centreId:", studentData.centreId);
+  //         callback(data.insertedId);
+  //       })
+  //       .catch((err) => {
+  //         console.error("❌ DB Error inserting student:", err);
+  //         callback(null);
+  //       });
+  
+  //   } catch (err) {
+  //     console.error("❌ Error in addStudent:", err);
+  //     callback(null);
+  //   }
+  // },
   addStudent: (studentData, callback) => {
     try {
   
-      // ✅ FIX 1: Normalize centreId
+      // ✅ Normalize centreId (KEEP EXISTING LOGIC)
       if (Array.isArray(studentData.centreId)) {
         studentData.centreId = studentData.centreId[0];
       }
@@ -250,7 +338,7 @@ module.exports = {
       studentData.createdAt = new Date();
       studentData.appliedForHallTicket = false;
   
-      // ✅ Convert batchId to ObjectId (this part was already correct)
+      // ✅ Convert batchId to ObjectId (DO NOT TOUCH)
       if (studentData.batchId) {
         try {
           studentData.batchId = new ObjectId(studentData.batchId);
@@ -259,11 +347,28 @@ module.exports = {
         }
       }
   
+      // 🔹 NEW FIX: attach centreObjectId (SAFE ADD)
       db.get()
-        .collection(collection.STUDENT_COLLECTION)
-        .insertOne(studentData)
+        .collection(collection.CENTER_COLLECTION)
+        .findOne({ centreId: studentData.centreId })
+        .then((center) => {
+  
+          if (center) {
+            studentData.centreObjectId = center._id;
+          } else {
+            console.warn("⚠️ Center not found for centreId:", studentData.centreId);
+          }
+  
+          return db.get()
+            .collection(collection.STUDENT_COLLECTION)
+            .insertOne(studentData);
+        })
         .then((data) => {
-          console.log("✅ Student inserted with centreId:", studentData.centreId);
+          console.log(
+            "✅ Student inserted:",
+            "centreId =", studentData.centreId,
+            "| centreObjectId =", studentData.centreObjectId
+          );
           callback(data.insertedId);
         })
         .catch((err) => {
@@ -290,13 +395,36 @@ module.exports = {
   },
   
   
-  // ===============================
-  // Get All Students
-  // ===============================
+  // // ===============================
+  // // Get All Students
+  // // ===============================
+  // getAllStudents: () => {
+  //   return new Promise(async (resolve, reject) => {
+  //     try {
+  //       let students = await db.get()
+  //         .collection(collection.STUDENT_COLLECTION)
+  //         .aggregate([
+  //           {
+  //             $lookup: {
+  //               from: collection.BATCH_COLLECTION,
+  //               localField: "batchId",
+  //               foreignField: "_id",
+  //               as: "batchDetails"
+  //             }
+  //           },
+  //           { $unwind: { path: "$batchDetails", preserveNullAndEmptyArrays: true } }
+  //         ])
+  //         .toArray();
+  //       resolve(students);
+  //     } catch (err) {
+  //       reject(err);
+  //     }
+  //   });
+  // },
   getAllStudents: () => {
     return new Promise(async (resolve, reject) => {
       try {
-        let students = await db.get()
+        const students = await db.get()
           .collection(collection.STUDENT_COLLECTION)
           .aggregate([
             {
@@ -307,16 +435,32 @@ module.exports = {
                 as: "batchDetails"
               }
             },
-            { $unwind: { path: "$batchDetails", preserveNullAndEmptyArrays: true } }
+            {
+              $lookup: {
+                from: collection.CENTER_COLLECTION,
+                localField: "centreObjectId",
+                foreignField: "_id",
+                as: "centreDetails"
+              }
+            },
+            { $unwind: { path: "$batchDetails", preserveNullAndEmptyArrays: true } },
+            { $unwind: { path: "$centreDetails", preserveNullAndEmptyArrays: true } },
+            {
+              $addFields: {
+                batchName: "$batchDetails.batchName",
+                centreName: "$centreDetails.centreName"
+              }
+            }
           ])
           .toArray();
+  
         resolve(students);
       } catch (err) {
         reject(err);
       }
     });
   },
-
+  
   // ===============================
   // Delete Student
   // ===============================
@@ -408,16 +552,27 @@ module.exports = {
   // ===============================
 // Update Student
 // ===============================
-updateStudent: (studentId, studentDetails) => {
+updateStudent: async (studentId, studentDetails) => {
   try {
     let qualifications = [];
 
-    // ✅ FIX 1: Normalize centreId (DO NOT remove this)
+    // ✅ Normalize centreId (DO NOT remove this)
     if (studentDetails.centreId) {
       if (Array.isArray(studentDetails.centreId)) {
         studentDetails.centreId = studentDetails.centreId[0];
       }
       studentDetails.centreId = String(studentDetails.centreId).trim();
+
+      // ✅ FIX: update centreObjectId when centreId changes
+      const center = await db.get()
+        .collection(collection.CENTER_COLLECTION)
+        .findOne({ centreId: studentDetails.centreId });
+
+      if (center) {
+        studentDetails.centreObjectId = center._id;
+      } else {
+        console.warn("⚠️ Center not found for centreId:", studentDetails.centreId);
+      }
     }
 
     // ✅ Build structured qualifications if form sent arrays
@@ -451,22 +606,86 @@ updateStudent: (studentId, studentDetails) => {
     delete studentDetails.year;
     delete studentDetails.board;
 
-    return db.get()
+    return await db.get()
       .collection(collection.STUDENT_COLLECTION)
       .updateOne(
         { _id: new ObjectId(studentId) },
         {
           $set: {
             ...studentDetails,
-            qualifications: qualifications
+            qualifications
           }
         }
       );
 
   } catch (err) {
     console.error("❌ Error in updateStudent:", err);
+    throw err;
   }
 },
+
+//   // ===============================
+// // Update Student
+// // ===============================
+// updateStudent: (studentId, studentDetails) => {
+//   try {
+//     let qualifications = [];
+
+//     // ✅ FIX 1: Normalize centreId (DO NOT remove this)
+//     if (studentDetails.centreId) {
+//       if (Array.isArray(studentDetails.centreId)) {
+//         studentDetails.centreId = studentDetails.centreId[0];
+//       }
+//       studentDetails.centreId = String(studentDetails.centreId).trim();
+//     }
+
+//     // ✅ Build structured qualifications if form sent arrays
+//     if (studentDetails.education) {
+//       qualifications = studentDetails.education.map((edu, i) => ({
+//         education: edu,
+//         maxMarks: studentDetails.maxMarks[i],
+//         minMarks: studentDetails.minMarks[i],
+//         obtainedMarks: studentDetails.obtainedMarks[i],
+//         grade: studentDetails.grade[i],
+//         year: studentDetails.year[i],
+//         board: studentDetails.board[i]
+//       }));
+//     }
+
+//     // 🟢 Convert batchId to ObjectId if exists
+//     if (studentDetails.batchId) {
+//       try {
+//         studentDetails.batchId = new ObjectId(studentDetails.batchId);
+//       } catch (err) {
+//         console.warn("⚠️ Invalid batchId format in update:", studentDetails.batchId);
+//       }
+//     }
+
+//     // Remove raw arrays
+//     delete studentDetails.education;
+//     delete studentDetails.maxMarks;
+//     delete studentDetails.minMarks;
+//     delete studentDetails.obtainedMarks;
+//     delete studentDetails.grade;
+//     delete studentDetails.year;
+//     delete studentDetails.board;
+
+//     return db.get()
+//       .collection(collection.STUDENT_COLLECTION)
+//       .updateOne(
+//         { _id: new ObjectId(studentId) },
+//         {
+//           $set: {
+//             ...studentDetails,
+//             qualifications: qualifications
+//           }
+//         }
+//       );
+
+//   } catch (err) {
+//     console.error("❌ Error in updateStudent:", err);
+//   }
+// },
 
 
   // ===============================
@@ -487,104 +706,14 @@ updateStudent: (studentId, studentDetails) => {
       }
     });
   },
-
-  // ===============================
-  // Search Students
-  // ===============================
-  searchStudents: (keyword) => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const searchTerm = keyword.trim();
-        
-        if (!searchTerm) {
-          resolve([]);
-          return;
-        }
-  
-        const results = await db.get()
-          .collection(collection.STUDENT_COLLECTION)
-          .aggregate([
-            {
-              $match: {
-                $or: [
-                  { fullName: { $regex: searchTerm, $options: "i" } },
-                  { regNo: { $regex: searchTerm, $options: "i" } },
-                  { courseName: { $regex: searchTerm, $options: "i" } },
-                  { email: { $regex: searchTerm, $options: "i" } },
-                  { phone: { $regex: searchTerm, $options: "i" } },
-                  { fatherName: { $regex: searchTerm, $options: "i" } },
-                  { motherName: { $regex: searchTerm, $options: "i" } },
-                  { centreName: { $regex: searchTerm, $options: "i" } },
-                  { address: { $regex: searchTerm, $options: "i" } },
-                  // Search in nested qualifications
-                  { "qualifications.education": { $regex: searchTerm, $options: "i" } },
-                  { "qualifications.board": { $regex: searchTerm, $options: "i" } }
-                ]
-              }
-            },
-            {
-              $lookup: {
-                from: collection.BATCH_COLLECTION,
-                localField: "batchId",
-                foreignField: "_id",
-                as: "batchDetails"
-              }
-            },
-            {
-              $lookup: {
-                from: collection.CENTER_COLLECTION,
-                let: { centreId: "$centreId" },
-                pipeline: [
-                  { 
-                    $match: { 
-                      $expr: { 
-                        $eq: ["$centreId", "$$centreId"] 
-                      } 
-                    } 
-                  }
-                ],
-                as: "centreDetails"
-              }
-            },
-            { $unwind: { path: "$batchDetails", preserveNullAndEmptyArrays: true } },
-            { $unwind: { path: "$centreDetails", preserveNullAndEmptyArrays: true } },
-            {
-              $addFields: {
-                batchName: "$batchDetails.batchName",
-                centreName: "$centreDetails.centreName",
-                hasMarks: { $cond: [{ $ifNull: ["$marks", false] }, true, false] }
-              }
-            },
-            {
-              $sort: { 
-                fullName: 1, // Sort alphabetically by name
-                regNo: 1
-              }
-            },
-            {
-              $limit: 100 // Limit results to prevent overload
-            }
-          ])
-          .toArray();
-  
-        resolve(results);
-      } catch (err) {
-        console.error("❌ Error in searchStudents:", err);
-        reject(err);
-      }
-    });
-  },
-// Update searchStudentsByCenter to debug
-searchStudentsByCenter: (keyword, centreId) => {
+// ===============================
+// Search Students
+// ===============================
+searchStudents: (keyword) => {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log("🔍 searchStudentsByCenter called with:");
-      console.log("Keyword:", keyword);
-      console.log("CentreId:", centreId);
-      console.log("CentreId type:", typeof centreId);
-      
       const searchTerm = keyword.trim();
-      
+
       if (!searchTerm) {
         resolve([]);
         return;
@@ -595,22 +724,264 @@ searchStudentsByCenter: (keyword, centreId) => {
         .aggregate([
           {
             $match: {
-              centreId: centreId, // This should match your data type
               $or: [
                 { fullName: { $regex: searchTerm, $options: "i" } },
                 { regNo: { $regex: searchTerm, $options: "i" } },
                 { courseName: { $regex: searchTerm, $options: "i" } },
                 { email: { $regex: searchTerm, $options: "i" } },
-                { phone: { $regex: searchTerm, $options: "i" } }
+                { phone: { $regex: searchTerm, $options: "i" } },
+                { fatherName: { $regex: searchTerm, $options: "i" } },
+                { motherName: { $regex: searchTerm, $options: "i" } },
+                { address: { $regex: searchTerm, $options: "i" } },
+                { "qualifications.education": { $regex: searchTerm, $options: "i" } },
+                { "qualifications.board": { $regex: searchTerm, $options: "i" } }
               ]
             }
           },
-          // ... rest of your aggregation
+
+          // ✅ Batch join (unchanged)
+          {
+            $lookup: {
+              from: collection.BATCH_COLLECTION,
+              localField: "batchId",
+              foreignField: "_id",
+              as: "batchDetails"
+            }
+          },
+
+          // ✅ FIX: Center join using ObjectId
+          {
+            $lookup: {
+              from: collection.CENTER_COLLECTION,
+              localField: "centreObjectId",
+              foreignField: "_id",
+              as: "centreDetails"
+            }
+          },
+
+          { $unwind: { path: "$batchDetails", preserveNullAndEmptyArrays: true } },
+          { $unwind: { path: "$centreDetails", preserveNullAndEmptyArrays: true } },
+
+          {
+            $addFields: {
+              batchName: "$batchDetails.batchName",
+              centreName: "$centreDetails.centreName",
+              hasMarks: {
+                $cond: [{ $ifNull: ["$marks", false] }, true, false]
+              }
+            }
+          },
+
+          {
+            $sort: {
+              fullName: 1,
+              regNo: 1
+            }
+          },
+
+          {
+            $limit: 100
+          }
         ])
         .toArray();
 
-      console.log("✅ Found", results.length, "students");
       resolve(results);
+
+    } catch (err) {
+      console.error("❌ Error in searchStudents:", err);
+      reject(err);
+    }
+  });
+},
+
+  // // ===============================
+  // // Search Students
+  // // ===============================
+  // searchStudents: (keyword) => {
+  //   return new Promise(async (resolve, reject) => {
+  //     try {
+  //       const searchTerm = keyword.trim();
+        
+  //       if (!searchTerm) {
+  //         resolve([]);
+  //         return;
+  //       }
+  
+  //       const results = await db.get()
+  //         .collection(collection.STUDENT_COLLECTION)
+  //         .aggregate([
+  //           {
+  //             $match: {
+  //               $or: [
+  //                 { fullName: { $regex: searchTerm, $options: "i" } },
+  //                 { regNo: { $regex: searchTerm, $options: "i" } },
+  //                 { courseName: { $regex: searchTerm, $options: "i" } },
+  //                 { email: { $regex: searchTerm, $options: "i" } },
+  //                 { phone: { $regex: searchTerm, $options: "i" } },
+  //                 { fatherName: { $regex: searchTerm, $options: "i" } },
+  //                 { motherName: { $regex: searchTerm, $options: "i" } },
+  //                 { centreName: { $regex: searchTerm, $options: "i" } },
+  //                 { address: { $regex: searchTerm, $options: "i" } },
+  //                 // Search in nested qualifications
+  //                 { "qualifications.education": { $regex: searchTerm, $options: "i" } },
+  //                 { "qualifications.board": { $regex: searchTerm, $options: "i" } }
+  //               ]
+  //             }
+  //           },
+  //           {
+  //             $lookup: {
+  //               from: collection.BATCH_COLLECTION,
+  //               localField: "batchId",
+  //               foreignField: "_id",
+  //               as: "batchDetails"
+  //             }
+  //           },
+  //           {
+  //             $lookup: {
+  //               from: collection.CENTER_COLLECTION,
+  //               let: { centreId: "$centreId" },
+  //               pipeline: [
+  //                 { 
+  //                   $match: { 
+  //                     $expr: { 
+  //                       $eq: ["$centreId", "$$centreId"] 
+  //                     } 
+  //                   } 
+  //                 }
+  //               ],
+  //               as: "centreDetails"
+  //             }
+  //           },
+  //           { $unwind: { path: "$batchDetails", preserveNullAndEmptyArrays: true } },
+  //           { $unwind: { path: "$centreDetails", preserveNullAndEmptyArrays: true } },
+  //           {
+  //             $addFields: {
+  //               batchName: "$batchDetails.batchName",
+  //               centreName: "$centreDetails.centreName",
+  //               hasMarks: { $cond: [{ $ifNull: ["$marks", false] }, true, false] }
+  //             }
+  //           },
+  //           {
+  //             $sort: { 
+  //               fullName: 1, // Sort alphabetically by name
+  //               regNo: 1
+  //             }
+  //           },
+  //           {
+  //             $limit: 100 // Limit results to prevent overload
+  //           }
+  //         ])
+  //         .toArray();
+  
+  //       resolve(results);
+  //     } catch (err) {
+  //       console.error("❌ Error in searchStudents:", err);
+  //       reject(err);
+  //     }
+  //   });
+  // },
+// Update searchStudentsByCenter to debug
+// searchStudentsByCenter: (keyword, centreId) => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       console.log("🔍 searchStudentsByCenter called with:");
+//       console.log("Keyword:", keyword);
+//       console.log("CentreId:", centreId);
+//       console.log("CentreId type:", typeof centreId);
+      
+//       const searchTerm = keyword.trim();
+      
+//       if (!searchTerm) {
+//         resolve([]);
+//         return;
+//       }
+
+//       const results = await db.get()
+//         .collection(collection.STUDENT_COLLECTION)
+//         .aggregate([
+//           {
+//             $match: {
+//               centreId: centreId, // This should match your data type
+//               $or: [
+//                 { fullName: { $regex: searchTerm, $options: "i" } },
+//                 { regNo: { $regex: searchTerm, $options: "i" } },
+//                 { courseName: { $regex: searchTerm, $options: "i" } },
+//                 { email: { $regex: searchTerm, $options: "i" } },
+//                 { phone: { $regex: searchTerm, $options: "i" } }
+//               ]
+//             }
+//           },
+//           // ... rest of your aggregation
+//         ])
+//         .toArray();
+
+//       console.log("✅ Found", results.length, "students");
+//       resolve(results);
+//     } catch (err) {
+//       console.error("❌ Error in searchStudentsByCenter:", err);
+//       reject(err);
+//     }
+//   });
+// },
+searchStudentsByCenter: (keyword, centreId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const searchTerm = keyword.trim();
+      if (!searchTerm) {
+        resolve([]);
+        return;
+      }
+
+      let centreObjectId = null;
+      try {
+        centreObjectId = new ObjectId(centreId);
+      } catch (e) {}
+
+      const results = await db.get()
+        .collection(collection.STUDENT_COLLECTION)
+        .aggregate([
+          {
+            $match: {
+              $or: [
+                { centreObjectId: centreObjectId },
+                { centreId: centreId } // fallback for old data
+              ],
+              $and: [
+                {
+                  $or: [
+                    { fullName: { $regex: searchTerm, $options: "i" } },
+                    { regNo: { $regex: searchTerm, $options: "i" } },
+                    { courseName: { $regex: searchTerm, $options: "i" } },
+                    { email: { $regex: searchTerm, $options: "i" } },
+                    { phone: { $regex: searchTerm, $options: "i" } }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            $lookup: {
+              from: collection.BATCH_COLLECTION,
+              localField: "batchId",
+              foreignField: "_id",
+              as: "batchDetails"
+            }
+          },
+          {
+            $lookup: {
+              from: collection.CENTER_COLLECTION,
+              localField: "centreObjectId",
+              foreignField: "_id",
+              as: "centreDetails"
+            }
+          },
+          { $unwind: { path: "$batchDetails", preserveNullAndEmptyArrays: true } },
+          { $unwind: { path: "$centreDetails", preserveNullAndEmptyArrays: true } }
+        ])
+        .toArray();
+
+      resolve(results);
+
     } catch (err) {
       console.error("❌ Error in searchStudentsByCenter:", err);
       reject(err);
