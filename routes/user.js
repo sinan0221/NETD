@@ -4994,7 +4994,12 @@ router.get('/app-form/:id', verifyUserLogin, async (req, res) => {
   try {
     const studentId = req.params.id;
 
-    // 1️⃣ Fetch student
+    // ✅ Validate ObjectId
+    if (!ObjectId.isValid(studentId)) {
+      return res.status(400).send("Invalid Student ID");
+    }
+
+    // 1️⃣ Fetch student by ID ONLY
     const student = await db.get()
       .collection(collection.STUDENT_COLLECTION)
       .findOne({ _id: new ObjectId(studentId) });
@@ -5003,26 +5008,24 @@ router.get('/app-form/:id', verifyUserLogin, async (req, res) => {
       return res.status(404).send("Student not found");
     }
 
-    // 2️⃣ Fetch student's centre using ObjectId (CORRECT WAY)
-    let centre = null;
-
-    if (student.centreObjectId) {
-      centre = await db.get()
-        .collection(collection.CENTER_COLLECTION)
-        .findOne({ _id: student.centreObjectId });
+    // 2️⃣ Student MUST have centreObjectId
+    if (!student.centreObjectId) {
+      return res.status(404).send("Centre not assigned to student");
     }
 
-    // 🛡️ Safety fallback (very rare)
+    // 3️⃣ Fetch centre by ObjectId ONLY
+    const centre = await db.get()
+      .collection(collection.CENTER_COLLECTION)
+      .findOne({ _id: student.centreObjectId });
+
     if (!centre) {
-      centre = await db.get()
-        .collection(collection.CENTER_COLLECTION)
-        .findOne({});
+      return res.status(404).send("Centre was deleted");
     }
 
     const today = new Date().toISOString().split('T')[0];
 
-    // 3️⃣ Render application form
-    res.render('user/app-form', { 
+    // 4️⃣ Render application form
+    res.render('user/app-form', {
       hideNavbar: true,
       studentId,
       student,
@@ -5035,6 +5038,7 @@ router.get('/app-form/:id', verifyUserLogin, async (req, res) => {
     res.status(500).send("Error loading application form");
   }
 });
+
 
 router.post('/app-form', verifyUserLogin, async (req, res) => {
   try {
