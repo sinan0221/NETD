@@ -4994,7 +4994,7 @@ router.get('/app-form/:id', verifyUserLogin, async (req, res) => {
   try {
     const studentId = req.params.id;
 
-    // 1️⃣ Fetch student details
+    // 1️⃣ Fetch student
     const student = await db.get()
       .collection(collection.STUDENT_COLLECTION)
       .findOne({ _id: new ObjectId(studentId) });
@@ -5003,32 +5003,30 @@ router.get('/app-form/:id', verifyUserLogin, async (req, res) => {
       return res.status(404).send("Student not found");
     }
 
-    // 2️⃣ Fetch all centers
-    const centres = await db.get()
-      .collection(collection.CENTER_COLLECTION)
-      .find({})
-      .toArray();
-
-    // ✅ Pick the center that matches student's centreId, or fallback to first one
+    // 2️⃣ Fetch student's centre using ObjectId (CORRECT WAY)
     let centre = null;
-    if (student.centreId) {
-      centre = centres.find(c => 
-        c._id.toString() === student.centreId.toString()
-      );
+
+    if (student.centreObjectId) {
+      centre = await db.get()
+        .collection(collection.CENTER_COLLECTION)
+        .findOne({ _id: student.centreObjectId });
     }
 
-    if (!centre && centres.length > 0) {
-      centre = centres[0]; // fallback if not matched
+    // 🛡️ Safety fallback (very rare)
+    if (!centre) {
+      centre = await db.get()
+        .collection(collection.CENTER_COLLECTION)
+        .findOne({});
     }
-    const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
-    // 3️⃣ Render app form with data
+    const today = new Date().toISOString().split('T')[0];
+
+    // 3️⃣ Render application form
     res.render('user/app-form', { 
       hideNavbar: true,
       studentId,
       student,
       centre,
-      centres,
       today
     });
 
