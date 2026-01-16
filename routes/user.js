@@ -2835,7 +2835,10 @@ router.get('/id-card-preview/:id', verifyUserLogin, async (req, res) => {
     // Fetch the center details using student's centreId
     const centre = await db.get().collection(collection.CENTER_COLLECTION)
       .findOne({ centreId: student.centreId });
-
+      console.log("🧑 Student ID:", student._id);
+      console.log("🏫 Student centreId (raw):", student.centreId);
+      console.log("🏫 centreId type:", typeof student.centreId, Array.isArray(student.centreId));
+      
     // Calculate dates
     const issueDate = new Date().toLocaleDateString('en-GB');
     const expiryDate = new Date();
