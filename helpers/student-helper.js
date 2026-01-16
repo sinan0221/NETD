@@ -232,6 +232,18 @@ module.exports = {
       callback(null);
     }
   },
+  updateStudentImage: (studentId, imageName) => {
+    return new Promise((resolve, reject) => {
+      db.get().collection(collection.STUDENT_COLLECTION)
+        .updateOne(
+          { _id: new ObjectId(studentId) },
+          { $set: { image: imageName } }
+        )
+        .then(resolve)
+        .catch(reject);
+    });
+  },
+  
   
   // ===============================
   // Get All Students
