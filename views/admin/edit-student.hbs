@@ -27,7 +27,8 @@
                 <h3>Note: All entries must be filled by the candidate in capital letters</h3>
                 
                 <form id="studentForm" action="/admin/update-student/{{student._id}}" method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="centreId" value="{{student.centreId}}">
+                   <input type="hidden" name="centreId" value="{{centreId}}">
+
 
                     <!-- Academic Details -->
                     <h2><i class="fa-solid fa-building-columns"></i> Academic Details</h2>
