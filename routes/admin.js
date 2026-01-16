@@ -7651,11 +7651,52 @@ router.get('/download-question-paper/:batchId/:paperId', verifyAdminLogin, async
   }
 });
 // ADD MARK PAGE
+// router.get('/add-mark/:id', verifyAdminLogin, async (req, res) => {
+//   try {
+//     const studentId = req.params.id;
+
+//     // 1️⃣ Fetch student details
+//     const student = await db.get()
+//       .collection(collection.STUDENT_COLLECTION)
+//       .findOne({ _id: new ObjectId(studentId) });
+
+//     if (!student) {
+//       return res.status(404).send("Student not found");
+//     }
+
+//     // 2️⃣ Fetch center details (not from student — directly from centers)
+//     const centres = await db.get()
+//       .collection(collection.CENTER_COLLECTION)
+//       .find({})
+//       .toArray();
+
+//     // If you only need one default center (for example, the first one)
+//     const centre = centres.length > 0 ? centres[0] : null;
+
+//     // 3️⃣ Render page with student + center
+//     res.render('admin/add-mark', { 
+//       hideNavbar: true, 
+//       studentId,
+//       student,
+//       centre,     // Single center (first or chosen)
+//       centres     // Or full list if you want a dropdown
+//     });
+
+//   } catch (err) {
+//     console.error("❌ Error loading student or centre data:", err);
+//     res.status(500).send("Error loading student or centre data");
+//   }
+// });
 router.get('/add-mark/:id', verifyAdminLogin, async (req, res) => {
   try {
     const studentId = req.params.id;
 
-    // 1️⃣ Fetch student details
+    // ✅ Validate student ID
+    if (!ObjectId.isValid(studentId)) {
+      return res.status(400).send("Invalid Student ID");
+    }
+
+    // 1️⃣ Fetch student
     const student = await db.get()
       .collection(collection.STUDENT_COLLECTION)
       .findOne({ _id: new ObjectId(studentId) });
@@ -7664,29 +7705,34 @@ router.get('/add-mark/:id', verifyAdminLogin, async (req, res) => {
       return res.status(404).send("Student not found");
     }
 
-    // 2️⃣ Fetch center details (not from student — directly from centers)
-    const centres = await db.get()
+    // ❗ Student MUST have centreObjectId
+    if (!student.centreObjectId) {
+      return res.status(404).send("Centre not assigned to student");
+    }
+
+    // 2️⃣ Fetch student's centre ONLY
+    const centre = await db.get()
       .collection(collection.CENTER_COLLECTION)
-      .find({})
-      .toArray();
+      .findOne({ _id: student.centreObjectId });
 
-    // If you only need one default center (for example, the first one)
-    const centre = centres.length > 0 ? centres[0] : null;
+    if (!centre) {
+      return res.status(404).send("Student's centre was deleted");
+    }
 
-    // 3️⃣ Render page with student + center
+    // 3️⃣ Render page
     res.render('admin/add-mark', { 
-      hideNavbar: true, 
+      hideNavbar: true,
       studentId,
       student,
-      centre,     // Single center (first or chosen)
-      centres     // Or full list if you want a dropdown
+      centre
     });
 
   } catch (err) {
-    console.error("❌ Error loading student or centre data:", err);
-    res.status(500).send("Error loading student or centre data");
+    console.error("❌ Error loading add-mark page:", err);
+    res.status(500).send("Error loading add-mark page");
   }
 });
+
 // POST route to save marks
 // POST route to save marks
 // POST route to save marks
