@@ -193,12 +193,56 @@ module.exports = {
   //     console.error("❌ Error in addStudent:", err);
   //   }
   // },
+  // addStudent: (studentData, callback) => {
+  //   try {
+  
+  //     // 🟢 Do NOT rebuild qualifications
+  //     // They already come as studentData.qualifications
+  
+  //     if (!Array.isArray(studentData.qualifications)) {
+  //       studentData.qualifications = [];
+  //     }
+  
+  //     studentData.createdAt = new Date();
+  //     studentData.appliedForHallTicket = false;
+  
+  //     // 🟢 Convert batchId to ObjectId
+  //     if (studentData.batchId) {
+  //       try {
+  //         studentData.batchId = new ObjectId(studentData.batchId);
+  //       } catch (err) {
+  //         console.warn("⚠️ Invalid batchId:", studentData.batchId);
+  //       }
+  //     }
+  
+  //     db.get()
+  //       .collection(collection.STUDENT_COLLECTION)
+  //       .insertOne(studentData)
+  //       .then((data) => {
+  //         console.log("✅ Student inserted with qualifications:", studentData.qualifications.length);
+  //         callback(data.insertedId);
+  //       })
+  //       .catch((err) => {
+  //         console.error("❌ DB Error inserting student:", err);
+  //         callback(null);
+  //       });
+  
+  //   } catch (err) {
+  //     console.error("❌ Error in addStudent:", err);
+  //     callback(null);
+  //   }
+  // },
   addStudent: (studentData, callback) => {
     try {
   
-      // 🟢 Do NOT rebuild qualifications
-      // They already come as studentData.qualifications
+      // ✅ FIX 1: Normalize centreId
+      if (Array.isArray(studentData.centreId)) {
+        studentData.centreId = studentData.centreId[0];
+      }
   
+      studentData.centreId = String(studentData.centreId).trim();
+  
+      // ✅ Keep qualifications safe
       if (!Array.isArray(studentData.qualifications)) {
         studentData.qualifications = [];
       }
@@ -206,7 +250,7 @@ module.exports = {
       studentData.createdAt = new Date();
       studentData.appliedForHallTicket = false;
   
-      // 🟢 Convert batchId to ObjectId
+      // ✅ Convert batchId to ObjectId (this part was already correct)
       if (studentData.batchId) {
         try {
           studentData.batchId = new ObjectId(studentData.batchId);
@@ -219,7 +263,7 @@ module.exports = {
         .collection(collection.STUDENT_COLLECTION)
         .insertOne(studentData)
         .then((data) => {
-          console.log("✅ Student inserted with qualifications:", studentData.qualifications.length);
+          console.log("✅ Student inserted with centreId:", studentData.centreId);
           callback(data.insertedId);
         })
         .catch((err) => {
@@ -232,6 +276,7 @@ module.exports = {
       callback(null);
     }
   },
+  
   updateStudentImage: (studentId, imageName) => {
     return new Promise((resolve, reject) => {
       db.get().collection(collection.STUDENT_COLLECTION)
@@ -307,59 +352,122 @@ module.exports = {
     });
   },
 
+  // // ===============================
+  // // Update Student
+  // // ===============================
+  // updateStudent: (studentId, studentDetails) => {
+  //   try {
+  //     let qualifications = [];
+
+  //     // ✅ Build structured qualifications if form sent arrays
+  //     if (studentDetails.education) {
+  //       qualifications = studentDetails.education.map((edu, i) => ({
+  //         education: edu,
+  //         maxMarks: studentDetails.maxMarks[i],
+  //         minMarks: studentDetails.minMarks[i],
+  //         obtainedMarks: studentDetails.obtainedMarks[i],
+  //         grade: studentDetails.grade[i],
+  //         year: studentDetails.year[i],
+  //         board: studentDetails.board[i]
+  //       }));
+  //     }
+
+  //     // 🟢 Convert batchId to ObjectId if exists
+  //     if (studentDetails.batchId) {
+  //       try {
+  //         studentDetails.batchId = new ObjectId(studentDetails.batchId);
+  //       } catch (err) {
+  //         console.warn("⚠️ Invalid batchId format in update:", studentDetails.batchId);
+  //       }
+  //     }
+
+  //     // Remove raw arrays
+  //     delete studentDetails.education;
+  //     delete studentDetails.maxMarks;
+  //     delete studentDetails.minMarks;
+  //     delete studentDetails.obtainedMarks;
+  //     delete studentDetails.grade;
+  //     delete studentDetails.year;
+  //     delete studentDetails.board;
+
+  //     return db.get()
+  //       .collection(collection.STUDENT_COLLECTION)
+  //       .updateOne(
+  //         { _id: new ObjectId(studentId) },
+  //         {
+  //           $set: {
+  //             ...studentDetails,
+  //             qualifications: qualifications
+  //           }
+  //         }
+  //       );
+  //   } catch (err) {
+  //     console.error("❌ Error in updateStudent:", err);
+  //   }
+  // },
   // ===============================
-  // Update Student
-  // ===============================
-  updateStudent: (studentId, studentDetails) => {
-    try {
-      let qualifications = [];
+// Update Student
+// ===============================
+updateStudent: (studentId, studentDetails) => {
+  try {
+    let qualifications = [];
 
-      // ✅ Build structured qualifications if form sent arrays
-      if (studentDetails.education) {
-        qualifications = studentDetails.education.map((edu, i) => ({
-          education: edu,
-          maxMarks: studentDetails.maxMarks[i],
-          minMarks: studentDetails.minMarks[i],
-          obtainedMarks: studentDetails.obtainedMarks[i],
-          grade: studentDetails.grade[i],
-          year: studentDetails.year[i],
-          board: studentDetails.board[i]
-        }));
+    // ✅ FIX 1: Normalize centreId (DO NOT remove this)
+    if (studentDetails.centreId) {
+      if (Array.isArray(studentDetails.centreId)) {
+        studentDetails.centreId = studentDetails.centreId[0];
       }
-
-      // 🟢 Convert batchId to ObjectId if exists
-      if (studentDetails.batchId) {
-        try {
-          studentDetails.batchId = new ObjectId(studentDetails.batchId);
-        } catch (err) {
-          console.warn("⚠️ Invalid batchId format in update:", studentDetails.batchId);
-        }
-      }
-
-      // Remove raw arrays
-      delete studentDetails.education;
-      delete studentDetails.maxMarks;
-      delete studentDetails.minMarks;
-      delete studentDetails.obtainedMarks;
-      delete studentDetails.grade;
-      delete studentDetails.year;
-      delete studentDetails.board;
-
-      return db.get()
-        .collection(collection.STUDENT_COLLECTION)
-        .updateOne(
-          { _id: new ObjectId(studentId) },
-          {
-            $set: {
-              ...studentDetails,
-              qualifications: qualifications
-            }
-          }
-        );
-    } catch (err) {
-      console.error("❌ Error in updateStudent:", err);
+      studentDetails.centreId = String(studentDetails.centreId).trim();
     }
-  },
+
+    // ✅ Build structured qualifications if form sent arrays
+    if (studentDetails.education) {
+      qualifications = studentDetails.education.map((edu, i) => ({
+        education: edu,
+        maxMarks: studentDetails.maxMarks[i],
+        minMarks: studentDetails.minMarks[i],
+        obtainedMarks: studentDetails.obtainedMarks[i],
+        grade: studentDetails.grade[i],
+        year: studentDetails.year[i],
+        board: studentDetails.board[i]
+      }));
+    }
+
+    // 🟢 Convert batchId to ObjectId if exists
+    if (studentDetails.batchId) {
+      try {
+        studentDetails.batchId = new ObjectId(studentDetails.batchId);
+      } catch (err) {
+        console.warn("⚠️ Invalid batchId format in update:", studentDetails.batchId);
+      }
+    }
+
+    // Remove raw arrays
+    delete studentDetails.education;
+    delete studentDetails.maxMarks;
+    delete studentDetails.minMarks;
+    delete studentDetails.obtainedMarks;
+    delete studentDetails.grade;
+    delete studentDetails.year;
+    delete studentDetails.board;
+
+    return db.get()
+      .collection(collection.STUDENT_COLLECTION)
+      .updateOne(
+        { _id: new ObjectId(studentId) },
+        {
+          $set: {
+            ...studentDetails,
+            qualifications: qualifications
+          }
+        }
+      );
+
+  } catch (err) {
+    console.error("❌ Error in updateStudent:", err);
+  }
+},
+
 
   // ===============================
   // Get Students By Batch
