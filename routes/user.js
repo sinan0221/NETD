@@ -707,18 +707,194 @@ if (req.files && req.files.image) {
     res.status(500).send("Server error: " + err.message);
   }
 });
-// EDIT STUDENT ROUTE
+// // EDIT STUDENT ROUTE
+// router.get('/edit-student/:id', verifyUserLogin, async (req, res) => {
+//   try {
+//     const studentId = req.params.id;
+//     const centreId = req.session.centreId;
+    
+//     console.log("🟢 Edit Student - Student ID:", studentId);
+//     console.log("🟢 Edit Student - Centre ID:", centreId);
+    
+//     if (!centreId) {
+//       return res.redirect('/user/login');
+//     }
+    
+//     // Fetch student details
+//     const student = await studentHelpers.getStudentById(studentId);
+    
+//     if (!student) {
+//       console.log("❌ Student not found:", studentId);
+//       return res.status(404).send("Student not found");
+//     }
+    
+//     console.log("🟢 Student data for edit:", {
+//       id: student._id,
+//       centreId: student.centreId,
+//       courseName: student.courseName,
+//       department: student.department,
+//       dob: student.dob,
+//       batchId: student.batchId
+//     });
+    
+//     // Fetch centre details
+//     const centre = await centerHelpers.getCenterDetails(centreId);
+//     console.log("🟢 Center found:", { 
+//       centreId: centre.centreId, 
+//       department: centre.department,
+//       courseName: centre.courseName 
+//     });
+    
+//     // Fetch batches for this centre
+//     const batches = await batchHelpers.getBatchesByCentre(centreId);
+    
+//     // Get qualifications
+//     const qualifications = student.qualifications || [];
+    
+//     res.render('user/edit-student', {
+//       user: req.session.user,
+//       hideNavbar: true,
+//       student: {
+//         id: student._id,
+//         admissionYear: student.admissionYear,
+//         mode: student.mode,
+//         centreId: student.centreId || [centreId],
+//         courseName: student.courseName,
+//         courseCode: student.courseCode,
+//         shortName: student.shortName,
+//         courseDuration: student.courseDuration,
+//         medium: student.medium,
+//         department: student.department,
+//         batchId: student.batchId,
+//         regNo: student.regNo,
+//         fullName: student.fullName,
+//         motherName: student.motherName,
+//         fatherName: student.fatherName,
+//         fatherOcc: student.fatherOcc,
+//         candOcc: student.candOcc,
+//         gender: student.gender,
+//         dob: student.dob,
+//         number: student.number,
+//         emerNum: student.emerNum,
+//         email: student.email,
+//         bpl: student.bpl,
+//         ph: student.ph,
+//         caste: student.caste,
+//         adharNo: student.adharNo,
+//         address: student.address,
+//         pinCode: student.pinCode,
+//         city: student.city,
+//         district: student.district,
+//         state: student.state,
+//         nationality: student.nationality,
+//         qualifications: qualifications,
+//         hasImage: student.hasImage || false
+//       },
+//       centre: centre,
+//       courseNames: centre.courseName || [],
+//       batches: batches || []
+//     });
+    
+//   } catch (err) {
+//     console.error("❌ Error loading edit-student page:", err);
+//     res.status(500).send("Error loading edit-student page: " + err.message);
+//   }
+// });
+
+// // UPDATE STUDENT ROUTE
+// router.post('/update-student/:id', verifyUserLogin, async (req, res) => {
+//   try {
+//     const studentId = req.params.id;
+    
+//     console.log("📥 Updating student:", studentId);
+//     console.log("📥 Update Data:", req.body);
+    
+//     // Parse qualifications
+//     let qualifications = [];
+//     let eduArr = req.body['education[]'];
+//     let maxArr = req.body['maxMarks[]'];
+//     let minArr = req.body['minMarks[]'];
+//     let obtArr = req.body['obtainedMarks[]'];
+//     let gradeArr = req.body['grade[]'];
+//     let yearArr = req.body['year[]'];
+//     let boardArr = req.body['board[]'];
+    
+//     // Convert to arrays if needed
+//     if (!Array.isArray(eduArr) && eduArr) {
+//       eduArr = [eduArr];
+//       maxArr = [maxArr];
+//       minArr = [minArr];
+//       obtArr = [obtArr];
+//       gradeArr = [gradeArr];
+//       yearArr = [yearArr];
+//       boardArr = [boardArr];
+//     }
+    
+//     // Process qualifications
+//     if (eduArr && Array.isArray(eduArr)) {
+//       eduArr.forEach((edu, i) => {
+//         if (edu && edu.trim() !== '' && maxArr[i] && maxArr[i].toString().trim() !== '') {
+//           qualifications.push({
+//             education: edu,
+//             maxMarks: maxArr[i],
+//             minMarks: minArr[i],
+//             obtainedMarks: obtArr[i],
+//             grade: gradeArr[i],
+//             year: yearArr[i],
+//             board: boardArr[i]
+//           });
+//         }
+//       });
+//     }
+    
+//     // Prepare update data
+//     const updateData = {
+//       ...req.body,
+//       qualifications: qualifications
+//     };
+    
+//     // Remove array fields
+//     delete updateData['education[]'];
+//     delete updateData['maxMarks[]'];
+//     delete updateData['minMarks[]'];
+//     delete updateData['obtainedMarks[]'];
+//     delete updateData['grade[]'];
+//     delete updateData['year[]'];
+//     delete updateData['board[]'];
+    
+//     // Handle image upload
+//     if (req.files && req.files.image) {
+//       let imageFile = req.files.image;
+//       let uploadPath = path.join(__dirname, '../public/studentImages/', studentId + '.jpg');
+      
+//       await imageFile.mv(uploadPath);
+//       console.log("✅ Student image updated:", uploadPath);
+//     }
+    
+//     // Update student in database
+//     const result = await studentHelpers.updateStudent(studentId, updateData);
+    
+//     if (result) {
+//       console.log("✅ Student updated successfully:", studentId);
+//       res.redirect('/user/view-students');
+//     } else {
+//       console.error("❌ Failed to update student");
+//       res.status(500).send("Failed to update student");
+//     }
+    
+//   } catch (err) {
+//     console.error("❌ Error updating student:", err);
+//     res.status(500).send("Error updating student: " + err.message);
+//   }
+// });
+// ===========================
+// ADMIN EDIT STUDENT - GET ROUTE (FIXED)
+// ===========================
 router.get('/edit-student/:id', verifyUserLogin, async (req, res) => {
   try {
     const studentId = req.params.id;
-    const centreId = req.session.centreId;
     
-    console.log("🟢 Edit Student - Student ID:", studentId);
-    console.log("🟢 Edit Student - Centre ID:", centreId);
-    
-    if (!centreId) {
-      return res.redirect('/user/login');
-    }
+    console.log("🟢 Admin Edit Student - Student ID:", studentId);
     
     // Fetch student details
     const student = await studentHelpers.getStudentById(studentId);
@@ -728,166 +904,262 @@ router.get('/edit-student/:id', verifyUserLogin, async (req, res) => {
       return res.status(404).send("Student not found");
     }
     
-    console.log("🟢 Student data for edit:", {
+    console.log("🟢 Student data for admin edit:", {
       id: student._id,
       centreId: student.centreId,
-      courseName: student.courseName,
-      department: student.department,
-      dob: student.dob,
-      batchId: student.batchId
+      centreIdType: typeof student.centreId,
+      isArray: Array.isArray(student.centreId)
     });
     
-    // Fetch centre details
-    const centre = await centerHelpers.getCenterDetails(centreId);
-    console.log("🟢 Center found:", { 
-      centreId: centre.centreId, 
-      department: centre.department,
-      courseName: centre.courseName 
-    });
+    // Handle centreId - it might be an array
+    let centreId;
+    if (Array.isArray(student.centreId)) {
+      // Take the first non-empty value from the array
+      centreId = student.centreId.find(id => id && id.trim() !== '');
+      console.log("🟢 Extracted centreId from array:", centreId);
+    } else {
+      centreId = student.centreId;
+    }
     
-    // Fetch batches for this centre
-    const batches = await batchHelpers.getBatchesByCentre(centreId);
+    if (!centreId) {
+      console.log("❌ No valid centreId found for student");
+      return res.status(400).send("Student has no valid centre assigned");
+    }
+    
+    // Fetch centre details - try multiple approaches
+    let center = null;
+    
+    // Try 1: Get center by centreId string (like '298571')
+    if (typeof centreId === 'string' && !ObjectId.isValid(centreId)) {
+      console.log("🟢 Trying to get center by centreId string:", centreId);
+      center = await centerHelpers.getCenterById(centreId);
+    }
+    
+    // Try 2: If still not found, try as ObjectId
+    if (!center && ObjectId.isValid(centreId)) {
+      console.log("🟢 Trying to get center by ObjectId:", centreId);
+      center = await centerHelpers.getCenterDetails(centreId);
+    }
+    
+    // Try 3: If still not found, try to get from centers collection directly
+    if (!center) {
+      console.log("🟢 Trying direct database query for centreId:", centreId);
+      const db = require('../config/connection').get();
+      const collection = require('../config/collections');
+      
+      // Try to find center by centreId field
+      center = await db.collection(collection.CENTER_COLLECTION)
+        .findOne({ centreId: centreId });
+      
+      // If not found by centreId, try by _id
+      if (!center && ObjectId.isValid(centreId)) {
+        center = await db.collection(collection.CENTER_COLLECTION)
+          .findOne({ _id: new ObjectId(centreId) });
+      }
+    }
+    
+    if (!center) {
+      console.log("❌ Center not found for student. CentreId value:", centreId);
+      // Instead of returning error, render with empty center
+      // and use student data directly
+      console.log("⚠️ Proceeding with student data only");
+    } else {
+      console.log("🟢 Center found for admin:", { 
+        centreId: center.centreId, 
+        department: center.department,
+        courseName: center.courseName 
+      });
+    }
+    
+    // Fetch batches - try different approaches
+    let batches = [];
+    
+    if (center && center._id) {
+      // Use center's ObjectId
+      batches = await batchHelpers.getBatchesByCentre(center._id);
+    } else if (centreId) {
+      // Try with centreId string
+      batches = await batchHelpers.getBatchesByCentre(centreId);
+    }
+    
+    // If still no batches, get all batches
+    if (!batches || batches.length === 0) {
+      console.log("⚠️ No batches found for centre, fetching all batches");
+      batches = await batchHelpers.getAllBatchesWithCentre();
+    }
+    
+    console.log("🟢 Batches found:", batches.length);
+    
+    // Get course names from center or use defaults
+    let courseNames = [];
+    if (center && center.courseName) {
+      courseNames = Array.isArray(center.courseName) ? center.courseName : [center.courseName];
+    } else {
+      // Default course names
+      courseNames = [
+        "Diploma in Medical Laboratory Technology (DMLT)",
+        "Diploma in Operation Theatre Technology (DOTT)",
+        "Diploma in X-Ray & ECG Technology (DXET)",
+        "Diploma in Optometry (DOPT)",
+        "Diploma in Medical Electronics (DME)"
+      ];
+    }
     
     // Get qualifications
     const qualifications = student.qualifications || [];
+    console.log("🟢 Qualifications found:", qualifications.length);
+    
+    // Format date for input field
+    let formattedDOB = '';
+    if (student.dob) {
+      try {
+        const dobDate = new Date(student.dob);
+        if (!isNaN(dobDate.getTime())) {
+          const year = dobDate.getFullYear();
+          const month = String(dobDate.getMonth() + 1).padStart(2, '0');
+          const day = String(dobDate.getDate()).padStart(2, '0');
+          formattedDOB = `${year}-${month}-${day}`;
+        }
+      } catch (e) {
+        console.log("⚠️ Could not format date:", student.dob);
+      }
+    }
+    
+    // Update student object with formatted date
+    const studentWithFormattedDate = {
+      ...student,
+      dob: formattedDOB || student.dob
+    };
     
     res.render('user/edit-student', {
-      user: req.session.user,
+      admin: true,
       hideNavbar: true,
-      student: {
-        id: student._id,
-        admissionYear: student.admissionYear,
-        mode: student.mode,
-        centreId: student.centreId || [centreId],
-        courseName: student.courseName,
-        courseCode: student.courseCode,
-        shortName: student.shortName,
-        courseDuration: student.courseDuration,
-        medium: student.medium,
-        department: student.department,
-        batchId: student.batchId,
-        regNo: student.regNo,
-        fullName: student.fullName,
-        motherName: student.motherName,
-        fatherName: student.fatherName,
-        fatherOcc: student.fatherOcc,
-        candOcc: student.candOcc,
-        gender: student.gender,
-        dob: student.dob,
-        number: student.number,
-        emerNum: student.emerNum,
-        email: student.email,
-        bpl: student.bpl,
-        ph: student.ph,
-        caste: student.caste,
-        adharNo: student.adharNo,
-        address: student.address,
-        pinCode: student.pinCode,
-        city: student.city,
-        district: student.district,
-        state: student.state,
-        nationality: student.nationality,
-        qualifications: qualifications,
-        hasImage: student.hasImage || false
-      },
-      centre: centre,
-      courseNames: centre.courseName || [],
-      batches: batches || []
+      student: studentWithFormattedDate,
+      centreId: center ? center.centreId : centreId,
+      centreName: center ? center.centreName : 'Unknown Centre',
+      department: center ? center.department : student.department || '',
+      centre: center || {},
+      courseNames: courseNames,
+      batches: batches || [],
+      // Helper functions
+      formatDate: function(date) {
+        if (!date) return '';
+        try {
+          const d = new Date(date);
+          if (isNaN(d.getTime())) return '';
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        } catch (e) {
+          return '';
+        }
+      }
     });
     
   } catch (err) {
-    console.error("❌ Error loading edit-student page:", err);
+    console.error("❌ Admin Error loading edit-student page:", err);
+    console.error("❌ Error details:", err.message);
     res.status(500).send("Error loading edit-student page: " + err.message);
   }
 });
 
-// UPDATE STUDENT ROUTE
-router.post('/update-student/:id', verifyUserLogin, async (req, res) => {
-  try {
-    const studentId = req.params.id;
-    
-    console.log("📥 Updating student:", studentId);
-    console.log("📥 Update Data:", req.body);
-    
-    // Parse qualifications
-    let qualifications = [];
-    let eduArr = req.body['education[]'];
-    let maxArr = req.body['maxMarks[]'];
-    let minArr = req.body['minMarks[]'];
-    let obtArr = req.body['obtainedMarks[]'];
-    let gradeArr = req.body['grade[]'];
-    let yearArr = req.body['year[]'];
-    let boardArr = req.body['board[]'];
-    
-    // Convert to arrays if needed
-    if (!Array.isArray(eduArr) && eduArr) {
-      eduArr = [eduArr];
-      maxArr = [maxArr];
-      minArr = [minArr];
-      obtArr = [obtArr];
-      gradeArr = [gradeArr];
-      yearArr = [yearArr];
-      boardArr = [boardArr];
-    }
-    
-    // Process qualifications
-    if (eduArr && Array.isArray(eduArr)) {
-      eduArr.forEach((edu, i) => {
-        if (edu && edu.trim() !== '' && maxArr[i] && maxArr[i].toString().trim() !== '') {
-          qualifications.push({
-            education: edu,
-            maxMarks: maxArr[i],
-            minMarks: minArr[i],
-            obtainedMarks: obtArr[i],
-            grade: gradeArr[i],
-            year: yearArr[i],
-            board: boardArr[i]
-          });
-        }
-      });
-    }
-    
-    // Prepare update data
-    const updateData = {
-      ...req.body,
-      qualifications: qualifications
-    };
-    
-    // Remove array fields
-    delete updateData['education[]'];
-    delete updateData['maxMarks[]'];
-    delete updateData['minMarks[]'];
-    delete updateData['obtainedMarks[]'];
-    delete updateData['grade[]'];
-    delete updateData['year[]'];
-    delete updateData['board[]'];
-    
-    // Handle image upload
-    if (req.files && req.files.image) {
-      let imageFile = req.files.image;
-      let uploadPath = path.join(__dirname, '../public/studentImages/', studentId + '.jpg');
-      
-      await imageFile.mv(uploadPath);
-      console.log("✅ Student image updated:", uploadPath);
-    }
-    
-    // Update student in database
-    const result = await studentHelpers.updateStudent(studentId, updateData);
-    
-    if (result) {
-      console.log("✅ Student updated successfully:", studentId);
-      res.redirect('/user/view-students');
-    } else {
-      console.error("❌ Failed to update student");
-      res.status(500).send("Failed to update student");
-    }
-    
-  } catch (err) {
-    console.error("❌ Error updating student:", err);
-    res.status(500).send("Error updating student: " + err.message);
-  }
-});
+// ===========================
+// ADMIN UPDATE STUDENT - POST ROUTE
+// ===========================
+router.post('/update-student/:id', verifyUserLogin, (req, res) => {
+  const studentId = req.params.id;
+  
+  // 🟢 Raw form data
+  console.log("📥 Admin Raw Update Form Data:", req.body);
 
+  // 🟢 Prepare qualification objects (same as add-student)
+  let qualifications = [];
+
+  // Check if data is coming as arrays or single values
+  let eduArr = req.body['education[]'];
+  let maxArr = req.body['maxMarks[]'];
+  let minArr = req.body['minMarks[]'];
+  let obtArr = req.body['obtainedMarks[]'];
+  let gradeArr = req.body['grade[]'];
+  let yearArr = req.body['year[]'];
+  let boardArr = req.body['board[]'];
+
+  // Convert to arrays if they're not already (same as add-student)
+  if (!Array.isArray(eduArr) && eduArr) {
+    eduArr = [eduArr];
+    maxArr = [maxArr];
+    minArr = [minArr];
+    obtArr = [obtArr];
+    gradeArr = [gradeArr];
+    yearArr = [yearArr];
+    boardArr = [boardArr];
+  }
+
+  // Process qualifications (same as add-student)
+  if (eduArr && Array.isArray(eduArr)) {
+    eduArr.forEach((edu, i) => {
+      if (edu && edu.trim() !== '' && maxArr[i] && maxArr[i].toString().trim() !== '') {
+        qualifications.push({
+          education: edu,
+          maxMarks: maxArr[i],
+          minMarks: minArr[i],
+          obtainedMarks: obtArr[i],
+          grade: gradeArr[i],
+          year: yearArr[i],
+          board: boardArr[i]
+        });
+      }
+    });
+  }
+
+  console.log("🎓 Admin Updated Qualifications:", qualifications);
+  console.log("🔢 Qualification count:", qualifications.length);
+
+  // Merge qualifications into req.body
+  let studentData = {
+    ...req.body,
+    qualifications
+  };
+  
+  // Remove the array fields since we're passing them as structured objects
+  delete studentData['education[]'];
+  delete studentData['maxMarks[]'];
+  delete studentData['minMarks[]'];
+  delete studentData['obtainedMarks[]'];
+  delete studentData['grade[]'];
+  delete studentData['year[]'];
+  delete studentData['board[]'];
+
+  console.log("📤 Admin Student Data for update:", JSON.stringify(studentData, null, 2));
+
+  // Update student in database
+  studentHelpers.updateStudent(studentId, studentData)
+    .then((response) => {
+      console.log("✅ Admin Database update response:", response);
+      
+      // Handle photo update if new image is uploaded
+      if (req.files && req.files.image) {
+        let imageFile = req.files.image;
+        let uploadPath = path.join(__dirname, '../public/studentImages/', studentId + '.jpg');
+
+        imageFile.mv(uploadPath, (err) => {
+          if (err) {
+            console.error("❌ Error updating image:", err);
+          } else {
+            console.log("✅ Student photo updated");
+          }
+        });
+      }
+      
+      console.log("✅ Admin: Student updated successfully");
+      res.redirect(`/user/preview-registration/${studentId}`);
+    })
+    .catch((err) => {
+      console.error("❌ Admin Error updating student:", err);
+      res.status(500).send("Error updating student");
+    });
+});
 // ===========================
 // REGISTRATION FORM PREVIEW (COMPLETE FIXED VERSION)
 // ===========================
