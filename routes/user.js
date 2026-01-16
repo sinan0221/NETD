@@ -658,19 +658,45 @@ router.post('/add-student', verifyUserLogin, (req, res) => {
       console.log("✅ Student added with ID:", insertedId);
       
       // Save student image if uploaded
-      if (req.files && req.files.image) {
-        let imageFile = req.files.image;
-        let uploadPath = path.join(__dirname, '../public/studentImages/', insertedId + '.jpg');
+      // if (req.files && req.files.image) {
+      //   let imageFile = req.files.image;
+      //   let uploadPath = path.join(__dirname, '../public/studentImages/', insertedId + '.jpg');
 
-        imageFile.mv(uploadPath, (err) => {
-          if (err) {
-            console.error("❌ Error saving image:", err);
-          } else {
-            console.log("✅ Student image saved:", uploadPath);
-          }
-        });
-      }
-      
+      //   imageFile.mv(uploadPath, (err) => {
+      //     if (err) {
+      //       console.error("❌ Error saving image:", err);
+      //     } else {
+      //       console.log("✅ Student image saved:", uploadPath);
+      //     }
+      //   });
+      // }
+      // Save student image if uploaded
+if (req.files && req.files.image) {
+
+  const imageFile = req.files.image;
+
+  const uploadDir = path.join(process.cwd(), 'public/studentImages');
+
+  // ✅ Ensure folder exists (Linux-safe)
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  const imageName = insertedId + path.extname(imageFile.name);
+  const uploadPath = path.join(uploadDir, imageName);
+
+  imageFile.mv(uploadPath)
+    .then(async () => {
+      console.log("✅ Student image saved:", uploadPath);
+
+      // ✅ Save image filename in DB
+      await studentHelpers.updateStudentImage(insertedId, imageName);
+    })
+    .catch(err => {
+      console.error("❌ Error saving image:", err);
+    });
+}
+
       // Redirect to registration form preview
       console.log("🔄 Redirecting to preview:", `/user/preview-registration/${insertedId}`);
       res.redirect(`/user/preview-registration/${insertedId}`);
